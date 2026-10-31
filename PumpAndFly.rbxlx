@@ -1,0 +1,1558 @@
+<roblox version="4"><Item class="ReplicatedStorage" referent="RBX00000008"><Properties><string name="Name">ReplicatedStorage</string></Properties><Item class="Folder" referent="RBX00000002"><Properties><string name="Name">Shared</string></Properties><Item class="ModuleScript" referent="RBX00000001"><Properties><string name="Name">Config</string><ProtectedString name="Source"><![CDATA[-- Pump & Fly – gemeinsame Einstellungen (Server + Client)
+-- Hier kannst du das komplette Balancing anpassen, ohne Code anzufassen.
+
+local Config = {}
+
+Config.GameName = "Pump & Fly"
+Config.DataStoreName = "PumpFly_v1"
+
+-- Flug & Belohnung
+Config.LiftPerAir = 2 -- Studs Höhe pro Luft-Einheit
+Config.CoinsPerStud = 0.5 -- Münzen pro Stud Höhe (vor Multiplikatoren)
+Config.MaxHeight = 30000
+Config.FlightSpeed = 400 -- Studs pro Sekunde (Flugdauer wird auf 1,5–9 s begrenzt)
+Config.LaunchMinAir = 5
+
+-- Pumpen
+Config.PumpCooldown = 0.08 -- Sekunden zwischen zwei Pumpstößen (Anti-Spam)
+Config.PumpRandomMin = 0.6 -- Pumpstoß = Power * Zufall(Min..Max) → Risiko!
+Config.PumpRandomMax = 1.6
+Config.MaxGainPerPump = 0.35 -- max. Anteil der Kapazität pro Pumpstoß
+
+-- Boosts
+Config.RebirthBonus = 0.5 -- +50 % Münzen pro Rebirth (dauerhaft)
+Config.FriendBoostPerFriend = 0.1 -- +10 % pro Freund im Server
+Config.FriendBoostMax = 0.5
+
+function Config.RebirthCost(rebirths)
+	return 25000 * (rebirths + 1) ^ 2
+end
+
+-- Gratis-Geschenk (hält Spieler im Spiel)
+Config.GiftCooldown = 15 * 60
+function Config.GiftCoins(rebirths)
+	return 300 * (rebirths + 1)
+end
+
+-- Codes: Poste die in deiner Spielbeschreibung / auf TikTok!
+Config.Codes = {
+	START = 250,
+	POP = 500,
+	HALLOWEEN = 1000,
+}
+
+-- Game Pass IDs (0 = deaktiviert). ID nach dem Erstellen im Creator Hub eintragen.
+Config.GamePasses = {
+	DoubleCoins = 0,
+}
+
+Config.Balloons = {
+	{ Name = "Kaugummi-Blase", Capacity = 20, Price = 0, Color = Color3.fromRGB(255, 140, 200) },
+	{ Name = "Party-Ballon", Capacity = 50, Price = 150, Color = Color3.fromRGB(255, 70, 70) },
+	{ Name = "Riesen-Ballon", Capacity = 120, Price = 800, Color = Color3.fromRGB(255, 170, 40) },
+	{ Name = "Wetter-Ballon", Capacity = 300, Price = 3500, Color = Color3.fromRGB(240, 240, 240) },
+	{ Name = "Zeppelin", Capacity = 750, Price = 15000, Color = Color3.fromRGB(150, 150, 170) },
+	{ Name = "Raketen-Ballon", Capacity = 2000, Price = 60000, Color = Color3.fromRGB(60, 200, 255) },
+	{ Name = "Galaxie-Ballon", Capacity = 5000, Price = 250000, Color = Color3.fromRGB(140, 80, 255) },
+	{ Name = "Schwarzes Loch", Capacity = 15000, Price = 1000000, Color = Color3.fromRGB(25, 15, 40) },
+}
+
+Config.Pumps = {
+	{ Name = "Puste-Lunge", Power = 1, Price = 0 },
+	{ Name = "Fahrradpumpe", Power = 2, Price = 100 },
+	{ Name = "Fußpumpe", Power = 5, Price = 600 },
+	{ Name = "Kompressor", Power = 12, Price = 3000 },
+	{ Name = "Laubbläser", Power = 30, Price = 14000 },
+	{ Name = "Düsentriebwerk", Power = 80, Price = 55000 },
+	{ Name = "Tornado in der Dose", Power = 200, Price = 220000 },
+	{ Name = "Urknall-Pumpe", Power = 600, Price = 900000 },
+}
+
+-- Höhen-Zonen: je höher, desto größer der Münz-Multiplikator
+Config.Zones = {
+	{ Name = "Wiese", Icon = "🌱", Height = 0, Multiplier = 1, Color = Color3.fromRGB(120, 220, 120), Decor = "none" },
+	{ Name = "Wolken", Icon = "☁️", Height = 400, Multiplier = 1.5, Color = Color3.fromRGB(255, 255, 255), Decor = "clouds" },
+	{ Name = "Gewitter", Icon = "⚡", Height = 1200, Multiplier = 2, Color = Color3.fromRGB(255, 220, 60), Decor = "storm" },
+	{ Name = "Weltall", Icon = "🚀", Height = 3500, Multiplier = 3, Color = Color3.fromRGB(120, 160, 255), Decor = "stars" },
+	{ Name = "Mond", Icon = "🌙", Height = 9000, Multiplier = 5, Color = Color3.fromRGB(230, 230, 200), Decor = "moon" },
+	{ Name = "Die Leere", Icon = "🕳️", Height = 22000, Multiplier = 10, Color = Color3.fromRGB(170, 60, 255), Decor = "void" },
+}
+
+function Config.GetZone(height)
+	local current = Config.Zones[1]
+	for _, zone in ipairs(Config.Zones) do
+		if height >= zone.Height then
+			current = zone
+		end
+	end
+	return current
+end
+
+-- 1234 → "1.2K", 2500000 → "2.5M"
+function Config.Format(n)
+	n = math.floor(n or 0)
+	local suffixes = { "", "K", "M", "B", "T", "Qa" }
+	local i, v = 1, n
+	while math.abs(v) >= 1000 and i < #suffixes do
+		v /= 1000
+		i += 1
+	end
+	if i == 1 then
+		return tostring(n)
+	end
+	return (string.format("%.1f%s", v, suffixes[i]):gsub("%.0(%a)", "%1"))
+end
+
+-- 1.5 → "1.5", 2 → "2"
+function Config.FormatMult(m)
+	local s = string.format("%.2f", m)
+	s = (s:gsub("0+$", ""))
+	s = (s:gsub("%.$", ""))
+	return s
+end
+
+return Config
+]]></ProtectedString></Properties></Item></Item></Item><Item class="ServerScriptService" referent="RBX00000009"><Properties><string name="Name">ServerScriptService</string></Properties><Item class="Folder" referent="RBX00000005"><Properties><string name="Name">Server</string></Properties><Item class="Script" referent="RBX00000003"><Properties><string name="Name">Main</string><ProtectedString name="Source"><![CDATA[-- Pump & Fly – Server: Spiellogik, Speichern, Bestenliste
+-- Der Server entscheidet alles (Luft, Höhe, Münzen) → Exploiter können nicht schummeln.
+
+local Players = game:GetService("Players")
+local DataStoreService = game:GetService("DataStoreService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Debris = game:GetService("Debris")
+
+local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local World = require(script.Parent:WaitForChild("World"))
+
+local world = World.Build(Config)
+local fmt = Config.Format
+
+---------------------------------------------------------------- Remotes
+local remotes = Instance.new("Folder")
+remotes.Name = "Remotes"
+local R = {}
+for _, name in ipairs({ "Pump", "Launch", "Buy", "Rebirth", "Redeem", "ClaimGift", "RequestState", "State", "Flight", "FlightEnd", "Notify" }) do
+	local r = Instance.new("RemoteEvent")
+	r.Name = name
+	r.Parent = remotes
+	R[name] = r
+end
+remotes.Parent = ReplicatedStorage
+
+---------------------------------------------------------------- Daten
+local dataStore, boardStore
+pcall(function()
+	dataStore = DataStoreService:GetDataStore(Config.DataStoreName)
+	boardStore = DataStoreService:GetOrderedDataStore(Config.DataStoreName .. "_BestHeight")
+end)
+
+local sessions = {} -- [player] = Session
+
+local function defaultData()
+	return { Coins = 0, Balloon = 1, Pump = 1, Rebirths = 0, BestHeight = 0, Launches = 0, Codes = {}, LastGift = 0 }
+end
+
+local function loadData(player)
+	if not dataStore then
+		return defaultData(), false
+	end
+	for attempt = 1, 3 do
+		local ok, result = pcall(function()
+			return dataStore:GetAsync("u_" .. player.UserId)
+		end)
+		if ok then
+			local data = type(result) == "table" and result or defaultData()
+			for k, v in pairs(defaultData()) do
+				if data[k] == nil then
+					data[k] = v
+				end
+			end
+			data.Balloon = math.clamp(data.Balloon, 1, #Config.Balloons)
+			data.Pump = math.clamp(data.Pump, 1, #Config.Pumps)
+			return data, true
+		end
+		task.wait(attempt)
+	end
+	return defaultData(), false
+end
+
+local function saveData(player, s)
+	if not s or not s.canSave or not dataStore then
+		return
+	end
+	local snapshot = table.clone(s.data)
+	for attempt = 1, 3 do
+		local ok, err = pcall(function()
+			dataStore:SetAsync("u_" .. player.UserId, snapshot)
+		end)
+		if ok then
+			return
+		end
+		warn("[PumpFly] Speichern fehlgeschlagen für", player.Name, err)
+		task.wait(attempt)
+	end
+end
+
+---------------------------------------------------------------- Helfer
+local function notify(player, text, kind)
+	R.Notify:FireClient(player, text, kind or "info")
+end
+
+local function friendBoost(s)
+	return math.min(s.friends * Config.FriendBoostPerFriend, Config.FriendBoostMax)
+end
+
+local function multiplier(s)
+	local m = (1 + s.data.Rebirths * Config.RebirthBonus) * (1 + friendBoost(s))
+	if s.hasDouble then
+		m *= 2
+	end
+	return m
+end
+
+local function sendState(player)
+	local s = sessions[player]
+	if not s then
+		return
+	end
+	local d = s.data
+	if s.stats then
+		s.stats.Coins.Value = d.Coins
+		s.stats.Record.Value = d.BestHeight
+		s.stats.Rebirths.Value = d.Rebirths
+	end
+	R.State:FireClient(player, {
+		Coins = d.Coins,
+		Air = s.air,
+		Capacity = Config.Balloons[d.Balloon].Capacity,
+		Balloon = d.Balloon,
+		Pump = d.Pump,
+		Rebirths = d.Rebirths,
+		BestHeight = d.BestHeight,
+		Multiplier = multiplier(s),
+		FriendBoost = friendBoost(s),
+		GiftIn = math.max(0, d.LastGift + Config.GiftCooldown - os.time()),
+		HasDouble = s.hasDouble,
+		Flying = s.flying,
+	})
+end
+
+local function burst(position, color, amount)
+	local p = Instance.new("Part")
+	p.Anchored = true
+	p.CanCollide = false
+	p.CanQuery = false
+	p.Transparency = 1
+	p.Size = Vector3.one
+	p.Position = position
+	p.Parent = workspace
+	local e = Instance.new("ParticleEmitter")
+	e.Color = ColorSequence.new(color)
+	e.LightEmission = 0.5
+	e.Speed = NumberRange.new(25, 50)
+	e.SpreadAngle = Vector2.new(180, 180)
+	e.Lifetime = NumberRange.new(0.4, 0.9)
+	e.Size = NumberSequence.new(1, 0)
+	e.Rate = 0
+	e.Parent = p
+	e:Emit(amount)
+	Debris:AddItem(p, 2)
+end
+
+-- Der Ballon über dem Kopf wächst mit der Luft – alle anderen sehen ihn!
+local function updateBalloon(player)
+	local s = sessions[player]
+	local char = player.Character
+	local head = char and char:FindFirstChild("Head")
+	if not s or not head then
+		return
+	end
+	local cfg = Config.Balloons[s.data.Balloon]
+	local balloon = char:FindFirstChild("PumpBalloon")
+	if not balloon then
+		balloon = Instance.new("Part")
+		balloon.Name = "PumpBalloon"
+		balloon.Shape = Enum.PartType.Ball
+		balloon.Material = Enum.Material.SmoothPlastic
+		balloon.Reflectance = 0.15
+		balloon.CanCollide = false
+		balloon.CanQuery = false
+		balloon.CanTouch = false
+		balloon.CastShadow = false
+		balloon.Massless = true
+
+		local weld = Instance.new("Weld")
+		weld.Name = "BalloonWeld"
+		weld.Part0 = head
+		weld.Part1 = balloon
+		weld.Parent = balloon
+
+		local top = Instance.new("Attachment")
+		top.Name = "StringTop"
+		top.Parent = balloon
+		local bottom = Instance.new("Attachment")
+		bottom.Name = "BalloonString"
+		bottom.Position = Vector3.new(0, head.Size.Y / 2, 0)
+		bottom.Parent = head
+
+		local rope = Instance.new("RopeConstraint")
+		rope.Name = "String"
+		rope.Visible = true
+		rope.Thickness = 0.05
+		rope.Color = BrickColor.White()
+		rope.Attachment0 = bottom
+		rope.Attachment1 = top
+		rope.Parent = balloon
+
+		balloon.Parent = char
+	end
+
+	local size = 1.2 + math.clamp(s.air / cfg.Capacity, 0, 1) * 5
+	local offset = 2 + size / 2
+	balloon.Size = Vector3.new(size, size * 1.1, size)
+	balloon.Color = cfg.Color
+	balloon.BalloonWeld.C0 = CFrame.new(0, offset, 0)
+	balloon.StringTop.Position = Vector3.new(0, -size * 0.55, 0)
+	balloon.String.Length = offset - size * 0.55 - head.Size.Y / 2 + 0.2
+end
+
+---------------------------------------------------------------- Pumpen
+R.Pump.OnServerEvent:Connect(function(player)
+	local s = sessions[player]
+	if not s or s.flying then
+		return
+	end
+	local now = os.clock()
+	if now - s.lastPump < Config.PumpCooldown then
+		return
+	end
+	s.lastPump = now
+
+	local cap = Config.Balloons[s.data.Balloon].Capacity
+	local power = Config.Pumps[s.data.Pump].Power
+	local roll = Config.PumpRandomMin + math.random() * (Config.PumpRandomMax - Config.PumpRandomMin)
+	local gain = math.max(1, math.floor(power * roll + 0.5))
+	gain = math.min(gain, math.max(1, math.floor(cap * Config.MaxGainPerPump)))
+	s.air += gain
+
+	if s.air > cap then
+		local balloon = player.Character and player.Character:FindFirstChild("PumpBalloon")
+		if balloon then
+			burst(balloon.Position, balloon.Color, 70)
+		end
+		s.air = 0
+		notify(player, "💥 PLOPP! Dein Ballon ist geplatzt!", "bad")
+	end
+	updateBalloon(player)
+	sendState(player)
+end)
+
+---------------------------------------------------------------- Fliegen
+R.Launch.OnServerEvent:Connect(function(player)
+	local s = sessions[player]
+	if not s or s.flying then
+		return
+	end
+	local char = player.Character
+	local hum = char and char:FindFirstChildOfClass("Humanoid")
+	if not hum or hum.Health <= 0 then
+		return
+	end
+	if s.air < Config.LaunchMinAir then
+		notify(player, "Zu wenig Luft! Erst pumpen 🎈", "bad")
+		return
+	end
+
+	s.flying = true
+	local height = math.min(s.air * Config.LiftPerAir, Config.MaxHeight)
+	local zone = Config.GetZone(height)
+	local duration = math.clamp(height / Config.FlightSpeed, 1.5, 9)
+	R.Flight:FireClient(player, height, duration)
+	sendState(player)
+
+	task.delay(duration, function()
+		if sessions[player] ~= s then
+			return
+		end
+		local reward = math.floor(height * Config.CoinsPerStud * zone.Multiplier * multiplier(s))
+		s.data.Coins += reward
+		s.data.Launches += 1
+
+		local balloon = char:FindFirstChild("PumpBalloon")
+		if balloon then
+			burst(balloon.Position, balloon.Color, 50)
+		end
+		s.air = 0
+		updateBalloon(player)
+
+		if height > s.data.BestHeight then
+			if s.data.BestHeight > 0 then
+				notify(player, "🏆 NEUER REKORD: " .. fmt(height) .. " Studs!", "record")
+			end
+			s.data.BestHeight = math.floor(height)
+		end
+		notify(player, string.format("+%s 💰   %s %s (x%s)", fmt(reward), zone.Icon, zone.Name, Config.FormatMult(zone.Multiplier)), "good")
+		sendState(player)
+
+		task.wait(1)
+		if sessions[player] ~= s then
+			return
+		end
+		R.FlightEnd:FireClient(player, world.SpawnCFrame * CFrame.new(math.random(-10, 10), 0, math.random(-10, 10)))
+		s.flying = false
+		sendState(player)
+	end)
+end)
+
+---------------------------------------------------------------- Shop / Rebirth / Codes / Geschenk
+R.Buy.OnServerEvent:Connect(function(player, kind)
+	local s = sessions[player]
+	if not s or (kind ~= "Balloon" and kind ~= "Pump") then
+		return
+	end
+	local list = kind == "Balloon" and Config.Balloons or Config.Pumps
+	local nextItem = list[s.data[kind] + 1]
+	if not nextItem then
+		notify(player, "Schon das Beste vom Besten! 😎", "info")
+		return
+	end
+	if s.data.Coins < nextItem.Price then
+		notify(player, "Nicht genug Münzen 💸", "bad")
+		return
+	end
+	s.data.Coins -= nextItem.Price
+	s.data[kind] += 1
+	notify(player, "Gekauft: " .. nextItem.Name .. " ✅", "good")
+	updateBalloon(player)
+	sendState(player)
+end)
+
+R.Rebirth.OnServerEvent:Connect(function(player)
+	local s = sessions[player]
+	if not s or s.flying then
+		return
+	end
+	local cost = Config.RebirthCost(s.data.Rebirths)
+	if s.data.Coins < cost then
+		notify(player, "Du brauchst " .. fmt(cost) .. " 💰 für einen Rebirth", "bad")
+		return
+	end
+	s.data.Rebirths += 1
+	s.data.Coins = 0
+	s.data.Balloon = 1
+	s.data.Pump = 1
+	s.air = 0
+	local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if root then
+		burst(root.Position, Color3.fromRGB(255, 220, 60), 120)
+	end
+	notify(player, string.format("🌟 REBIRTH %d! Jetzt dauerhaft x%s Münzen", s.data.Rebirths, Config.FormatMult(multiplier(s))), "record")
+	updateBalloon(player)
+	sendState(player)
+end)
+
+R.Redeem.OnServerEvent:Connect(function(player, code)
+	local s = sessions[player]
+	if not s or typeof(code) ~= "string" or #code > 30 then
+		return
+	end
+	if os.clock() - s.lastAction < 1 then
+		return
+	end
+	s.lastAction = os.clock()
+	code = string.upper((code:gsub("%s", "")))
+	local reward = Config.Codes[code]
+	if not reward then
+		notify(player, "Ungültiger Code ❌", "bad")
+	elseif s.data.Codes[code] then
+		notify(player, "Code schon eingelöst!", "bad")
+	else
+		s.data.Codes[code] = true
+		s.data.Coins += reward
+		notify(player, "🎁 Code eingelöst: +" .. fmt(reward) .. " 💰", "good")
+		sendState(player)
+	end
+end)
+
+R.ClaimGift.OnServerEvent:Connect(function(player)
+	local s = sessions[player]
+	if not s then
+		return
+	end
+	if os.time() - s.data.LastGift < Config.GiftCooldown then
+		notify(player, "Geschenk noch nicht bereit ⏳", "bad")
+		return
+	end
+	local reward = Config.GiftCoins(s.data.Rebirths)
+	s.data.LastGift = os.time()
+	s.data.Coins += reward
+	notify(player, "🎁 Gratis-Geschenk: +" .. fmt(reward) .. " 💰", "good")
+	sendState(player)
+end)
+
+R.RequestState.OnServerEvent:Connect(sendState)
+
+MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, passId, purchased)
+	local s = sessions[player]
+	if s and purchased and passId == Config.GamePasses.DoubleCoins then
+		s.hasDouble = true
+		notify(player, "💎 2x Münzen aktiviert! Danke!", "record")
+		sendState(player)
+	end
+end)
+
+---------------------------------------------------------------- Freunde-Boost (lädt Spieler ein, Freunde mitzubringen)
+local friendPairs = {}
+
+local function refreshFriends()
+	for player, s in pairs(sessions) do
+		local n = 0
+		for other, isFriend in pairs(friendPairs[player] or {}) do
+			if isFriend and other.Parent then
+				n += 1
+			end
+		end
+		if n > s.friends then
+			notify(player, string.format("👥 Freund ist da! +%d%% Münzen", math.floor(math.min(n * Config.FriendBoostPerFriend, Config.FriendBoostMax) * 100)), "good")
+		end
+		s.friends = n
+		sendState(player)
+	end
+end
+
+---------------------------------------------------------------- Spieler betreten / verlassen
+local function onPlayerAdded(player)
+	local data, ok = loadData(player)
+	if not player.Parent then
+		return
+	end
+
+	local s = {
+		data = data,
+		canSave = ok,
+		air = 0,
+		flying = false,
+		lastPump = 0,
+		lastAction = 0,
+		friends = 0,
+		hasDouble = false,
+		postedHeight = 0,
+	}
+
+	local leaderstats = Instance.new("Folder")
+	leaderstats.Name = "leaderstats"
+	local coins = Instance.new("NumberValue")
+	coins.Name = "Münzen"
+	coins.Parent = leaderstats
+	local record = Instance.new("NumberValue")
+	record.Name = "Rekord"
+	record.Parent = leaderstats
+	local rebirths = Instance.new("IntValue")
+	rebirths.Name = "Rebirths"
+	rebirths.Parent = leaderstats
+	leaderstats.Parent = player
+	s.stats = { Coins = coins, Record = record, Rebirths = rebirths }
+
+	sessions[player] = s
+
+	if Config.GamePasses.DoubleCoins ~= 0 then
+		local okPass, owns = pcall(MarketplaceService.UserOwnsGamePassAsync, MarketplaceService, player.UserId, Config.GamePasses.DoubleCoins)
+		s.hasDouble = okPass and owns or false
+	end
+
+	friendPairs[player] = friendPairs[player] or {}
+	for _, other in ipairs(Players:GetPlayers()) do
+		if other ~= player then
+			local okF, isFriend = pcall(player.IsFriendsWith, player, other.UserId)
+			local f = okF and isFriend or false
+			friendPairs[player][other] = f
+			friendPairs[other] = friendPairs[other] or {}
+			friendPairs[other][player] = f
+		end
+	end
+
+	player.CharacterAdded:Connect(function(char)
+		char:WaitForChild("Head", 5)
+		updateBalloon(player)
+	end)
+	if player.Character then
+		task.spawn(updateBalloon, player)
+	end
+
+	if not ok then
+		notify(player, "⚠ Daten konnten nicht geladen werden – Fortschritt wird diese Runde NICHT gespeichert.", "bad")
+	end
+	notify(player, "Willkommen bei " .. Config.GameName .. "! 🎈 Halte PUMPEN gedrückt.", "info")
+	refreshFriends()
+end
+
+Players.PlayerAdded:Connect(onPlayerAdded)
+for _, p in ipairs(Players:GetPlayers()) do
+	task.spawn(onPlayerAdded, p)
+end
+
+Players.PlayerRemoving:Connect(function(player)
+	local s = sessions[player]
+	sessions[player] = nil
+	friendPairs[player] = nil
+	for _, t in pairs(friendPairs) do
+		t[player] = nil
+	end
+	if s then
+		saveData(player, s)
+	end
+	refreshFriends()
+end)
+
+-- Autosave
+task.spawn(function()
+	while true do
+		task.wait(90)
+		for player, s in pairs(sessions) do
+			task.spawn(saveData, player, s)
+		end
+	end
+end)
+
+game:BindToClose(function()
+	local pending = 0
+	for player, s in pairs(sessions) do
+		pending += 1
+		task.spawn(function()
+			saveData(player, s)
+			pending -= 1
+		end)
+	end
+	local start = os.clock()
+	while pending > 0 and os.clock() - start < 25 do
+		task.wait(0.2)
+	end
+end)
+
+---------------------------------------------------------------- Weltweite Bestenliste
+local nameCache = {}
+
+local function updateGlobalBoard()
+	if not boardStore then
+		world.SetBoard(nil)
+		return
+	end
+	for player, s in pairs(sessions) do
+		if s.canSave and s.data.BestHeight > s.postedHeight then
+			local ok = pcall(function()
+				boardStore:SetAsync(tostring(player.UserId), math.floor(s.data.BestHeight))
+			end)
+			if ok then
+				s.postedHeight = s.data.BestHeight
+			end
+		end
+	end
+	local ok, pages = pcall(function()
+		return boardStore:GetSortedAsync(false, 10)
+	end)
+	if not ok then
+		world.SetBoard(nil)
+		return
+	end
+	local entries = {}
+	for _, entry in ipairs(pages:GetCurrentPage()) do
+		local userId = tonumber(entry.key)
+		local name = nameCache[userId]
+		if not name then
+			local okName, result = pcall(Players.GetNameFromUserIdAsync, Players, userId)
+			name = okName and result or "???"
+			nameCache[userId] = name
+		end
+		table.insert(entries, { Name = name, Value = entry.value })
+	end
+	world.SetBoard(entries)
+end
+
+task.spawn(function()
+	task.wait(5)
+	while true do
+		updateGlobalBoard()
+		task.wait(60)
+	end
+end)
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX00000004"><Properties><string name="Name">World</string><ProtectedString name="Source"><![CDATA[-- Pump & Fly – baut die Map per Code (Spawn, Zonen-Ringe, Wolken, Bestenliste)
+-- Du musst nichts bauen: einfach eine leere Baseplate nehmen und starten.
+
+local World = {}
+
+local function make(class, props)
+	local inst = Instance.new(class)
+	local parent = props.Parent
+	props.Parent = nil
+	for k, v in pairs(props) do
+		inst[k] = v
+	end
+	inst.Parent = parent
+	return inst
+end
+
+local function part(props)
+	props.Anchored = true
+	props.TopSurface = Enum.SurfaceType.Smooth
+	props.BottomSurface = Enum.SurfaceType.Smooth
+	if props.CanCollide == nil then
+		props.CanCollide = false
+	end
+	return make("Part", props)
+end
+
+local function billboard(adornee, text, color, size)
+	local gui = make("BillboardGui", {
+		Size = UDim2.new(size.X, 0, size.Y, 0),
+		LightInfluence = 0,
+		MaxDistance = 2000,
+		Parent = adornee,
+	})
+	make("TextLabel", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Text = text,
+		TextColor3 = color,
+		TextStrokeTransparency = 0,
+		TextScaled = true,
+		Font = Enum.Font.FredokaOne,
+		Parent = gui,
+	})
+	return gui
+end
+
+local function buildZones(folder, Config, rng)
+	for index, zone in ipairs(Config.Zones) do
+		if zone.Height > 0 then
+			local h = zone.Height
+			local nextZone = Config.Zones[index + 1]
+			local top = nextZone and nextZone.Height or (h + 8000)
+
+			-- Leuchtender Rahmen, durch den man fliegt
+			local size, t = 140, 3
+			for _, def in ipairs({
+				{ Vector3.new(0, h, size / 2), Vector3.new(size, t, t) },
+				{ Vector3.new(0, h, -size / 2), Vector3.new(size, t, t) },
+				{ Vector3.new(size / 2, h, 0), Vector3.new(t, t, size) },
+				{ Vector3.new(-size / 2, h, 0), Vector3.new(t, t, size) },
+			}) do
+				part({
+					Name = zone.Name .. "Ring",
+					Position = def[1],
+					Size = def[2],
+					Color = zone.Color,
+					Material = Enum.Material.Neon,
+					Transparency = 0.15,
+					CastShadow = false,
+					CanQuery = false,
+					Parent = folder,
+				})
+			end
+
+			local labelAnchor = part({
+				Name = zone.Name .. "Label",
+				Position = Vector3.new(0, h + 15, size / 2),
+				Size = Vector3.new(1, 1, 1),
+				Transparency = 1,
+				CanQuery = false,
+				Parent = folder,
+			})
+			billboard(
+				labelAnchor,
+				string.format("%s %s  •  x%s Münzen", zone.Icon, string.upper(zone.Name), Config.FormatMult(zone.Multiplier)),
+				zone.Color,
+				Vector2.new(80, 14)
+			)
+
+			-- Deko pro Zone
+			local count = (zone.Decor == "clouds" or zone.Decor == "storm") and 18 or 30
+			for _ = 1, count do
+				local pos = Vector3.new(rng:NextNumber(-500, 500), rng:NextNumber(h, top), rng:NextNumber(-500, 500))
+				if zone.Decor == "clouds" or zone.Decor == "storm" then
+					local w = rng:NextNumber(25, 60)
+					part({
+						Name = "Cloud",
+						Shape = Enum.PartType.Ball,
+						Size = Vector3.new(w, w, w),
+						Position = pos,
+						Color = zone.Decor == "storm" and Color3.fromRGB(90, 90, 105) or Color3.new(1, 1, 1),
+						Material = Enum.Material.SmoothPlastic,
+						Transparency = 0.25,
+						CastShadow = false,
+						CanQuery = false,
+						Parent = folder,
+					})
+				else
+					local s = rng:NextNumber(1, 4)
+					part({
+						Name = "Star",
+						Shape = Enum.PartType.Ball,
+						Size = Vector3.new(s, s, s),
+						Position = pos,
+						Color = zone.Decor == "void" and Color3.fromRGB(200, 120, 255) or Color3.new(1, 1, 0.85),
+						Material = Enum.Material.Neon,
+						CastShadow = false,
+						CanQuery = false,
+						Parent = folder,
+					})
+				end
+			end
+
+			if zone.Decor == "moon" then
+				part({
+					Name = "Moon",
+					Shape = Enum.PartType.Ball,
+					Size = Vector3.new(400, 400, 400),
+					Position = Vector3.new(700, h + 600, -700),
+					Color = Color3.fromRGB(200, 200, 190),
+					Material = Enum.Material.Slate,
+					CastShadow = false,
+					CanQuery = false,
+					Parent = folder,
+				})
+			end
+		end
+	end
+end
+
+local function buildLeaderboard(folder)
+	local board = part({
+		Name = "Bestenliste",
+		Size = Vector3.new(18, 14, 1),
+		CFrame = CFrame.new(0, 9, -30) * CFrame.Angles(0, math.pi, 0),
+		Color = Color3.fromRGB(35, 35, 55),
+		Material = Enum.Material.SmoothPlastic,
+		CanCollide = true,
+		Parent = folder,
+	})
+	local gui = make("SurfaceGui", {
+		Face = Enum.NormalId.Front,
+		SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud,
+		PixelsPerStud = 40,
+		LightInfluence = 0,
+		Parent = board,
+	})
+	make("TextLabel", {
+		Size = UDim2.new(1, 0, 0.16, 0),
+		BackgroundTransparency = 1,
+		Text = "🏆 HÖCHSTE FLÜGE (WELTWEIT)",
+		TextColor3 = Color3.fromRGB(255, 215, 60),
+		TextScaled = true,
+		Font = Enum.Font.FredokaOne,
+		Parent = gui,
+	})
+	local list = make("Frame", {
+		Position = UDim2.new(0.05, 0, 0.18, 0),
+		Size = UDim2.new(0.9, 0, 0.8, 0),
+		BackgroundTransparency = 1,
+		Parent = gui,
+	})
+	make("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Parent = list })
+
+	local rows = {}
+	for i = 1, 10 do
+		rows[i] = make("TextLabel", {
+			LayoutOrder = i,
+			Size = UDim2.new(1, 0, 0.1, 0),
+			BackgroundTransparency = 1,
+			Text = i == 1 and "Lade…" or "",
+			TextColor3 = Color3.new(1, 1, 1),
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextScaled = true,
+			Font = Enum.Font.FredokaOne,
+			Parent = list,
+		})
+	end
+
+	return function(entries, format)
+		if not entries then
+			rows[1].Text = "Bestenliste nur im veröffentlichten Spiel"
+			return
+		end
+		local medals = { "🥇", "🥈", "🥉" }
+		for i = 1, 10 do
+			local e = entries[i]
+			rows[i].Text = e and string.format("%s %d. %s – %s Studs", medals[i] or "  ", i, e.Name, format(e.Value)) or ""
+		end
+	end
+end
+
+function World.Build(Config)
+	local old = workspace:FindFirstChild("PumpFlyWorld")
+	if old then
+		old:Destroy()
+	end
+	local folder = make("Folder", { Name = "PumpFlyWorld", Parent = workspace })
+	local rng = Random.new(1337)
+
+	-- Boden, falls keine Baseplate existiert
+	if not workspace:FindFirstChild("Baseplate") then
+		part({
+			Name = "Baseplate",
+			Size = Vector3.new(1024, 2, 1024),
+			Position = Vector3.new(0, -1, 0),
+			Color = Color3.fromRGB(100, 190, 90),
+			Material = Enum.Material.Grass,
+			CanCollide = true,
+			Parent = folder,
+		})
+	end
+
+	-- Fremde Spawns entfernen, damit alle auf unserer Plattform starten
+	for _, d in ipairs(workspace:GetDescendants()) do
+		if d:IsA("SpawnLocation") then
+			d:Destroy()
+		end
+	end
+
+	part({
+		Name = "SpawnPlatform",
+		Shape = Enum.PartType.Cylinder,
+		Size = Vector3.new(1, 70, 70),
+		CFrame = CFrame.new(0, 0.5, 0) * CFrame.Angles(0, 0, math.rad(90)),
+		Color = Color3.fromRGB(255, 200, 80),
+		Material = Enum.Material.SmoothPlastic,
+		CanCollide = true,
+		Parent = folder,
+	})
+	local spawn = make("SpawnLocation", {
+		Name = "Spawn",
+		Anchored = true,
+		Size = Vector3.new(12, 1, 12),
+		Position = Vector3.new(0, 1.5, 0),
+		Color = Color3.fromRGB(255, 120, 180),
+		Material = Enum.Material.Neon,
+		Duration = 0,
+		Neutral = true,
+		Parent = folder,
+	})
+
+	local tip = part({
+		Name = "Tipp",
+		Size = Vector3.new(1, 1, 1),
+		Position = Vector3.new(0, 14, 25),
+		Transparency = 1,
+		Parent = folder,
+	})
+	billboard(tip, "🎈 Pumpe so viel du dich traust… 💥 aber nicht zu viel!", Color3.new(1, 1, 1), Vector2.new(40, 5))
+
+	buildZones(folder, Config, rng)
+	local setBoard = buildLeaderboard(folder)
+
+	return {
+		SpawnCFrame = spawn.CFrame + Vector3.new(0, 4, 0),
+		SetBoard = function(entries)
+			setBoard(entries, Config.Format)
+		end,
+	}
+end
+
+return World
+]]></ProtectedString></Properties></Item></Item></Item><Item class="StarterPlayer" referent="RBX00000011"><Properties><string name="Name">StarterPlayer</string></Properties><Item class="StarterPlayerScripts" referent="RBX00000010"><Properties><string name="Name">StarterPlayerScripts</string></Properties><Item class="Folder" referent="RBX00000007"><Properties><string name="Name">Client</string></Properties><Item class="LocalScript" referent="RBX00000006"><Properties><string name="Name">Client</string><ProtectedString name="Source"><![CDATA[-- Pump & Fly – Client: komplette UI per Code, Steuerung, Flug-Animation
+-- PC: E gedrückt halten = pumpen, F = starten. Handy: Buttons.
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local MarketplaceService = game:GetService("MarketplaceService")
+
+local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local remotes = ReplicatedStorage:WaitForChild("Remotes")
+local R = {}
+for _, name in ipairs({ "Pump", "Launch", "Buy", "Rebirth", "Redeem", "ClaimGift", "RequestState", "State", "Flight", "FlightEnd", "Notify" }) do
+	R[name] = remotes:WaitForChild(name)
+end
+
+local player = Players.LocalPlayer
+local fmt = Config.Format
+local FONT = Enum.Font.FredokaOne
+local WHITE = Color3.new(1, 1, 1)
+local DARK = Color3.fromRGB(30, 30, 45)
+
+---------------------------------------------------------------- UI-Helfer
+local function new(class, props, children)
+	local inst = Instance.new(class)
+	local parent
+	for k, v in pairs(props or {}) do
+		if k == "Parent" then
+			parent = v
+		else
+			inst[k] = v
+		end
+	end
+	for _, child in ipairs(children or {}) do
+		child.Parent = inst
+	end
+	inst.Parent = parent
+	return inst
+end
+
+local function corner(r)
+	return new("UICorner", { CornerRadius = UDim.new(0, r or 12) })
+end
+
+local function stroke(thickness, color)
+	return new("UIStroke", {
+		Thickness = thickness or 3,
+		Color = color or Color3.new(0, 0, 0),
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+	})
+end
+
+local function label(props)
+	props.BackgroundTransparency = 1
+	props.Font = FONT
+	props.TextScaled = true
+	props.TextColor3 = props.TextColor3 or WHITE
+	props.TextStrokeTransparency = props.TextStrokeTransparency or 0.3
+	return new("TextLabel", props)
+end
+
+local function button(text, color, props)
+	props.Text = text
+	props.BackgroundColor3 = color
+	props.Font = FONT
+	props.TextScaled = true
+	props.TextColor3 = WHITE
+	props.TextStrokeTransparency = 0.3
+	props.AutoButtonColor = true
+	local b = new("TextButton", props, {
+		corner(14),
+		stroke(3),
+		new("UIPadding", {
+			PaddingTop = UDim.new(0, 6),
+			PaddingBottom = UDim.new(0, 6),
+			PaddingLeft = UDim.new(0, 8),
+			PaddingRight = UDim.new(0, 8),
+		}),
+	})
+	new("UIScale", { Name = "Bounce", Parent = b })
+	return b
+end
+
+local function bounce(gui)
+	local s = gui:FindFirstChild("Bounce")
+	if s then
+		s.Scale = 0.88
+		TweenService:Create(s, TweenInfo.new(0.15, Enum.EasingStyle.Back), { Scale = 1 }):Play()
+	end
+end
+
+local gui = new("ScreenGui", {
+	Name = "PumpFlyUI",
+	ResetOnSpawn = false,
+	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+	Parent = player:WaitForChild("PlayerGui"),
+})
+
+-- Skaliert alle Bereiche passend zur Bildschirmgröße (Handy + PC)
+local scalers = {}
+local function scaled(frame)
+	table.insert(scalers, new("UIScale", { Parent = frame }))
+	return frame
+end
+local function updateScale()
+	local cam = workspace.CurrentCamera
+	local scale = cam and math.clamp(cam.ViewportSize.Y / 760, 0.5, 1.2) or 1
+	for _, s in ipairs(scalers) do
+		s.Scale = scale
+	end
+end
+
+---------------------------------------------------------------- Oben: Münzen + Infos
+local top = scaled(new("Frame", {
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, 8),
+	Size = UDim2.fromOffset(460, 90),
+	BackgroundTransparency = 1,
+	Parent = gui,
+}))
+local coinsLabel = label({
+	Size = UDim2.new(1, 0, 0, 56),
+	Text = "💰 0",
+	TextColor3 = Color3.fromRGB(255, 220, 60),
+	TextStrokeTransparency = 0,
+	Parent = top,
+})
+local infoLabel = label({
+	Position = UDim2.fromOffset(0, 58),
+	Size = UDim2.new(1, 0, 0, 26),
+	Text = "",
+	Parent = top,
+})
+
+---------------------------------------------------------------- Unten: Luft-Balken + Pumpen/Starten
+local bottom = scaled(new("Frame", {
+	AnchorPoint = Vector2.new(0.5, 1),
+	Position = UDim2.new(0.5, 0, 1, -16),
+	Size = UDim2.fromOffset(400, 190),
+	BackgroundTransparency = 1,
+	Parent = gui,
+}))
+
+local warnLabel = label({
+	Size = UDim2.new(1, 0, 0, 26),
+	Text = "",
+	TextColor3 = Color3.fromRGB(255, 80, 80),
+	TextStrokeTransparency = 0,
+	Parent = bottom,
+})
+
+local airBar = new("Frame", {
+	Position = UDim2.fromOffset(0, 30),
+	Size = UDim2.new(1, 0, 0, 38),
+	BackgroundColor3 = DARK,
+	Parent = bottom,
+}, { corner(12), stroke(3) })
+local airFill = new("Frame", {
+	Size = UDim2.new(0, 0, 1, 0),
+	BackgroundColor3 = Color3.fromRGB(90, 220, 90),
+	Parent = airBar,
+}, { corner(12) })
+local airText = label({
+	Size = UDim2.fromScale(1, 1),
+	Text = "🎈 Luft: 0 / 20",
+	ZIndex = 2,
+	Parent = airBar,
+})
+
+local pumpButton = button("🎈 PUMPEN", Color3.fromRGB(60, 190, 90), {
+	Position = UDim2.fromOffset(0, 80),
+	Size = UDim2.fromOffset(192, 84),
+	Parent = bottom,
+})
+local launchButton = button("🚀 STARTEN", Color3.fromRGB(255, 140, 30), {
+	Position = UDim2.fromOffset(208, 80),
+	Size = UDim2.fromOffset(192, 84),
+	Parent = bottom,
+})
+label({
+	Position = UDim2.fromOffset(0, 168),
+	Size = UDim2.new(1, 0, 0, 20),
+	Text = UserInputService.TouchEnabled and "PUMPEN gedrückt halten!" or "E halten = Pumpen   •   F = Starten",
+	TextTransparency = 0.2,
+	Parent = bottom,
+})
+
+---------------------------------------------------------------- Links: Menü
+local menu = scaled(new("Frame", {
+	AnchorPoint = Vector2.new(0, 0.5),
+	Position = UDim2.new(0, 10, 0.5, 0),
+	Size = UDim2.fromOffset(150, 330),
+	BackgroundTransparency = 1,
+	Parent = gui,
+}, {
+	new("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }),
+}))
+local function menuButton(text, color, order)
+	return button(text, color, { Size = UDim2.fromOffset(150, 56), LayoutOrder = order, Parent = menu })
+end
+local shopBtn = menuButton("🛒 Shop", Color3.fromRGB(60, 140, 255), 1)
+local rebirthBtn = menuButton("🌟 Rebirth", Color3.fromRGB(200, 80, 255), 2)
+local codesBtn = menuButton("🎟 Codes", Color3.fromRGB(255, 90, 140), 3)
+local giftBtn = menuButton("🎁 Geschenk", Color3.fromRGB(40, 200, 180), 4)
+local passBtn = menuButton("💎 2x Münzen", Color3.fromRGB(255, 190, 0), 5)
+passBtn.Visible = Config.GamePasses.DoubleCoins ~= 0
+
+---------------------------------------------------------------- Fenster (Shop, Rebirth, Codes)
+local panels = {}
+local function panel(title, height)
+	local frame = scaled(new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(480, height),
+		BackgroundColor3 = DARK,
+		Visible = false,
+		ZIndex = 5,
+		Parent = gui,
+	}, { corner(18), stroke(4) }))
+	label({ Position = UDim2.fromOffset(0, 8), Size = UDim2.new(1, 0, 0, 44), Text = title, ZIndex = 6, Parent = frame })
+	local close = button("X", Color3.fromRGB(230, 60, 60), {
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -10, 0, 10),
+		Size = UDim2.fromOffset(44, 44),
+		ZIndex = 6,
+		Parent = frame,
+	})
+	close.Activated:Connect(function()
+		frame.Visible = false
+	end)
+	local content = new("Frame", {
+		Position = UDim2.fromOffset(16, 62),
+		Size = UDim2.new(1, -32, 1, -76),
+		BackgroundTransparency = 1,
+		ZIndex = 6,
+		Parent = frame,
+	})
+	table.insert(panels, frame)
+	return frame, content
+end
+
+local function toggle(frame)
+	local show = not frame.Visible
+	for _, p in ipairs(panels) do
+		p.Visible = false
+	end
+	frame.Visible = show
+end
+
+-- Shop
+local shopPanel, shopContent = panel("🛒 SHOP", 360)
+local function shopRow(y, buyText)
+	local row = new("Frame", {
+		Position = UDim2.fromOffset(0, y),
+		Size = UDim2.new(1, 0, 0, 130),
+		BackgroundColor3 = Color3.fromRGB(50, 50, 75),
+		ZIndex = 6,
+		Parent = shopContent,
+	}, { corner(14) })
+	local current = label({ Position = UDim2.fromOffset(12, 8), Size = UDim2.new(1, -24, 0, 30), TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7, Parent = row })
+	local nextL = label({ Position = UDim2.fromOffset(12, 40), Size = UDim2.new(1, -24, 0, 26), TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = Color3.fromRGB(190, 190, 220), ZIndex = 7, Parent = row })
+	local buy = button(buyText, Color3.fromRGB(60, 190, 90), { Position = UDim2.fromOffset(12, 74), Size = UDim2.new(1, -24, 0, 46), ZIndex = 7, Parent = row })
+	return current, nextL, buy
+end
+local balloonCurrent, balloonNext, buyBalloon = shopRow(0, "Kaufen")
+local pumpCurrent, pumpNext, buyPump = shopRow(144, "Kaufen")
+
+-- Rebirth
+local rebirthPanel, rebirthContent = panel("🌟 REBIRTH", 300)
+local rebirthInfo = label({
+	Size = UDim2.new(1, 0, 0, 140),
+	TextScaled = true,
+	TextWrapped = true,
+	ZIndex = 7,
+	Parent = rebirthContent,
+})
+local doRebirth = button("REBIRTH!", Color3.fromRGB(200, 80, 255), { Position = UDim2.fromOffset(0, 154), Size = UDim2.new(1, 0, 0, 60), ZIndex = 7, Parent = rebirthContent })
+
+-- Codes
+local codesPanel, codesContent = panel("🎟 CODES", 250)
+local codeBox = new("TextBox", {
+	Size = UDim2.new(1, 0, 0, 56),
+	BackgroundColor3 = WHITE,
+	TextColor3 = DARK,
+	PlaceholderText = "Code eingeben…",
+	Text = "",
+	Font = FONT,
+	TextScaled = true,
+	ClearTextOnFocus = false,
+	ZIndex = 7,
+	Parent = codesContent,
+}, { corner(12), stroke(3) })
+local redeemBtn = button("Einlösen", Color3.fromRGB(255, 90, 140), { Position = UDim2.fromOffset(0, 70), Size = UDim2.new(1, 0, 0, 56), ZIndex = 7, Parent = codesContent })
+label({ Position = UDim2.fromOffset(0, 136), Size = UDim2.new(1, 0, 0, 24), Text = "Neue Codes gibt's auf unserem TikTok! 👀", TextColor3 = Color3.fromRGB(190, 190, 220), ZIndex = 7, Parent = codesContent })
+
+---------------------------------------------------------------- Benachrichtigungen + Flug-Anzeige
+local toastHolder = scaled(new("Frame", {
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, 105),
+	Size = UDim2.fromOffset(560, 220),
+	BackgroundTransparency = 1,
+	Parent = gui,
+}, {
+	new("UIListLayout", { Padding = UDim.new(0, 6), HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder }),
+}))
+
+local toastColors = {
+	good = Color3.fromRGB(90, 230, 110),
+	bad = Color3.fromRGB(255, 90, 90),
+	record = Color3.fromRGB(255, 215, 60),
+	info = WHITE,
+}
+local toastCount = 0
+local function toast(text, kind)
+	toastCount += 1
+	local t = label({
+		Size = UDim2.new(1, 0, 0, kind == "record" and 46 or 34),
+		Text = text,
+		TextColor3 = toastColors[kind] or WHITE,
+		TextStrokeTransparency = 0,
+		LayoutOrder = toastCount,
+		Parent = toastHolder,
+	})
+	local items = toastHolder:GetChildren()
+	if #items > 6 then
+		for _, c in ipairs(items) do
+			if c:IsA("TextLabel") then
+				c:Destroy()
+				break
+			end
+		end
+	end
+	task.delay(2.5, function()
+		if t.Parent then
+			local tween = TweenService:Create(t, TweenInfo.new(0.5), { TextTransparency = 1, TextStrokeTransparency = 1 })
+			tween:Play()
+			tween.Completed:Wait()
+			t:Destroy()
+		end
+	end)
+end
+
+local flightLabel = label({
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.36),
+	Size = UDim2.fromScale(0.6, 0.12),
+	Text = "",
+	TextStrokeTransparency = 0,
+	Visible = false,
+	Parent = gui,
+})
+
+---------------------------------------------------------------- Zustand vom Server anzeigen
+local state
+local giftReadyAt = 0
+
+local function applyState(s)
+	state = s
+	coinsLabel.Text = "💰 " .. fmt(s.Coins)
+
+	local info = string.format("⚡ x%s Boost   🏆 Rekord: %s Studs", Config.FormatMult(s.Multiplier), fmt(s.BestHeight))
+	if s.FriendBoost > 0 then
+		info ..= string.format("   👥 +%d%%", math.floor(s.FriendBoost * 100 + 0.5))
+	end
+	infoLabel.Text = info
+
+	local fill = math.clamp(s.Air / s.Capacity, 0, 1)
+	TweenService:Create(airFill, TweenInfo.new(0.12), {
+		Size = UDim2.new(fill, 0, 1, 0),
+		BackgroundColor3 = Color3.fromRGB(90, 220, 90):Lerp(Color3.fromRGB(255, 50, 50), fill),
+	}):Play()
+	airText.Text = string.format("🎈 Luft: %s / %s   →  %s Studs", fmt(s.Air), fmt(s.Capacity), fmt(s.Air * Config.LiftPerAir))
+	if fill >= 0.85 then
+		warnLabel.Text = "⚠ GLEICH PLATZT ES! ⚠"
+	elseif fill >= 0.65 then
+		warnLabel.Text = "Riskant… 😬"
+	else
+		warnLabel.Text = ""
+	end
+
+	local canLaunch = s.Air >= Config.LaunchMinAir and not s.Flying
+	launchButton.BackgroundColor3 = canLaunch and Color3.fromRGB(255, 140, 30) or Color3.fromRGB(120, 120, 120)
+
+	-- Shop
+	local b, nb = Config.Balloons[s.Balloon], Config.Balloons[s.Balloon + 1]
+	balloonCurrent.Text = string.format("🎈 %s (%s Luft)", b.Name, fmt(b.Capacity))
+	balloonNext.Text = nb and string.format("Nächster: %s (%s Luft)", nb.Name, fmt(nb.Capacity)) or "MAX erreicht!"
+	buyBalloon.Text = nb and ("Kaufen – " .. fmt(nb.Price) .. " 💰") or "MAX"
+	buyBalloon.BackgroundColor3 = (nb and s.Coins >= nb.Price) and Color3.fromRGB(60, 190, 90) or Color3.fromRGB(110, 110, 110)
+
+	local p, np = Config.Pumps[s.Pump], Config.Pumps[s.Pump + 1]
+	pumpCurrent.Text = string.format("💨 %s (%s pro Pump)", p.Name, fmt(p.Power))
+	pumpNext.Text = np and string.format("Nächste: %s (%s pro Pump)", np.Name, fmt(np.Power)) or "MAX erreicht!"
+	buyPump.Text = np and ("Kaufen – " .. fmt(np.Price) .. " 💰") or "MAX"
+	buyPump.BackgroundColor3 = (np and s.Coins >= np.Price) and Color3.fromRGB(60, 190, 90) or Color3.fromRGB(110, 110, 110)
+
+	-- Rebirth
+	local cost = Config.RebirthCost(s.Rebirths)
+	local nextMult = 1 + (s.Rebirths + 1) * Config.RebirthBonus
+	rebirthInfo.Text = string.format(
+		"Rebirths: %d\nSetzt Münzen, Ballon & Pumpe zurück.\nDafür DAUERHAFT x%s Münzen!\nKosten: %s 💰",
+		s.Rebirths,
+		Config.FormatMult(nextMult),
+		fmt(cost)
+	)
+	doRebirth.BackgroundColor3 = s.Coins >= cost and Color3.fromRGB(200, 80, 255) or Color3.fromRGB(110, 110, 110)
+
+	giftReadyAt = os.clock() + s.GiftIn
+	passBtn.Text = s.HasDouble and "💎 2x AKTIV" or "💎 2x Münzen"
+end
+
+R.State.OnClientEvent:Connect(applyState)
+R.Notify.OnClientEvent:Connect(toast)
+
+-- Geschenk-Countdown
+task.spawn(function()
+	while true do
+		local left = math.max(0, math.ceil(giftReadyAt - os.clock()))
+		if left == 0 then
+			giftBtn.Text = "🎁 ABHOLEN!"
+		else
+			giftBtn.Text = string.format("🎁 %d:%02d", left // 60, left % 60)
+		end
+		task.wait(0.5)
+	end
+end)
+
+---------------------------------------------------------------- Pumpen (gedrückt halten)
+local holding = false
+local function startPumping()
+	if holding then
+		return
+	end
+	holding = true
+	task.spawn(function()
+		while holding do
+			if state and not state.Flying then
+				R.Pump:FireServer()
+				bounce(pumpButton)
+			end
+			task.wait(0.1)
+		end
+	end)
+end
+local function stopPumping()
+	holding = false
+end
+
+local function launch()
+	if state and not state.Flying then
+		stopPumping()
+		bounce(launchButton)
+		R.Launch:FireServer()
+	end
+end
+
+local function isPress(input)
+	return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
+end
+
+pumpButton.InputBegan:Connect(function(input)
+	if isPress(input) then
+		startPumping()
+	end
+end)
+launchButton.Activated:Connect(launch)
+
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed then
+		return
+	end
+	if input.KeyCode == Enum.KeyCode.E then
+		startPumping()
+	elseif input.KeyCode == Enum.KeyCode.F then
+		launch()
+	end
+end)
+UserInputService.InputEnded:Connect(function(input)
+	if isPress(input) or input.KeyCode == Enum.KeyCode.E then
+		stopPumping()
+	end
+end)
+
+---------------------------------------------------------------- Menü-Buttons
+shopBtn.Activated:Connect(function()
+	bounce(shopBtn)
+	toggle(shopPanel)
+end)
+rebirthBtn.Activated:Connect(function()
+	bounce(rebirthBtn)
+	toggle(rebirthPanel)
+end)
+codesBtn.Activated:Connect(function()
+	bounce(codesBtn)
+	toggle(codesPanel)
+end)
+giftBtn.Activated:Connect(function()
+	bounce(giftBtn)
+	R.ClaimGift:FireServer()
+end)
+passBtn.Activated:Connect(function()
+	bounce(passBtn)
+	if Config.GamePasses.DoubleCoins ~= 0 and not (state and state.HasDouble) then
+		MarketplaceService:PromptGamePassPurchase(player, Config.GamePasses.DoubleCoins)
+	end
+end)
+
+buyBalloon.Activated:Connect(function()
+	bounce(buyBalloon)
+	R.Buy:FireServer("Balloon")
+end)
+buyPump.Activated:Connect(function()
+	bounce(buyPump)
+	R.Buy:FireServer("Pump")
+end)
+doRebirth.Activated:Connect(function()
+	bounce(doRebirth)
+	R.Rebirth:FireServer()
+end)
+redeemBtn.Activated:Connect(function()
+	bounce(redeemBtn)
+	R.Redeem:FireServer(codeBox.Text)
+	codeBox.Text = ""
+end)
+
+---------------------------------------------------------------- Flug (rein optisch – Belohnung berechnet der Server)
+local flight
+
+local function endFlight()
+	if flight then
+		flight.conn:Disconnect()
+		flight.align:Destroy()
+		flight.attachment:Destroy()
+		flight = nil
+	end
+	flightLabel.Visible = false
+end
+
+R.Flight.OnClientEvent:Connect(function(height, duration)
+	endFlight()
+	local char = player.Character
+	local root = char and char:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return
+	end
+	stopPumping()
+
+	local attachment = new("Attachment", { Parent = root })
+	local align = new("AlignPosition", {
+		Mode = Enum.PositionAlignmentMode.OneAttachment,
+		Attachment0 = attachment,
+		MaxForce = 1e9,
+		MaxVelocity = 1e6,
+		Responsiveness = 120,
+		Position = root.Position,
+		Parent = root,
+	})
+
+	local start = root.Position
+	local t0 = os.clock()
+	local lastZone
+	flightLabel.Visible = true
+	local conn = RunService.Heartbeat:Connect(function()
+		local a = math.clamp((os.clock() - t0) / duration, 0, 1)
+		local y = height * (1 - (1 - a) ^ 3)
+		align.Position = start + Vector3.new(0, y, 0)
+		local zone = Config.GetZone(y)
+		flightLabel.Text = string.format("⬆ %s Studs\n%s %s", fmt(y), zone.Icon, zone.Name)
+		flightLabel.TextColor3 = zone.Color
+		if zone ~= lastZone then
+			if lastZone then
+				toast(string.format("%s %s erreicht! x%s", zone.Icon, zone.Name, Config.FormatMult(zone.Multiplier)), "record")
+			end
+			lastZone = zone
+		end
+	end)
+	flight = { conn = conn, align = align, attachment = attachment }
+end)
+
+R.FlightEnd.OnClientEvent:Connect(function(spawnCFrame)
+	endFlight()
+	local char = player.Character
+	local root = char and char:FindFirstChild("HumanoidRootPart")
+	if root then
+		root.AssemblyLinearVelocity = Vector3.zero
+		char:PivotTo(spawnCFrame)
+	end
+end)
+
+player.CharacterAdded:Connect(function()
+	endFlight()
+	stopPumping()
+end)
+
+---------------------------------------------------------------- Start
+local function hookCamera()
+	local cam = workspace.CurrentCamera
+	if cam then
+		cam:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
+	end
+	updateScale()
+end
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(hookCamera)
+hookCamera()
+
+R.RequestState:FireServer()
+]]></ProtectedString></Properties></Item></Item></Item></Item></roblox>
