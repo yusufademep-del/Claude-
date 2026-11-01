@@ -1,7 +1,7 @@
-"""Baut PumpAndFly.rbxlx aus den Skripten in src/ (ohne Rojo).
+"""Baut LagerImperium.rbxlx aus den Skripten in src/ (ohne Rojo).
 
 Aufruf:  python tools/build_place.py
-Danach PumpAndFly.rbxlx per Doppelklick in Roblox Studio öffnen.
+Danach LagerImperium.rbxlx per Doppelklick in Roblox Studio öffnen.
 """
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -75,7 +75,7 @@ def build():
         parts.append(inner)
 
     xml = '<roblox version="4">' + "".join(parts) + "</roblox>"
-    out = ROOT / "PumpAndFly.rbxlx"
+    out = ROOT / "LagerImperium.rbxlx"
     out.write_text(xml, encoding="utf-8")
     print(f"Fertig: {out}")
 

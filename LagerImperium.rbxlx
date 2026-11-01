@@ -1,0 +1,3485 @@
+<roblox version="4"><Item class="ReplicatedStorage" referent="RBX00000013"><Properties><string name="Name">ReplicatedStorage</string></Properties><Item class="Folder" referent="RBX00000003"><Properties><string name="Name">Shared</string></Properties><Item class="ModuleScript" referent="RBX00000001"><Properties><string name="Name">Config</string><ProtectedString name="Source"><![CDATA[-- Lager-Imperium – Einstellungen & Balancing (Server + Client)
+-- Hier änderst du Preise, Waren, Level usw. ohne den restlichen Code anzufassen.
+
+local Config = {}
+
+Config.GameName = "Lager-Imperium"
+Config.DataStoreName = "LagerImperium_v1"
+Config.StartCoins = 500
+
+-- Raster: 1 Feld = 4 Studs. Ein Grundstück besteht aus 5 x 4 Flächen-Stücken à 8 x 8 Feldern.
+Config.TileSize = 4
+Config.ChunkTiles = 8
+Config.ChunksX = 5 -- Breite (links ↔ rechts)
+Config.ChunksZ = 4 -- Tiefe (von der Straße nach hinten)
+Config.StartChunk = { 2, 0 } -- vorne in der Mitte
+Config.MaxItems = 700
+
+function Config.ChunkPrice(ownedCount)
+	return math.floor(1000 * 1.5 ^ (ownedCount - 1))
+end
+
+function Config.TilesX()
+	return Config.ChunksX * Config.ChunkTiles
+end
+
+function Config.TilesZ()
+	return Config.ChunksZ * Config.ChunkTiles
+end
+
+-- Level: XP gibt's für jede bewegte Kiste und jeden fertigen Auftrag
+function Config.XPForLevel(level)
+	return math.floor(60 * level ^ 1.6)
+end
+
+-- Waren (werden mit höherem Level freigeschaltet und sind mehr wert)
+Config.Goods = {
+	{ Id = "Food", Name = "Lebensmittel", Icon = "🥫", Color = Color3.fromRGB(110, 200, 90), Level = 1, Value = 1 },
+	{ Id = "Clothes", Name = "Kleidung", Icon = "👕", Color = Color3.fromRGB(80, 140, 255), Level = 1, Value = 1.1 },
+	{ Id = "Tech", Name = "Elektronik", Icon = "📱", Color = Color3.fromRGB(255, 210, 60), Level = 3, Value = 1.5 },
+	{ Id = "Furniture", Name = "Möbel", Icon = "🛋️", Color = Color3.fromRGB(170, 110, 60), Level = 5, Value = 2 },
+	{ Id = "Toys", Name = "Spielzeug", Icon = "🧸", Color = Color3.fromRGB(255, 110, 180), Level = 7, Value = 2.5 },
+	{ Id = "Medicine", Name = "Medizin", Icon = "💊", Color = Color3.fromRGB(240, 240, 240), Level = 10, Value = 3.5 },
+}
+Config.GoodsById = {}
+for _, g in ipairs(Config.Goods) do
+	Config.GoodsById[g.Id] = g
+end
+
+-- Aufträge
+Config.OfferCount = 3 -- angebotene Aufträge (+1 pro Büro)
+Config.OfferLifetime = 120 -- Sekunden, bis ein Angebot verschwindet
+Config.InRewardPerBox = 8 -- Wareneingang: Gebühr pro Kiste
+Config.OutRewardPerBox = 20 -- Warenausgang: Verkaufspreis pro Kiste
+Config.XPPerBox = 1
+Config.XPPerOrderBox = 2
+
+function Config.OrderAmountRange(level)
+	return 3, 6 + level * 2
+end
+
+function Config.OrderTime(amount)
+	return 60 + amount * 10
+end
+
+Config.Clients = {
+	"Paketblitz GmbH", "Müller Handel", "SuperMarkt24", "Kaufrausch AG", "Turbo-Versand",
+	"Omas Laden", "MegaStore", "Blitzkauf", "Nordfracht", "Stadtmarkt", "Klick&Weg", "Hafenkontor",
+}
+
+-- Ausrüstung: wie viele Kisten du auf einmal tragen kannst
+Config.Tools = {
+	{ Name = "Hände", Carry = 1, Price = 0, Level = 1 },
+	{ Name = "Sackkarre", Carry = 3, Price = 500, Level = 2 },
+	{ Name = "Hubwagen", Carry = 6, Price = 3000, Level = 4 },
+	{ Name = "Elektro-Ameise", Carry = 12, Price = 15000, Level = 7 },
+	{ Name = "Mini-Stapler", Carry = 25, Price = 75000, Level = 11 },
+}
+
+-- Automatisierung
+Config.ForkliftInterval = 6 -- Sekunden pro Kiste und Station
+Config.ConveyorBonus = 0.1 -- +10 % Tempo pro Förderband
+Config.ConveyorMax = 10
+Config.PackBonus = 0.1 -- +10 % Ausgang-Belohnung pro Packstation
+Config.PackMax = 10
+Config.OfficeBonus = 0.05 -- +5 % auf alle Belohnungen pro Büro
+Config.OfficeMax = 5
+Config.CoffeeSpeed = 2 -- +2 Laufgeschwindigkeit pro Kaffeeautomat
+Config.CoffeeMax = 5
+Config.BaseWalkSpeed = 16
+
+Config.RemoveRefund = 0.5 -- 50 % zurück beim Abreißen
+
+-- Codes für TikTok / Beschreibung
+Config.Codes = {
+	START = 500,
+	LAGER = 1000,
+	LKW = 2000,
+}
+
+function Config.Format(n)
+	n = math.floor(n or 0)
+	local suffixes = { "", "K", "M", "B", "T" }
+	local i, v = 1, n
+	while math.abs(v) >= 1000 and i < #suffixes do
+		v /= 1000
+		i += 1
+	end
+	if i == 1 then
+		return tostring(n)
+	end
+	return (string.format("%.1f%s", v, suffixes[i]):gsub("%.0(%a)", "%1"))
+end
+
+function Config.FormatTime(seconds)
+	seconds = math.max(0, math.floor(seconds))
+	return string.format("%d:%02d", seconds // 60, seconds % 60)
+end
+
+return Config
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX00000002"><Properties><string name="Name">Items</string><ProtectedString name="Source"><![CDATA[-- Lager-Imperium – alle platzierbaren Objekte (Definition + 3D-Modell aus Parts)
+-- Wird vom Server (echte Objekte) und vom Client (durchsichtige Vorschau beim Bauen) benutzt.
+--
+-- Neues Objekt hinzufügen: Eintrag in Items.List mit Id, Name, Cat, Price, Level, W, D (Größe in Feldern)
+-- und einer Build-Funktion. Fertig – es taucht automatisch im Bau-Menü auf.
+
+local Config = require(script.Parent:WaitForChild("Config"))
+
+local Items = {}
+
+Items.Categories = { "Lager", "Technik", "Bau", "Deko" }
+
+local M = Enum.Material
+local C = Color3.fromRGB
+
+local function add(model, name, size, cf, color, material, props)
+	local p = Instance.new("Part")
+	p.Name = name
+	p.Anchored = true
+	p.Size = size
+	p.CFrame = cf
+	p.Color = color
+	p.Material = material or M.SmoothPlastic
+	p.TopSurface = Enum.SurfaceType.Smooth
+	p.BottomSurface = Enum.SurfaceType.Smooth
+	if props then
+		for k, v in pairs(props) do
+			p[k] = v
+		end
+	end
+	p.Parent = props and props.Parent or model
+	return p
+end
+
+-- Zylinder stehen in Roblox quer – das hier stellt sie aufrecht
+local function cylinder(model, name, height, diameter, pos, color, material)
+	return add(model, name, Vector3.new(height, diameter, diameter), CFrame.new(pos) * CFrame.Angles(0, 0, math.rad(90)), color, material, { Shape = Enum.PartType.Cylinder })
+end
+
+local function signText(part, face, text, color)
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = face
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 30
+	gui.LightInfluence = 0
+	local l = Instance.new("TextLabel")
+	l.Size = UDim2.fromScale(1, 1)
+	l.BackgroundTransparency = 1
+	l.Text = text
+	l.TextColor3 = color or Color3.new(1, 1, 1)
+	l.TextScaled = true
+	l.Font = Enum.Font.FredokaOne
+	l.Parent = gui
+	gui.Parent = part
+	return l
+end
+
+---------------------------------------------------------------- Bau-Funktionen
+local function buildShelf(m, def)
+	local W, D = def.W * 4, def.D * 4
+	local levels, spacing = def.Shelf.Levels, def.Shelf.Spacing
+	local levelH = spacing * 0.8 + 1.2
+	local H = levels * levelH + 0.6
+	local upright, beam = C(40, 90, 200), C(255, 120, 30)
+
+	local nx = math.max(1, math.floor(W / 4))
+	for i = 0, nx do
+		local x = -W / 2 + 0.2 + i * (W - 0.4) / nx
+		for _, z in ipairs({ -D / 2 + 0.2, D / 2 - 0.2 }) do
+			add(m, "Post", Vector3.new(0.4, H, 0.4), CFrame.new(x, H / 2, z), upright, M.Metal)
+		end
+	end
+
+	local slots = Instance.new("Folder")
+	slots.Name = "Slots"
+	slots.Parent = m
+	local perX = math.max(1, math.floor((W - 0.6) / spacing))
+	local perZ = math.max(1, math.floor((D - 0.6) / spacing))
+	local box = spacing * 0.8
+	local n = 0
+	for l = 1, levels do
+		local y = (l - 1) * levelH + 0.4
+		add(m, "Board", Vector3.new(W - 0.2, 0.2, D - 0.4), CFrame.new(0, y, 0), C(160, 160, 165), M.Metal)
+		add(m, "Beam", Vector3.new(W, 0.3, 0.3), CFrame.new(0, y + 0.05, -D / 2 + 0.2), beam, M.Metal)
+		add(m, "Beam", Vector3.new(W, 0.3, 0.3), CFrame.new(0, y + 0.05, D / 2 - 0.2), beam, M.Metal)
+		for ix = 1, perX do
+			for iz = 1, perZ do
+				n += 1
+				local x = -W / 2 + 0.3 + (ix - 0.5) * (W - 0.6) / perX
+				local z = -D / 2 + 0.3 + (iz - 0.5) * (D - 0.6) / perZ
+				add(slots, tostring(n), Vector3.new(box, box, box), CFrame.new(x, y + 0.1 + box / 2, z), C(200, 160, 110), M.SmoothPlastic, {
+					Transparency = 1,
+					CanCollide = false,
+					CanQuery = false,
+					Parent = slots,
+				})
+			end
+		end
+	end
+	add(m, "Beam", Vector3.new(W, 0.3, 0.3), CFrame.new(0, H, -D / 2 + 0.2), beam, M.Metal)
+	add(m, "Beam", Vector3.new(W, 0.3, 0.3), CFrame.new(0, H, D / 2 - 0.2), beam, M.Metal)
+
+	add(m, "Interact", Vector3.new(W, 3, D), CFrame.new(0, 2, 0), C(0, 0, 0), M.SmoothPlastic, {
+		Transparency = 1,
+		CanCollide = false,
+		CanQuery = false,
+	})
+end
+
+local function buildDock(m, def)
+	local W, D = def.W * 4, def.D * 4
+	add(m, "Floor", Vector3.new(W, 0.3, D), CFrame.new(0, 0.15, 0), C(150, 150, 150), M.Concrete)
+	for i = 0, 5 do
+		add(m, "Stripe", Vector3.new(W / 6, 0.32, 0.6), CFrame.new(-W / 2 + W / 12 + i * W / 6, 0.16, -D / 2 + 0.3), i % 2 == 0 and C(255, 200, 0) or C(30, 30, 30))
+	end
+	for _, x in ipairs({ -W / 2 + 0.5, W / 2 - 0.5 }) do
+		add(m, "Post", Vector3.new(1, 11, 1), CFrame.new(x, 5.5, -D / 2 + 0.5), C(70, 70, 80), M.Metal)
+	end
+	add(m, "TopBeam", Vector3.new(W, 1.5, 1), CFrame.new(0, 11.75, -D / 2 + 0.5), C(70, 70, 80), M.Metal)
+	add(m, "Shutter", Vector3.new(W - 2, 2, 0.6), CFrame.new(0, 10, -D / 2 + 0.5), C(200, 200, 210), M.CorrodedMetal)
+	for _, x in ipairs({ -3, 3 }) do
+		add(m, "Bumper", Vector3.new(1, 1.2, 0.6), CFrame.new(x, 1.5, -D / 2 - 0.2), C(20, 20, 20), M.SmoothPlastic)
+	end
+	add(m, "Light", Vector3.new(1.2, 0.6, 0.6), CFrame.new(0, 12.8, -D / 2 + 0.5), C(60, 255, 90), M.Neon)
+	signText(add(m, "SignBoard", Vector3.new(6, 1.4, 0.2), CFrame.new(0, 11.75, -D / 2 - 0.05), C(30, 30, 30)), Enum.NormalId.Front, "RAMPE", C(255, 220, 60))
+end
+
+local function buildForklift(m, def)
+	local W, D = def.W * 4, def.D * 4
+	for _, s in ipairs({
+		{ Vector3.new(W, 0.12, 0.4), Vector3.new(0, 0.06, -D / 2 + 0.2) },
+		{ Vector3.new(W, 0.12, 0.4), Vector3.new(0, 0.06, D / 2 - 0.2) },
+		{ Vector3.new(0.4, 0.12, D), Vector3.new(-W / 2 + 0.2, 0.06, 0) },
+		{ Vector3.new(0.4, 0.12, D), Vector3.new(W / 2 - 0.2, 0.06, 0) },
+	}) do
+		add(m, "Marking", s[1], CFrame.new(s[2]), C(255, 200, 0))
+	end
+	add(m, "Charger", Vector3.new(1, 4, 1), CFrame.new(W / 2 - 1, 2, D / 2 - 1), C(60, 60, 70), M.Metal)
+	add(m, "ChargerLight", Vector3.new(0.4, 0.4, 0.2), CFrame.new(W / 2 - 1, 3.4, D / 2 - 1.55), C(60, 255, 90), M.Neon)
+
+	add(m, "Body", Vector3.new(3, 2, 4.5), CFrame.new(0, 1.6, 0.5), C(255, 190, 0), M.SmoothPlastic)
+	add(m, "Seat", Vector3.new(1.4, 0.8, 1.2), CFrame.new(0, 3, 1), C(30, 30, 30))
+	for _, p in ipairs({ { -1.3, -0.6 }, { 1.3, -0.6 }, { -1.3, 2.4 }, { 1.3, 2.4 } }) do
+		add(m, "Cage", Vector3.new(0.2, 3, 0.2), CFrame.new(p[1], 4.1, p[2]), C(30, 30, 30), M.Metal)
+	end
+	add(m, "Roof", Vector3.new(3, 0.2, 3.4), CFrame.new(0, 5.6, 0.9), C(30, 30, 30), M.Metal)
+	for _, x in ipairs({ -0.8, 0.8 }) do
+		add(m, "Mast", Vector3.new(0.3, 6, 0.3), CFrame.new(x, 3, -2), C(60, 60, 60), M.Metal)
+		add(m, "Fork", Vector3.new(0.4, 0.2, 3), CFrame.new(x, 0.5, -3.5), C(60, 60, 60), M.Metal)
+	end
+	for _, p in ipairs({ { -1.6, -1 }, { 1.6, -1 }, { -1.6, 2 }, { 1.6, 2 } }) do
+		add(m, "Wheel", Vector3.new(0.6, 1.4, 1.4), CFrame.new(p[1], 0.7, p[2]), C(20, 20, 20), M.SmoothPlastic, { Shape = Enum.PartType.Cylinder })
+	end
+end
+
+local function buildConveyor(m, def)
+	local W, D = def.W * 4, def.D * 4
+	for _, z in ipairs({ -D / 2 + 1, 0, D / 2 - 1 }) do
+		for _, x in ipairs({ -W / 2 + 0.6, W / 2 - 0.6 }) do
+			add(m, "Leg", Vector3.new(0.3, 2.3, 0.3), CFrame.new(x, 1.15, z), C(80, 80, 90), M.Metal)
+		end
+	end
+	for _, x in ipairs({ -W / 2 + 0.35, W / 2 - 0.35 }) do
+		add(m, "Side", Vector3.new(0.3, 0.7, D), CFrame.new(x, 2.6, 0), C(255, 200, 0), M.Metal)
+	end
+	add(m, "Belt", Vector3.new(W - 1, 0.3, D), CFrame.new(0, 2.45, 0), C(35, 35, 35), M.SmoothPlastic)
+	add(m, "Arrow", Vector3.new(1, 0.05, 2), CFrame.new(0, 2.62, 0), C(255, 255, 255), M.Neon)
+end
+
+local function buildPack(m, def)
+	add(m, "Table", Vector3.new(7, 0.4, 3.5), CFrame.new(0, 3, 0), C(190, 150, 100), M.Wood)
+	for _, p in ipairs({ { -3.2, -1.5 }, { 3.2, -1.5 }, { -3.2, 1.5 }, { 3.2, 1.5 } }) do
+		add(m, "Leg", Vector3.new(0.3, 2.8, 0.3), CFrame.new(p[1], 1.4, p[2]), C(80, 80, 90), M.Metal)
+	end
+	add(m, "Box", Vector3.new(2, 1.5, 1.5), CFrame.new(-1.5, 3.95, 0), C(200, 160, 110))
+	add(m, "Box", Vector3.new(1.2, 1, 1.2), CFrame.new(0.5, 3.7, 0.5), C(200, 160, 110))
+	add(m, "Monitor", Vector3.new(1.8, 1.2, 0.2), CFrame.new(2.3, 4.2, 1.2), C(20, 20, 30))
+	add(m, "Screen", Vector3.new(1.6, 1, 0.05), CFrame.new(2.3, 4.2, 1.08), C(80, 200, 255), M.Neon)
+	add(m, "Tape", Vector3.new(0.6, 0.6, 0.6), CFrame.new(1.2, 3.5, -1), C(240, 200, 60))
+end
+
+local function buildOffice(m, def)
+	local W, D = def.W * 4, def.D * 4
+	add(m, "Container", Vector3.new(W - 0.4, 8, D - 0.4), CFrame.new(0, 4, 0), C(40, 110, 200), M.CorrodedMetal)
+	add(m, "Roof", Vector3.new(W, 0.4, D), CFrame.new(0, 8.2, 0), C(230, 230, 235), M.Metal)
+	for _, x in ipairs({ -3.5, 3.5 }) do
+		add(m, "Window", Vector3.new(3, 2.5, 0.2), CFrame.new(x, 5, -D / 2 + 0.15), C(150, 220, 255), M.Glass, { Transparency = 0.3 })
+	end
+	add(m, "Door", Vector3.new(2.2, 5.5, 0.2), CFrame.new(0, 2.75, -D / 2 + 0.15), C(230, 230, 235), M.Metal)
+	signText(add(m, "Sign", Vector3.new(5, 1.2, 0.2), CFrame.new(0, 7.2, -D / 2 + 0.1), C(30, 30, 30)), Enum.NormalId.Front, "BÜRO", C(255, 255, 255))
+end
+
+local function buildCoffee(m)
+	add(m, "Machine", Vector3.new(2.6, 5.5, 2), CFrame.new(0, 2.75, 0.5), C(130, 30, 40), M.Metal)
+	add(m, "Panel", Vector3.new(1.6, 1.6, 0.1), CFrame.new(0, 4, -0.55), C(255, 180, 90), M.Neon)
+	add(m, "Slot", Vector3.new(1, 1, 0.3), CFrame.new(0, 1.8, -0.45), C(20, 20, 20))
+	cylinder(m, "Cup", 0.5, 0.4, Vector3.new(0, 1.55, -0.4), C(255, 255, 255))
+	signText(add(m, "Label", Vector3.new(2.2, 0.6, 0.1), CFrame.new(0, 5, -0.55), C(130, 30, 40)), Enum.NormalId.Front, "☕ KAFFEE", C(255, 255, 255))
+end
+
+local function buildWall(m, def)
+	local W = def.W * 4
+	add(m, "Wall", Vector3.new(W, 12, 1), CFrame.new(0, 6, 0), C(225, 225, 230), M.Metal)
+	add(m, "Kick", Vector3.new(W, 1, 1.1), CFrame.new(0, 0.5, 0), C(60, 60, 70), M.Metal)
+end
+
+local function buildWindowWall(m, def)
+	local W = def.W * 4
+	add(m, "Lower", Vector3.new(W, 4, 1), CFrame.new(0, 2, 0), C(225, 225, 230), M.Metal)
+	add(m, "Glass", Vector3.new(W, 5, 0.3), CFrame.new(0, 6.5, 0), C(170, 220, 255), M.Glass, { Transparency = 0.5 })
+	add(m, "Upper", Vector3.new(W, 3, 1), CFrame.new(0, 10.5, 0), C(225, 225, 230), M.Metal)
+end
+
+local function buildGate(m, def)
+	local W = def.W * 4
+	for _, x in ipairs({ -W / 2 + 0.5, W / 2 - 0.5 }) do
+		add(m, "Post", Vector3.new(1, 12, 1), CFrame.new(x, 6, 0), C(60, 60, 70), M.Metal)
+		for i = 0, 3 do
+			add(m, "Stripe", Vector3.new(1.05, 0.6, 1.05), CFrame.new(x, 0.8 + i * 1.2, 0), C(255, 200, 0))
+		end
+	end
+	add(m, "Housing", Vector3.new(W, 2, 1.6), CFrame.new(0, 11, 0), C(200, 200, 210), M.CorrodedMetal)
+	add(m, "Threshold", Vector3.new(W - 2, 0.1, 1), CFrame.new(0, 0.05, 0), C(255, 200, 0), M.SmoothPlastic, { CanCollide = false })
+end
+
+local function buildPillar(m)
+	add(m, "Steel", Vector3.new(1.5, 14, 1.5), CFrame.new(0, 7, 0), C(90, 90, 100), M.Metal)
+	add(m, "Base", Vector3.new(2.4, 1, 2.4), CFrame.new(0, 0.5, 0), C(255, 200, 0))
+end
+
+local function floorBuilder(color, material, lines)
+	return function(m, def)
+		local W, D = def.W * 4, def.D * 4
+		add(m, "Floor", Vector3.new(W, 0.2, D), CFrame.new(0, 0.1, 0), color, material)
+		if lines then
+			for _, x in ipairs({ -W / 2 + 0.4, W / 2 - 0.4 }) do
+				add(m, "Line", Vector3.new(0.4, 0.22, D), CFrame.new(x, 0.11, 0), C(255, 200, 0))
+			end
+		end
+	end
+end
+
+local function buildPlant(m)
+	cylinder(m, "Pot", 2, 2.2, Vector3.new(0, 1, 0), C(180, 90, 50), M.Slate)
+	add(m, "Leaves", Vector3.new(3, 3, 3), CFrame.new(0, 3.3, 0), C(60, 160, 60), M.Grass, { Shape = Enum.PartType.Ball })
+	add(m, "Leaves", Vector3.new(2, 2, 2), CFrame.new(0.6, 4.6, 0.3), C(80, 180, 70), M.Grass, { Shape = Enum.PartType.Ball })
+end
+
+local function buildLamp(m)
+	add(m, "Base", Vector3.new(1.4, 0.4, 1.4), CFrame.new(0, 0.2, 0), C(40, 40, 45), M.Metal)
+	add(m, "Pole", Vector3.new(0.4, 10, 0.4), CFrame.new(0, 5, 0), C(40, 40, 45), M.Metal)
+	local head = add(m, "Head", Vector3.new(2.2, 0.6, 2.2), CFrame.new(0, 10.2, 0), C(255, 245, 200), M.Neon)
+	local light = Instance.new("PointLight")
+	light.Range = 22
+	light.Brightness = 1.5
+	light.Color = C(255, 240, 210)
+	light.Parent = head
+end
+
+local function buildPallets(m)
+	for i = 0, 2 do
+		add(m, "Pallet", Vector3.new(3.6, 0.5, 3.6), CFrame.new(0, 0.25 + i * 0.55, 0), C(170, 130, 80), M.WoodPlanks)
+	end
+	add(m, "Box", Vector3.new(1.6, 1.6, 1.6), CFrame.new(-0.8, 2.5, -0.6), C(200, 160, 110))
+	add(m, "Box", Vector3.new(1.4, 1.2, 1.4), CFrame.new(0.9, 2.3, 0.7), C(190, 150, 100))
+end
+
+local function buildBarrier(m, def)
+	local W = def.W * 4
+	for _, x in ipairs({ -W / 2 + 0.5, W / 2 - 0.5 }) do
+		add(m, "Post", Vector3.new(0.4, 3.5, 0.4), CFrame.new(x, 1.75, 0), C(255, 200, 0), M.Metal)
+	end
+	add(m, "Bar", Vector3.new(W - 1, 0.4, 0.3), CFrame.new(0, 3, 0), C(255, 200, 0), M.Metal)
+	add(m, "Bar", Vector3.new(W - 1, 0.4, 0.3), CFrame.new(0, 1.8, 0), C(30, 30, 30), M.Metal)
+end
+
+local function buildBarrels(m)
+	cylinder(m, "Barrel", 3, 1.6, Vector3.new(-0.8, 1.5, -0.7), C(40, 90, 200), M.Metal)
+	cylinder(m, "Barrel", 3, 1.6, Vector3.new(0.9, 1.5, -0.5), C(200, 50, 50), M.Metal)
+	cylinder(m, "Barrel", 3, 1.6, Vector3.new(0, 1.5, 0.9), C(40, 90, 200), M.Metal)
+end
+
+local function buildSign(m, def, ctx)
+	local W = def.W * 4
+	for _, x in ipairs({ -W / 2 + 0.6, W / 2 - 0.6 }) do
+		add(m, "Post", Vector3.new(0.4, 7.5, 0.4), CFrame.new(x, 3.75, 0), C(60, 60, 70), M.Metal)
+	end
+	local board = add(m, "Board", Vector3.new(W, 3, 0.4), CFrame.new(0, 6.5, 0), C(30, 30, 45))
+	local text = "📦 " .. string.upper((ctx and ctx.OwnerName) or "MEIN LAGER")
+	signText(board, Enum.NormalId.Front, text, C(255, 210, 60))
+	signText(board, Enum.NormalId.Back, text, C(255, 210, 60))
+end
+
+---------------------------------------------------------------- Objekt-Liste
+-- W/D = Breite/Tiefe in Feldern (1 Feld = 4 Studs). Layer "Floor" darf unter anderen Objekten liegen.
+Items.List = {
+	-- Lager
+	{ Id = "ShelfS", Name = "Kleines Regal", Cat = "Lager", Price = 150, Level = 1, W = 2, D = 1, Capacity = 10, Shelf = { Levels = 3, Spacing = 2 }, Build = buildShelf, Desc = "Platz für 10 Kisten" },
+	{ Id = "ShelfM", Name = "Großes Regal", Cat = "Lager", Price = 600, Level = 2, W = 4, D = 1, Capacity = 30, Shelf = { Levels = 3, Spacing = 2 }, Build = buildShelf, Desc = "Platz für 30 Kisten" },
+	{ Id = "ShelfL", Name = "Hochregal", Cat = "Lager", Price = 2500, Level = 4, W = 4, D = 2, Capacity = 80, Shelf = { Levels = 4, Spacing = 3 }, Build = buildShelf, Desc = "Platz für 80 Kisten" },
+	{ Id = "ShelfXL", Name = "Mega-Hochregal", Cat = "Lager", Price = 9000, Level = 7, W = 6, D = 2, Capacity = 200, Shelf = { Levels = 5, Spacing = 3.5 }, Build = buildShelf, Desc = "Platz für 200 Kisten" },
+
+	-- Technik
+	{ Id = "Dock", Name = "Laderampe", Cat = "Technik", Price = 1200, Level = 1, W = 3, D = 2, Dock = true, Build = buildDock, Desc = "Hier docken LKWs an. Nur vorne an der Straße!" },
+	{ Id = "Pack", Name = "Packstation", Cat = "Technik", Price = 1500, Level = 2, W = 2, D = 2, Build = buildPack, Desc = "+10 % Belohnung bei Warenausgang" },
+	{ Id = "Coffee", Name = "Kaffeeautomat", Cat = "Technik", Price = 800, Level = 2, W = 1, D = 1, Build = buildCoffee, Desc = "Du läufst schneller (+2)" },
+	{ Id = "Forklift", Name = "Gabelstapler", Cat = "Technik", Price = 3000, Level = 3, W = 2, D = 2, Build = buildForklift, Desc = "Be- und entlädt LKWs automatisch" },
+	{ Id = "Conveyor", Name = "Förderband", Cat = "Technik", Price = 400, Level = 3, W = 1, D = 3, Build = buildConveyor, Desc = "Gabelstapler +10 % schneller. Trägt dich mit!" },
+	{ Id = "Office", Name = "Büro-Container", Cat = "Technik", Price = 5000, Level = 5, W = 3, D = 2, Build = buildOffice, Desc = "+1 Auftrag im Angebot, +5 % Belohnung" },
+
+	-- Bau
+	{ Id = "Wall", Name = "Wand", Cat = "Bau", Price = 20, Level = 1, W = 2, D = 1, Build = buildWall, Desc = "Baue deine Lagerhalle" },
+	{ Id = "WindowWall", Name = "Fensterwand", Cat = "Bau", Price = 40, Level = 1, W = 2, D = 1, Build = buildWindowWall, Desc = "Wand mit Fenster" },
+	{ Id = "Gate", Name = "Rolltor", Cat = "Bau", Price = 150, Level = 1, W = 3, D = 1, Build = buildGate, Desc = "Durchgang in der Wand" },
+	{ Id = "Pillar", Name = "Stahlsäule", Cat = "Bau", Price = 30, Level = 1, W = 1, D = 1, Build = buildPillar, Desc = "Stütze für die Halle" },
+	{ Id = "FloorGray", Name = "Betonboden", Cat = "Bau", Price = 10, Level = 1, W = 2, D = 2, Layer = "Floor", Build = floorBuilder(C(140, 140, 145), M.Concrete), Desc = "Boden (darunter platzierbar)" },
+	{ Id = "FloorGreen", Name = "Epoxid-Boden", Cat = "Bau", Price = 25, Level = 2, W = 2, D = 2, Layer = "Floor", Build = floorBuilder(C(70, 140, 100), M.SmoothPlastic), Desc = "Glänzender Hallenboden" },
+	{ Id = "FloorLane", Name = "Fahrspur", Cat = "Bau", Price = 15, Level = 1, W = 2, D = 2, Layer = "Floor", Build = floorBuilder(C(90, 90, 95), M.Concrete, true), Desc = "Boden mit gelben Linien" },
+
+	-- Deko
+	{ Id = "Plant", Name = "Pflanze", Cat = "Deko", Price = 50, Level = 1, W = 1, D = 1, Build = buildPlant, Desc = "Etwas Grün" },
+	{ Id = "Lamp", Name = "Hallenlampe", Cat = "Deko", Price = 80, Level = 1, W = 1, D = 1, Build = buildLamp, Desc = "Leuchtet nachts" },
+	{ Id = "Pallets", Name = "Palettenstapel", Cat = "Deko", Price = 60, Level = 1, W = 1, D = 1, Build = buildPallets, Desc = "Sieht nach Arbeit aus" },
+	{ Id = "Barrier", Name = "Absperrung", Cat = "Deko", Price = 40, Level = 1, W = 2, D = 1, Build = buildBarrier, Desc = "Sicherheit zuerst" },
+	{ Id = "Barrels", Name = "Fässer", Cat = "Deko", Price = 70, Level = 2, W = 1, D = 1, Build = buildBarrels, Desc = "Industrie-Look" },
+	{ Id = "Sign", Name = "Firmenschild", Cat = "Deko", Price = 300, Level = 1, W = 2, D = 1, Build = buildSign, Desc = "Zeigt deinen Namen" },
+}
+
+Items.ById = {}
+for i, def in ipairs(Items.List) do
+	def.Order = i
+	def.Layer = def.Layer or "Object"
+	Items.ById[def.Id] = def
+end
+
+---------------------------------------------------------------- Raster-Helfer
+function Items.Footprint(def, rot)
+	if rot % 2 == 1 then
+		return def.D, def.W
+	end
+	return def.W, def.D
+end
+
+-- Position relativ zum Grundstück (Ursprung = vordere Mitte, +Z = weg von der Straße)
+function Items.LocalCFrame(def, tx, tz, rot)
+	local w, d = Items.Footprint(def, rot)
+	local T = Config.TileSize
+	return CFrame.new((tx + w / 2) * T, 0, (tz + d / 2) * T) * CFrame.Angles(0, rot * math.pi / 2, 0)
+end
+
+function Items.ChunkOf(tx, tz)
+	local half = Config.TilesX() // 2
+	return (tx + half) // Config.ChunkTiles, tz // Config.ChunkTiles
+end
+
+-- Prüft, ob ein Objekt hier stehen darf. ownsChunk(cx, cz) und isFree(layer, x, z) kommen vom Aufrufer.
+function Items.Validate(def, tx, tz, rot, ownsChunk, isFree)
+	local w, d = Items.Footprint(def, rot)
+	if def.Dock then
+		if rot ~= 0 then
+			return false, "Rampe muss zur Straße zeigen"
+		end
+		if tz ~= 0 then
+			return false, "Rampen nur ganz vorne an der Straße"
+		end
+	end
+	local half = Config.TilesX() // 2
+	for x = tx, tx + w - 1 do
+		for z = tz, tz + d - 1 do
+			if x < -half or x >= half or z < 0 or z >= Config.TilesZ() then
+				return false, "Außerhalb deines Grundstücks"
+			end
+			if not ownsChunk(Items.ChunkOf(x, z)) then
+				return false, "Fläche noch nicht gekauft (🧱 Erweitern)"
+			end
+			if not isFree(def.Layer, x, z) then
+				return false, "Platz ist belegt"
+			end
+		end
+	end
+	return true
+end
+
+function Items.Build(def, ctx)
+	local model = Instance.new("Model")
+	model.Name = def.Id
+	def.Build(model, def, ctx)
+	model.WorldPivot = CFrame.new()
+	return model
+end
+
+-- Füllt die Kisten im Regal passend zum Lagerbestand
+function Items.UpdateShelf(model, stock, capacity)
+	local slots = model:FindFirstChild("Slots")
+	if not slots then
+		return
+	end
+	local count = #slots:GetChildren()
+	local total = 0
+	for _, n in pairs(stock) do
+		total += n
+	end
+	local shown = total > 0 and math.max(1, math.ceil(total / capacity * count)) or 0
+	local idx, acc = 0, 0
+	for _, g in ipairs(Config.Goods) do
+		local n = stock[g.Id] or 0
+		if n > 0 then
+			acc += n
+			local upto = math.floor(acc / total * shown + 0.5)
+			while idx < upto do
+				idx += 1
+				local slot = slots:FindFirstChild(tostring(idx))
+				if slot then
+					slot.Transparency = 0
+					slot.Color = g.Color
+				end
+			end
+		end
+	end
+	for i = idx + 1, count do
+		local slot = slots:FindFirstChild(tostring(i))
+		if slot then
+			slot.Transparency = 1
+		end
+	end
+end
+
+return Items
+]]></ProtectedString></Properties></Item></Item></Item><Item class="ServerScriptService" referent="RBX00000014"><Properties><string name="Name">ServerScriptService</string></Properties><Item class="Folder" referent="RBX00000008"><Properties><string name="Name">Server</string></Properties><Item class="Script" referent="RBX00000004"><Properties><string name="Name">Main</string><ProtectedString name="Source"><![CDATA[-- Lager-Imperium – Server: Spieler, Speichern, Bauen, Aufträge, LKWs, Tragen, Automatisierung
+-- Alles Wichtige entscheidet der Server → Exploiter können sich keine Münzen ercheaten.
+
+local Players = game:GetService("Players")
+local DataStoreService = game:GetService("DataStoreService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+local TweenService = game:GetService("TweenService")
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Config = require(Shared:WaitForChild("Config"))
+local Items = require(Shared:WaitForChild("Items"))
+local World = require(script.Parent:WaitForChild("World"))
+local Plots = require(script.Parent:WaitForChild("Plots"))
+local Trucks = require(script.Parent:WaitForChild("Trucks"))
+
+local fmt = Config.Format
+local world = World.Build(Config)
+Plots.Init(world.Plots)
+
+---------------------------------------------------------------- Remotes
+local remotes = Instance.new("Folder")
+remotes.Name = "Remotes"
+local R = {}
+for _, name in ipairs({ "Place", "Remove", "BuyChunk", "AcceptOrder", "CancelOrder", "BuyTool", "Drop", "Redeem", "RequestState", "State", "Notify" }) do
+	local r = Instance.new("RemoteEvent")
+	r.Name = name
+	r.Parent = remotes
+	R[name] = r
+end
+remotes.Parent = ReplicatedStorage
+
+---------------------------------------------------------------- Daten
+local dataStore
+pcall(function()
+	dataStore = DataStoreService:GetDataStore(Config.DataStoreName)
+end)
+
+local function defaultData()
+	local sx, sz = Config.StartChunk[1], Config.StartChunk[2]
+	return {
+		Coins = Config.StartCoins,
+		XP = 0,
+		Level = 1,
+		Tool = 1,
+		Orders = 0,
+		Chunks = { [Plots.ChunkKey(sx, sz)] = true },
+		Items = {
+			{ u = 1, i = "Dock", x = -2, z = 0, r = 0 },
+			{ u = 2, i = "ShelfS", x = -4, z = 5, r = 0 },
+			{ u = 3, i = "ShelfS", x = 1, z = 5, r = 0 },
+			{ u = 4, i = "Sign", x = 2, z = 0, r = 0 },
+		},
+		NextUid = 5,
+		Codes = {},
+	}
+end
+
+local function loadData(player)
+	if not dataStore then
+		return defaultData(), false
+	end
+	for attempt = 1, 3 do
+		local ok, result = pcall(function()
+			return dataStore:GetAsync("u_" .. player.UserId)
+		end)
+		if ok then
+			local data = type(result) == "table" and result or defaultData()
+			for k, v in pairs(defaultData()) do
+				if data[k] == nil then
+					data[k] = v
+				end
+			end
+			data.Tool = math.clamp(data.Tool, 1, #Config.Tools)
+			return data, true
+		end
+		task.wait(attempt)
+	end
+	return defaultData(), false
+end
+
+local function saveData(player, s)
+	if not s or not s.canSave or not dataStore then
+		return
+	end
+	for attempt = 1, 3 do
+		local ok, err = pcall(function()
+			dataStore:SetAsync("u_" .. player.UserId, s.data)
+		end)
+		if ok then
+			return
+		end
+		warn("[Lager] Speichern fehlgeschlagen für", player.Name, err)
+		task.wait(attempt)
+	end
+end
+
+---------------------------------------------------------------- Sitzungen & Helfer
+local sessions = {}
+
+local function notify(player, text, kind)
+	R.Notify:FireClient(player, text, kind or "info")
+end
+
+local function count(s, itemId, max)
+	local n = s.plot and Plots.Count(s.plot, itemId) or 0
+	return max and math.min(n, max) or n
+end
+
+local function carryMax(s)
+	return Config.Tools[s.data.Tool].Carry
+end
+
+local function rewardMult(s, kind)
+	local m = 1 + count(s, "Office", Config.OfficeMax) * Config.OfficeBonus
+	if kind == "Out" then
+		m += count(s, "Pack", Config.PackMax) * Config.PackBonus
+	end
+	return m
+end
+
+local function freeDocks(s)
+	local free, total = {}, 0
+	if s.plot then
+		for _, e in ipairs(Plots.Docks(s.plot)) do
+			total += 1
+			if not s.plot.DockBusy[e.u] then
+				table.insert(free, e)
+			end
+		end
+	end
+	return free, total
+end
+
+local function sendState(player)
+	local s = sessions[player]
+	if not s then
+		return
+	end
+	local d = s.data
+	if s.stats then
+		s.stats.Coins.Value = d.Coins
+		s.stats.Level.Value = d.Level
+	end
+	local stock, used, cap = {}, 0, 0
+	if s.plot then
+		stock, used, cap = Plots.StockSummary(s.plot)
+	end
+	local now = os.clock()
+	local offers = {}
+	for _, o in ipairs(s.offers) do
+		table.insert(offers, {
+			Id = o.Id,
+			Kind = o.Kind,
+			Goods = o.Goods,
+			Amount = o.Amount,
+			Reward = math.floor(o.Reward * rewardMult(s, o.Kind)),
+			Client = o.Client,
+			Time = o.Time,
+			ExpiresIn = math.max(0, o.Expires - now),
+		})
+	end
+	local active = {}
+	for _, o in ipairs(s.active) do
+		table.insert(active, {
+			Id = o.Id,
+			Kind = o.Kind,
+			Goods = o.Goods,
+			Amount = o.Amount,
+			Done = o.Done,
+			Reward = math.floor(o.Reward * rewardMult(s, o.Kind)),
+			Client = o.Client,
+			Arrived = o.Arrived,
+			TimeLeft = o.Arrived and math.max(0, o.Deadline - now) or o.Time,
+		})
+	end
+	local free, totalDocks = freeDocks(s)
+	R.State:FireClient(player, {
+		Coins = d.Coins,
+		Level = d.Level,
+		XP = d.XP,
+		XPNeed = Config.XPForLevel(d.Level),
+		Tool = d.Tool,
+		Carry = { Goods = s.carry.g, Count = s.carry.n },
+		CarryMax = carryMax(s),
+		Chunks = d.Chunks,
+		ChunkPrice = Config.ChunkPrice(Plots.ChunkCount(d)),
+		Stock = stock,
+		Used = used,
+		Capacity = cap,
+		Offers = offers,
+		Active = active,
+		Docks = totalDocks,
+		FreeDocks = #free,
+		OrdersDone = d.Orders,
+		ItemCount = #d.Items,
+		PlotIndex = s.plot and s.plot.Index or 0,
+	})
+end
+
+local function addXP(s, amount)
+	local d = s.data
+	d.XP += amount
+	while d.XP >= Config.XPForLevel(d.Level) do
+		d.XP -= Config.XPForLevel(d.Level)
+		d.Level += 1
+		local unlocked = {}
+		for _, def in ipairs(Items.List) do
+			if def.Level == d.Level then
+				table.insert(unlocked, def.Name)
+			end
+		end
+		for _, g in ipairs(Config.Goods) do
+			if g.Level == d.Level then
+				table.insert(unlocked, g.Icon .. " " .. g.Name)
+			end
+		end
+		for _, t in ipairs(Config.Tools) do
+			if t.Level == d.Level then
+				table.insert(unlocked, t.Name)
+			end
+		end
+		notify(s.player, "⭐ LEVEL " .. d.Level .. "!", "record")
+		if #unlocked > 0 then
+			notify(s.player, "🔓 Neu: " .. table.concat(unlocked, ", "), "good")
+		end
+	end
+end
+
+-- Kisten, die der Spieler trägt, sieht man vor seinem Bauch
+local function updateCarryVisual(s)
+	local char = s.player.Character
+	local root = char and char:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return
+	end
+	local old = char:FindFirstChild("CarryBoxes")
+	if old then
+		old:Destroy()
+	end
+	if s.carry.n <= 0 then
+		return
+	end
+	local g = Config.GoodsById[s.carry.g]
+	local folder = Instance.new("Folder")
+	folder.Name = "CarryBoxes"
+	for i = 1, math.min(s.carry.n, 6) do
+		local box = Instance.new("Part")
+		box.Name = "Box"
+		box.Size = Vector3.new(1.8, 1.2, 1.4)
+		box.Color = g and g.Color or Color3.fromRGB(200, 160, 110)
+		box.Material = Enum.Material.SmoothPlastic
+		box.CanCollide = false
+		box.CanQuery = false
+		box.CanTouch = false
+		box.Massless = true
+		box.CFrame = root.CFrame * CFrame.new(0, -0.6 + (i - 1) * 1.25, -1.5)
+		local weld = Instance.new("WeldConstraint")
+		weld.Part0 = root
+		weld.Part1 = box
+		weld.Parent = box
+		box.Parent = folder
+	end
+	folder.Parent = char
+end
+
+local function applyBonuses(s)
+	local char = s.player.Character
+	local hum = char and char:FindFirstChildOfClass("Humanoid")
+	if hum then
+		hum.WalkSpeed = Config.BaseWalkSpeed + count(s, "Coffee", Config.CoffeeMax) * Config.CoffeeSpeed
+	end
+end
+
+---------------------------------------------------------------- Aufträge
+local function unlockedGoods(level)
+	local list = {}
+	for _, g in ipairs(Config.Goods) do
+		if g.Level <= level then
+			table.insert(list, g)
+		end
+	end
+	return list
+end
+
+local function makeOrder(s)
+	local d = s.data
+	local stock, used, cap = Plots.StockSummary(s.plot)
+	local goodsList = unlockedGoods(d.Level)
+	local minA, maxA = Config.OrderAmountRange(d.Level)
+
+	local inStock = {}
+	for _, g in ipairs(goodsList) do
+		if (stock[g.Id] or 0) >= minA then
+			table.insert(inStock, g)
+		end
+	end
+
+	local kind, g, amount
+	if #inStock > 0 and math.random() < 0.55 then
+		kind = "Out"
+		g = inStock[math.random(1, #inStock)]
+		amount = math.random(minA, math.max(minA, math.min(maxA, stock[g.Id])))
+	else
+		kind = "In"
+		g = goodsList[math.random(1, #goodsList)]
+		local free = cap - used
+		amount = math.random(minA, free >= minA and math.min(maxA, free) or maxA)
+	end
+
+	local levelMult = 1 + (d.Level - 1) * 0.08
+	local base = kind == "In" and Config.InRewardPerBox or Config.OutRewardPerBox
+	local order = {
+		Id = s.nextOrderId,
+		Kind = kind,
+		Goods = g.Id,
+		Amount = amount,
+		Reward = math.floor(amount * base * g.Value * levelMult),
+		Time = Config.OrderTime(amount),
+		Client = Config.Clients[math.random(1, #Config.Clients)],
+		Expires = os.clock() + Config.OfferLifetime + math.random(0, 40),
+	}
+	s.nextOrderId += 1
+	return order
+end
+
+local function refillOffers(s)
+	if not s.plot then
+		return false
+	end
+	local now, changed = os.clock(), false
+	for i = #s.offers, 1, -1 do
+		if s.offers[i].Expires <= now then
+			table.remove(s.offers, i)
+			changed = true
+		end
+	end
+	local want = Config.OfferCount + count(s, "Office", Config.OfficeMax)
+	while #s.offers < want do
+		table.insert(s.offers, makeOrder(s))
+		changed = true
+	end
+	return changed
+end
+
+local function findActive(s, id)
+	for i, o in ipairs(s.active) do
+		if o.Id == id then
+			return o, i
+		end
+	end
+end
+
+local function updateTruckLabel(o)
+	local truck = o.Truck
+	local label = truck and truck:FindFirstChild("Trailer") and truck.Trailer:FindFirstChild("Info")
+	if not label then
+		return
+	end
+	local g = Config.GoodsById[o.Goods]
+	local head = o.Kind == "In" and "⬇ ENTLADEN" or "⬆ BELADEN"
+	local timeText = o.Arrived and ("⏱ " .. Config.FormatTime(o.Deadline - os.clock())) or "🚚 kommt an…"
+	label.Text.Text = string.format("%s  %s %d/%d\n%s", head, g.Icon, o.Done, o.Amount, timeText)
+end
+
+local function finishOrder(s, o, success, reason)
+	if o.Finished then
+		return
+	end
+	o.Finished = true
+	local _, index = findActive(s, o.Id)
+	if index then
+		table.remove(s.active, index)
+	end
+
+	if success then
+		local reward = math.floor(o.Reward * rewardMult(s, o.Kind))
+		s.data.Coins += reward
+		s.data.Orders += 1
+		addXP(s, o.Amount * Config.XPPerOrderBox)
+		notify(s.player, string.format("✅ Auftrag für %s erledigt: +%s 💰", o.Client, fmt(reward)), "good")
+	else
+		notify(s.player, reason or "⌛ Auftrag abgelaufen – der LKW fährt weg.", "bad")
+	end
+
+	local plot = s.plot
+	local truck = o.Truck
+	local dockEntry = plot and plot.Entries[o.DockUid]
+	if truck and truck.Parent then
+		local prompt = truck:FindFirstChild("TruckPrompt", true)
+		if prompt then
+			prompt:Destroy()
+		end
+		if o.Arrived and dockEntry then
+			truck.Trailer.Info.Text.Text = success and "✅ Danke! Tschüss!" or "❌ Zu spät…"
+			task.spawn(function()
+				Trucks.Leave(truck, plot.Origin, Plots.DockX(dockEntry))
+			end)
+		else
+			truck:Destroy()
+		end
+	end
+	if plot then
+		task.delay(o.Arrived and 2.5 or 0, function()
+			if plot.Owner == s.player and plot.DockBusy[o.DockUid] == o.Id then
+				Plots.SetDockBusy(plot, o.DockUid, nil)
+				sendState(s.player)
+			end
+		end)
+	end
+	refillOffers(s)
+	sendState(s.player)
+end
+
+local function checkComplete(s, o)
+	updateTruckLabel(o)
+	if o.Done >= o.Amount then
+		finishOrder(s, o, true)
+	end
+end
+
+R.AcceptOrder.OnServerEvent:Connect(function(player, id)
+	local s = sessions[player]
+	if not s or not s.plot then
+		return
+	end
+	local offer, index
+	for i, o in ipairs(s.offers) do
+		if o.Id == id then
+			offer, index = o, i
+		end
+	end
+	if not offer then
+		return
+	end
+	local free = freeDocks(s)
+	local dock = free[1]
+	if not dock then
+		notify(player, "🚫 Keine freie Laderampe! Bau eine weitere (🔨 Bauen → Technik).", "bad")
+		return
+	end
+
+	table.remove(s.offers, index)
+	offer.Done = 0
+	offer.DockUid = dock.u
+	offer.Arrived = false
+	table.insert(s.active, offer)
+	Plots.SetDockBusy(s.plot, dock.u, offer.Id)
+
+	local plot = s.plot
+	local g = Config.GoodsById[offer.Goods]
+	local truck = Trucks.Build(g.Color, "🚚 kommt an…")
+	truck.Parent = plot.Trucks
+	offer.Truck = truck
+	updateTruckLabel(offer)
+
+	task.spawn(function()
+		Trucks.Arrive(truck, plot.Origin, Plots.DockX(dock))
+		if offer.Finished or not truck.Parent then
+			return
+		end
+		offer.Arrived = true
+		offer.Deadline = os.clock() + offer.Time
+		local prompt = Instance.new("ProximityPrompt")
+		prompt.Name = "TruckPrompt"
+		prompt.ActionText = offer.Kind == "In" and "Entladen" or "Beladen"
+		prompt.ObjectText = "LKW – " .. g.Icon .. " " .. g.Name
+		prompt.KeyboardKeyCode = Enum.KeyCode.E
+		prompt.HoldDuration = 0
+		prompt.MaxActivationDistance = 12
+		prompt.RequiresLineOfSight = false
+		prompt:SetAttribute("Action", "Truck")
+		prompt:SetAttribute("OrderId", offer.Id)
+		prompt:SetAttribute("OwnerId", player.UserId)
+		prompt.Parent = truck.Rear.PromptPoint
+		updateTruckLabel(offer)
+		notify(player, offer.Kind == "In" and "🚚 LKW ist da – ab ans Entladen!" or "🚚 LKW ist da – belade ihn mit " .. g.Name .. "!", "info")
+		sendState(player)
+	end)
+
+	refillOffers(s)
+	sendState(player)
+end)
+
+R.CancelOrder.OnServerEvent:Connect(function(player, id)
+	local s = sessions[player]
+	local o = s and findActive(s, id)
+	if o then
+		finishOrder(s, o, false, "Auftrag abgebrochen.")
+	end
+end)
+
+---------------------------------------------------------------- Tragen: Regale & LKWs
+local function neededForOut(s, goods)
+	local need = 0
+	for _, o in ipairs(s.active) do
+		if o.Kind == "Out" and o.Goods == goods then
+			need += o.Amount - o.Done
+		end
+	end
+	return need
+end
+
+local function shelfAction(s, entry, action)
+	local def = Items.ById[entry.i]
+	local carry = s.carry
+	if action == "Store" then
+		if carry.n <= 0 then
+			notify(s.player, "Du trägst nichts. Hol Kisten vom LKW!", "bad")
+			return
+		end
+		local free = def.Capacity - Plots.ShelfUsed(entry)
+		if free <= 0 then
+			notify(s.player, "Regal ist voll! Bau mehr Regale.", "bad")
+			return
+		end
+		local n = math.min(free, carry.n)
+		entry.s[carry.g] = (entry.s[carry.g] or 0) + n
+		carry.n -= n
+		addXP(s, n * Config.XPPerBox)
+	else
+		local space = carryMax(s) - carry.n
+		if space <= 0 then
+			notify(s.player, "Hände voll! Bessere Ausrüstung = mehr tragen (🛠).", "bad")
+			return
+		end
+		local pick
+		if carry.n > 0 then
+			pick = carry.g
+		else
+			for _, g in ipairs(Config.Goods) do
+				if (entry.s[g.Id] or 0) > 0 and neededForOut(s, g.Id) > 0 then
+					pick = g.Id
+					break
+				end
+			end
+			if not pick then
+				local best = 0
+				for gid, c in pairs(entry.s) do
+					if c > best then
+						pick, best = gid, c
+					end
+				end
+			end
+		end
+		local have = pick and entry.s[pick] or 0
+		if have <= 0 then
+			notify(s.player, carry.n > 0 and "Hier liegt keine passende Ware." or "Regal ist leer.", "bad")
+			return
+		end
+		local n = math.min(space, have)
+		local need = neededForOut(s, pick)
+		if need > 0 then
+			n = math.min(n, math.max(1, need - (carry.g == pick and carry.n or 0)))
+		end
+		entry.s[pick] = have - n > 0 and have - n or nil
+		carry.g = pick
+		carry.n += n
+	end
+	if carry.n <= 0 then
+		carry.g, carry.n = nil, 0
+	end
+	Plots.UpdateShelf(s.plot, entry)
+	updateCarryVisual(s)
+	sendState(s.player)
+end
+
+local function truckAction(s, o)
+	local carry = s.carry
+	local g = Config.GoodsById[o.Goods]
+	if not o.Arrived or o.Done >= o.Amount then
+		return
+	end
+	if o.Kind == "In" then
+		if carry.n > 0 and carry.g ~= o.Goods then
+			notify(s.player, "Du trägst andere Ware! Erst einlagern oder fallen lassen.", "bad")
+			return
+		end
+		local space = carryMax(s) - carry.n
+		if space <= 0 then
+			notify(s.player, "Hände voll – bring die Kisten erst ins Regal!", "bad")
+			return
+		end
+		local n = math.min(space, o.Amount - o.Done)
+		carry.g = o.Goods
+		carry.n += n
+		o.Done += n
+		addXP(s, n * Config.XPPerBox)
+	else
+		if carry.n <= 0 or carry.g ~= o.Goods then
+			notify(s.player, "Hol erst " .. g.Icon .. " " .. g.Name .. " aus einem Regal (F)!", "bad")
+			return
+		end
+		local n = math.min(carry.n, o.Amount - o.Done)
+		carry.n -= n
+		o.Done += n
+		addXP(s, n * Config.XPPerBox)
+		if carry.n <= 0 then
+			carry.g, carry.n = nil, 0
+		end
+	end
+	updateCarryVisual(s)
+	checkComplete(s, o)
+	sendState(s.player)
+end
+
+ProximityPromptService.PromptTriggered:Connect(function(prompt, player)
+	local s = sessions[player]
+	local action = prompt:GetAttribute("Action")
+	if not s or not s.plot or not action then
+		return
+	end
+	if prompt:GetAttribute("OwnerId") ~= player.UserId then
+		notify(player, "Das ist nicht dein Lager 😉", "bad")
+		return
+	end
+	if action == "Store" or action == "Take" then
+		local entry = s.plot.Entries[prompt:GetAttribute("Uid")]
+		if entry then
+			shelfAction(s, entry, action)
+		end
+	elseif action == "Truck" then
+		local o = findActive(s, prompt:GetAttribute("OrderId"))
+		if o then
+			truckAction(s, o)
+		end
+	end
+end)
+
+R.Drop.OnServerEvent:Connect(function(player)
+	local s = sessions[player]
+	if s and s.carry.n > 0 then
+		notify(player, "Kisten abgestellt und entsorgt.", "info")
+		s.carry.g, s.carry.n = nil, 0
+		updateCarryVisual(s)
+		sendState(player)
+	end
+end)
+
+---------------------------------------------------------------- Bauen
+local function isInt(v, lo, hi)
+	return typeof(v) == "number" and v == v and math.floor(v) == v and v >= lo and v <= hi
+end
+
+R.Place.OnServerEvent:Connect(function(player, itemId, tx, tz, rot)
+	local s = sessions[player]
+	if not s or not s.plot or typeof(itemId) ~= "string" then
+		return
+	end
+	if not (isInt(tx, -999, 999) and isInt(tz, -999, 999) and isInt(rot, 0, 3)) then
+		return
+	end
+	local def = Items.ById[itemId]
+	if not def then
+		return
+	end
+	local d = s.data
+	if d.Level < def.Level then
+		notify(player, "🔒 Ab Level " .. def.Level, "bad")
+		return
+	end
+	if d.Coins < def.Price then
+		notify(player, "Nicht genug Münzen 💸", "bad")
+		return
+	end
+	if #d.Items >= Config.MaxItems then
+		notify(player, "Maximale Anzahl Objekte erreicht.", "bad")
+		return
+	end
+	local ok, reason = Plots.CanPlace(s.plot, d, def, tx, tz, rot)
+	if not ok then
+		notify(player, reason, "bad")
+		return
+	end
+	d.Coins -= def.Price
+	local entry = { u = d.NextUid, i = itemId, x = tx, z = tz, r = rot }
+	d.NextUid += 1
+	table.insert(d.Items, entry)
+	Plots.Spawn(s.plot, entry)
+	applyBonuses(s)
+	refillOffers(s)
+	sendState(player)
+end)
+
+R.Remove.OnServerEvent:Connect(function(player, uid)
+	local s = sessions[player]
+	if not s or not s.plot or typeof(uid) ~= "number" then
+		return
+	end
+	local plot = s.plot
+	local entry = plot.Entries[uid]
+	if not entry then
+		return
+	end
+	local def = Items.ById[entry.i]
+	if def.Dock then
+		if plot.DockBusy[uid] then
+			notify(player, "Da steht gerade ein LKW!", "bad")
+			return
+		end
+		if #Plots.Docks(plot) <= 1 then
+			notify(player, "Du brauchst mindestens eine Laderampe.", "bad")
+			return
+		end
+	end
+	local moved
+	if def.Shelf then
+		local used = Plots.ShelfUsed(entry)
+		if used > 0 then
+			local _, totalUsed, totalCap = Plots.StockSummary(plot)
+			local otherFree = (totalCap - def.Capacity) - (totalUsed - used)
+			if otherFree < used then
+				notify(player, "Kein Platz in anderen Regalen für den Inhalt!", "bad")
+				return
+			end
+			moved = entry.s
+		end
+	end
+
+	Plots.Despawn(plot, uid)
+	for i, e in ipairs(s.data.Items) do
+		if e.u == uid then
+			table.remove(s.data.Items, i)
+			break
+		end
+	end
+	if moved then
+		for g, c in pairs(moved) do
+			Plots.StoreAnywhere(plot, g, c)
+		end
+	end
+	local refund = math.floor(def.Price * Config.RemoveRefund)
+	s.data.Coins += refund
+	notify(player, "Abgerissen: +" .. fmt(refund) .. " 💰", "info")
+	applyBonuses(s)
+	sendState(player)
+end)
+
+R.BuyChunk.OnServerEvent:Connect(function(player, cx, cz)
+	local s = sessions[player]
+	if not s or not s.plot or not (isInt(cx, 0, 99) and isInt(cz, 0, 99)) then
+		return
+	end
+	local d = s.data
+	if not Plots.CanBuyChunk(d, cx, cz) then
+		notify(player, "Diese Fläche kannst du (noch) nicht kaufen.", "bad")
+		return
+	end
+	local price = Config.ChunkPrice(Plots.ChunkCount(d))
+	if d.Coins < price then
+		notify(player, "Du brauchst " .. fmt(price) .. " 💰 für diese Fläche.", "bad")
+		return
+	end
+	d.Coins -= price
+	d.Chunks[Plots.ChunkKey(cx, cz)] = true
+	Plots.RefreshGround(s.plot, d)
+	notify(player, "🧱 Neue Fläche gekauft! Dein Lager wächst.", "good")
+	sendState(player)
+end)
+
+R.BuyTool.OnServerEvent:Connect(function(player)
+	local s = sessions[player]
+	if not s then
+		return
+	end
+	local d = s.data
+	local nextTool = Config.Tools[d.Tool + 1]
+	if not nextTool then
+		return
+	end
+	if d.Level < nextTool.Level then
+		notify(player, "🔒 Ab Level " .. nextTool.Level, "bad")
+		return
+	end
+	if d.Coins < nextTool.Price then
+		notify(player, "Nicht genug Münzen 💸", "bad")
+		return
+	end
+	d.Coins -= nextTool.Price
+	d.Tool += 1
+	notify(player, "🛠 " .. nextTool.Name .. " gekauft! Du trägst jetzt " .. nextTool.Carry .. " Kisten.", "good")
+	sendState(player)
+end)
+
+R.Redeem.OnServerEvent:Connect(function(player, code)
+	local s = sessions[player]
+	if not s or typeof(code) ~= "string" or #code > 30 then
+		return
+	end
+	if os.clock() - s.lastAction < 1 then
+		return
+	end
+	s.lastAction = os.clock()
+	code = string.upper((code:gsub("%s", "")))
+	local reward = Config.Codes[code]
+	if not reward then
+		notify(player, "Ungültiger Code ❌", "bad")
+	elseif s.data.Codes[code] then
+		notify(player, "Code schon eingelöst!", "bad")
+	else
+		s.data.Codes[code] = true
+		s.data.Coins += reward
+		notify(player, "🎁 Code eingelöst: +" .. fmt(reward) .. " 💰", "good")
+		sendState(player)
+	end
+end)
+
+R.RequestState.OnServerEvent:Connect(sendState)
+
+---------------------------------------------------------------- Spieler betreten / verlassen
+local function teleportHome(s)
+	local char = s.player.Character
+	if char and s.plot then
+		char:PivotTo(s.plot.Origin * CFrame.new(0, 4, 13))
+	end
+end
+
+local function onPlayerAdded(player)
+	local data, ok = loadData(player)
+	if not player.Parent then
+		return
+	end
+
+	local s = {
+		player = player,
+		data = data,
+		canSave = ok,
+		carry = { g = nil, n = 0 },
+		offers = {},
+		active = {},
+		nextOrderId = 1,
+		lastAction = 0,
+		autoAcc = 0,
+	}
+
+	local leaderstats = Instance.new("Folder")
+	leaderstats.Name = "leaderstats"
+	local coins = Instance.new("NumberValue")
+	coins.Name = "Münzen"
+	coins.Parent = leaderstats
+	local level = Instance.new("IntValue")
+	level.Name = "Level"
+	level.Parent = leaderstats
+	leaderstats.Parent = player
+	s.stats = { Coins = coins, Level = level }
+
+	sessions[player] = s
+
+	s.plot = Plots.Assign(player)
+	if s.plot then
+		Plots.Load(s.plot, data)
+		refillOffers(s)
+	else
+		notify(player, "Server ist voll – kein Grundstück frei. Bitte anderen Server wählen.", "bad")
+	end
+
+	player.CharacterAdded:Connect(function(char)
+		char:WaitForChild("HumanoidRootPart", 10)
+		task.wait(0.1)
+		teleportHome(s)
+		applyBonuses(s)
+		s.carry.g, s.carry.n = nil, 0
+		sendState(player)
+	end)
+	if player.Character then
+		task.spawn(function()
+			teleportHome(s)
+			applyBonuses(s)
+		end)
+	end
+
+	if not ok then
+		notify(player, "⚠ Daten konnten nicht geladen werden – Fortschritt wird diese Runde NICHT gespeichert.", "bad")
+	end
+	notify(player, "Willkommen in deinem Lager! 📦 Öffne 📋 Aufträge, um loszulegen.", "info")
+	sendState(player)
+end
+
+Players.PlayerAdded:Connect(onPlayerAdded)
+for _, p in ipairs(Players:GetPlayers()) do
+	task.spawn(onPlayerAdded, p)
+end
+
+Players.PlayerRemoving:Connect(function(player)
+	local s = sessions[player]
+	sessions[player] = nil
+	if not s then
+		return
+	end
+	for _, o in ipairs(s.active) do
+		o.Finished = true
+	end
+	saveData(player, s)
+	if s.plot then
+		Plots.Release(s.plot)
+	end
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(90)
+		for player, s in pairs(sessions) do
+			task.spawn(saveData, player, s)
+		end
+	end
+end)
+
+game:BindToClose(function()
+	local pending = 0
+	for player, s in pairs(sessions) do
+		pending += 1
+		task.spawn(function()
+			saveData(player, s)
+			pending -= 1
+		end)
+	end
+	local start = os.clock()
+	while pending > 0 and os.clock() - start < 25 do
+		task.wait(0.2)
+	end
+end)
+
+---------------------------------------------------------------- Takt: Zeitlimits, Angebote, LKW-Anzeigen
+task.spawn(function()
+	while true do
+		task.wait(1)
+		local now = os.clock()
+		for player, s in pairs(sessions) do
+			local changed = refillOffers(s)
+			for i = #s.active, 1, -1 do
+				local o = s.active[i]
+				if o and o.Arrived and now > o.Deadline then
+					finishOrder(s, o, false)
+				elseif o then
+					updateTruckLabel(o)
+				end
+			end
+			if changed then
+				sendState(player)
+			end
+		end
+	end
+end)
+
+---------------------------------------------------------------- Automatisierung: Gabelstapler
+local function animateForklift(s)
+	local list = {}
+	for uid, e in pairs(s.plot.Entries) do
+		if e.i == "Forklift" then
+			table.insert(list, s.plot.Models[uid])
+		end
+	end
+	local model = list[math.random(1, math.max(1, #list))]
+	if not model then
+		return
+	end
+	for _, part in ipairs(model:GetChildren()) do
+		if part.Name == "Fork" and part:IsA("BasePart") then
+			local base = part:GetAttribute("BaseCFrame") or part.CFrame
+			part:SetAttribute("BaseCFrame", base)
+			part.CFrame = base
+			local up = TweenService:Create(part, TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, true), { CFrame = base + Vector3.new(0, 2.5, 0) })
+			up:Play()
+		end
+	end
+end
+
+local function autoMove(s)
+	for _, o in ipairs(s.active) do
+		if o.Arrived and not o.Finished and o.Done < o.Amount then
+			local moved = 0
+			if o.Kind == "In" then
+				moved = Plots.StoreAnywhere(s.plot, o.Goods, 1)
+			else
+				moved = Plots.TakeAnywhere(s.plot, o.Goods, 1)
+			end
+			if moved > 0 then
+				o.Done += 1
+				addXP(s, Config.XPPerBox)
+				animateForklift(s)
+				checkComplete(s, o)
+				return true
+			end
+		end
+	end
+	return false
+end
+
+local TICK = 0.5
+task.spawn(function()
+	while true do
+		task.wait(TICK)
+		for player, s in pairs(sessions) do
+			if s.plot and #s.active > 0 then
+				local forklifts = count(s, "Forklift")
+				if forklifts > 0 then
+					local speed = 1 + count(s, "Conveyor", Config.ConveyorMax) * Config.ConveyorBonus
+					s.autoAcc += forklifts * speed / Config.ForkliftInterval * TICK
+					local moved = false
+					while s.autoAcc >= 1 do
+						s.autoAcc -= 1
+						if autoMove(s) then
+							moved = true
+						else
+							s.autoAcc = 0
+							break
+						end
+					end
+					if moved then
+						sendState(player)
+					end
+				end
+			else
+				s.autoAcc = 0
+			end
+		end
+	end
+end)
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX00000005"><Properties><string name="Name">Plots</string><ProtectedString name="Source"><![CDATA[-- Lager-Imperium – Grundstücke: Zuweisung, Flächen, Objekte platzieren/abreißen, Regale
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Config = require(Shared:WaitForChild("Config"))
+local Items = require(Shared:WaitForChild("Items"))
+
+local Plots = {}
+Plots.List = {}
+
+local T = Config.TileSize
+local CHUNK = Config.ChunkTiles * T
+
+function Plots.Init(worldPlots)
+	for _, p in ipairs(worldPlots) do
+		p.Owner = nil
+		p.Models = {}
+		p.Entries = {}
+		p.Occ = { Object = {}, Floor = {} }
+		p.DockBusy = {}
+		table.insert(Plots.List, p)
+	end
+end
+
+function Plots.Assign(player)
+	for _, p in ipairs(Plots.List) do
+		if not p.Owner then
+			p.Owner = player
+			p.Folder:SetAttribute("OwnerId", player.UserId)
+			p.SignLabel.Text = "📦 Lager von " .. player.DisplayName
+			return p
+		end
+	end
+	return nil
+end
+
+function Plots.Clear(plot)
+	plot.ItemsFolder:ClearAllChildren()
+	plot.Trucks:ClearAllChildren()
+	plot.Ground:ClearAllChildren()
+	plot.Models = {}
+	plot.Entries = {}
+	plot.Occ = { Object = {}, Floor = {} }
+	plot.DockBusy = {}
+end
+
+function Plots.Release(plot)
+	Plots.Clear(plot)
+	plot.Owner = nil
+	plot.Folder:SetAttribute("OwnerId", 0)
+	plot.SignLabel.Text = "Freies Grundstück"
+end
+
+function Plots.ChunkKey(cx, cz)
+	return cx .. "," .. cz
+end
+
+function Plots.OwnsChunk(data, cx, cz)
+	return data.Chunks[Plots.ChunkKey(cx, cz)] == true
+end
+
+function Plots.ChunkCount(data)
+	local n = 0
+	for _ in pairs(data.Chunks) do
+		n += 1
+	end
+	return n
+end
+
+-- Darf dieses Flächen-Stück gekauft werden? (muss an ein eigenes angrenzen)
+function Plots.CanBuyChunk(data, cx, cz)
+	if cx < 0 or cx >= Config.ChunksX or cz < 0 or cz >= Config.ChunksZ then
+		return false
+	end
+	if Plots.OwnsChunk(data, cx, cz) then
+		return false
+	end
+	for _, n in ipairs({ { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } }) do
+		if Plots.OwnsChunk(data, cx + n[1], cz + n[2]) then
+			return true
+		end
+	end
+	return false
+end
+
+-- Betonboden für alle gekauften Flächen
+function Plots.RefreshGround(plot, data)
+	plot.Ground:ClearAllChildren()
+	local halfW = Config.ChunksX * CHUNK / 2
+	for key in pairs(data.Chunks) do
+		local cx, cz = string.match(key, "^(%-?%d+),(%-?%d+)$")
+		cx, cz = tonumber(cx), tonumber(cz)
+		if cx and cz then
+			local p = Instance.new("Part")
+			p.Name = "Chunk_" .. key
+			p.Anchored = true
+			p.Size = Vector3.new(CHUNK, 1, CHUNK)
+			p.CFrame = plot.Origin * CFrame.new(-halfW + (cx + 0.5) * CHUNK, -0.5, (cz + 0.5) * CHUNK)
+			p.Color = (cx + cz) % 2 == 0 and Color3.fromRGB(175, 175, 180) or Color3.fromRGB(165, 165, 170)
+			p.Material = Enum.Material.Concrete
+			p.TopSurface = Enum.SurfaceType.Smooth
+			p.Parent = plot.Ground
+		end
+	end
+end
+
+local function tileKey(x, z)
+	return x .. "," .. z
+end
+
+function Plots.IsFree(plot, layer, x, z)
+	return plot.Occ[layer][tileKey(x, z)] == nil
+end
+
+function Plots.CanPlace(plot, data, def, tx, tz, rot)
+	return Items.Validate(def, tx, tz, rot, function(cx, cz)
+		return Plots.OwnsChunk(data, cx, cz)
+	end, function(layer, x, z)
+		return Plots.IsFree(plot, layer, x, z)
+	end)
+end
+
+local function occupy(plot, entry, value)
+	local def = Items.ById[entry.i]
+	local w, d = Items.Footprint(def, entry.r)
+	for x = entry.x, entry.x + w - 1 do
+		for z = entry.z, entry.z + d - 1 do
+			plot.Occ[def.Layer][tileKey(x, z)] = value
+		end
+	end
+end
+
+local function addPrompt(parent, name, action, key, text, distance, uid, plot)
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name = name
+	prompt.ActionText = text
+	prompt.ObjectText = ""
+	prompt.KeyboardKeyCode = key
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = distance
+	prompt.RequiresLineOfSight = false
+	prompt:SetAttribute("Action", action)
+	prompt:SetAttribute("Uid", uid)
+	prompt:SetAttribute("Plot", plot.Index)
+	prompt:SetAttribute("OwnerId", plot.Owner and plot.Owner.UserId or 0)
+	prompt.Parent = parent
+	return prompt
+end
+
+function Plots.Spawn(plot, entry)
+	local def = Items.ById[entry.i]
+	if not def then
+		return
+	end
+	local model = Items.Build(def, { OwnerName = plot.Owner and plot.Owner.DisplayName })
+	model.Name = def.Id .. "_" .. entry.u
+	model:SetAttribute("Uid", entry.u)
+	model:SetAttribute("ItemId", def.Id)
+	model:SetAttribute("Tx", entry.x)
+	model:SetAttribute("Tz", entry.z)
+	model:SetAttribute("Rot", entry.r)
+	model:PivotTo(plot.Origin * Items.LocalCFrame(def, entry.x, entry.z, entry.r))
+
+	if def.Shelf then
+		entry.s = entry.s or {}
+		local interact = model:FindFirstChild("Interact")
+		local dist = math.max(def.W, def.D) * T / 2 + 6
+		local store = addPrompt(interact, "StorePrompt", "Store", Enum.KeyCode.E, "Einlagern", dist, entry.u, plot)
+		store.ObjectText = def.Name
+		local take = addPrompt(interact, "TakePrompt", "Take", Enum.KeyCode.F, "Auslagern", dist, entry.u, plot)
+		take.ObjectText = def.Name
+		take.UIOffset = Vector2.new(0, 70)
+		Items.UpdateShelf(model, entry.s, def.Capacity)
+	end
+
+	model.Parent = plot.ItemsFolder
+	if def.Id == "Conveyor" then
+		local belt = model:FindFirstChild("Belt")
+		if belt then
+			belt.AssemblyLinearVelocity = belt.CFrame.LookVector * 10
+		end
+	end
+	plot.Models[entry.u] = model
+	plot.Entries[entry.u] = entry
+	occupy(plot, entry, entry.u)
+	return model
+end
+
+function Plots.Despawn(plot, uid)
+	local entry = plot.Entries[uid]
+	if not entry then
+		return
+	end
+	occupy(plot, entry, nil)
+	if plot.Models[uid] then
+		plot.Models[uid]:Destroy()
+	end
+	plot.Models[uid] = nil
+	plot.Entries[uid] = nil
+	plot.DockBusy[uid] = nil
+end
+
+function Plots.Load(plot, data)
+	Plots.Clear(plot)
+	Plots.RefreshGround(plot, data)
+	local valid = {}
+	for _, entry in ipairs(data.Items) do
+		local def = Items.ById[entry.i]
+		if def and Plots.CanPlace(plot, data, def, entry.x, entry.z, entry.r) then
+			Plots.Spawn(plot, entry)
+			table.insert(valid, entry)
+		end
+	end
+	data.Items = valid
+end
+
+function Plots.Count(plot, itemId)
+	local n = 0
+	for _, e in pairs(plot.Entries) do
+		if e.i == itemId then
+			n += 1
+		end
+	end
+	return n
+end
+
+function Plots.Shelves(plot)
+	local list = {}
+	for _, e in pairs(plot.Entries) do
+		local def = Items.ById[e.i]
+		if def.Shelf then
+			table.insert(list, e)
+		end
+	end
+	table.sort(list, function(a, b)
+		return a.u < b.u
+	end)
+	return list
+end
+
+function Plots.ShelfUsed(entry)
+	local n = 0
+	for _, c in pairs(entry.s or {}) do
+		n += c
+	end
+	return n
+end
+
+function Plots.UpdateShelf(plot, entry)
+	local model = plot.Models[entry.u]
+	if model then
+		Items.UpdateShelf(model, entry.s, Items.ById[entry.i].Capacity)
+	end
+end
+
+-- Gesamtbestand + Kapazität
+function Plots.StockSummary(plot)
+	local stock, used, cap = {}, 0, 0
+	for _, e in ipairs(Plots.Shelves(plot)) do
+		cap += Items.ById[e.i].Capacity
+		for g, c in pairs(e.s or {}) do
+			stock[g] = (stock[g] or 0) + c
+			used += c
+		end
+	end
+	return stock, used, cap
+end
+
+-- Kisten in Regale einlagern (füllt der Reihe nach). Gibt die eingelagerte Menge zurück.
+function Plots.StoreAnywhere(plot, goods, amount)
+	local stored = 0
+	for _, e in ipairs(Plots.Shelves(plot)) do
+		if stored >= amount then
+			break
+		end
+		local free = Items.ById[e.i].Capacity - Plots.ShelfUsed(e)
+		if free > 0 then
+			local n = math.min(free, amount - stored)
+			e.s[goods] = (e.s[goods] or 0) + n
+			stored += n
+			Plots.UpdateShelf(plot, e)
+		end
+	end
+	return stored
+end
+
+function Plots.TakeAnywhere(plot, goods, amount)
+	local taken = 0
+	for _, e in ipairs(Plots.Shelves(plot)) do
+		if taken >= amount then
+			break
+		end
+		local have = e.s[goods] or 0
+		if have > 0 then
+			local n = math.min(have, amount - taken)
+			e.s[goods] = have - n > 0 and have - n or nil
+			taken += n
+			Plots.UpdateShelf(plot, e)
+		end
+	end
+	return taken
+end
+
+function Plots.Docks(plot)
+	local list = {}
+	for _, e in pairs(plot.Entries) do
+		if e.i == "Dock" then
+			table.insert(list, e)
+		end
+	end
+	table.sort(list, function(a, b)
+		return a.x < b.x
+	end)
+	return list
+end
+
+function Plots.DockX(entry)
+	local def = Items.ById.Dock
+	local w = Items.Footprint(def, entry.r)
+	return (entry.x + w / 2) * T
+end
+
+function Plots.SetDockBusy(plot, uid, orderId)
+	plot.DockBusy[uid] = orderId
+	local model = plot.Models[uid]
+	local light = model and model:FindFirstChild("Light")
+	if light then
+		light.Color = orderId and Color3.fromRGB(255, 70, 50) or Color3.fromRGB(60, 255, 90)
+	end
+end
+
+return Plots
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX00000006"><Properties><string name="Name">Trucks</string><ProtectedString name="Source"><![CDATA[-- Lager-Imperium – LKW-Modell + Fahrten (anfahren, rückwärts an die Rampe, abfahren)
+
+local TweenService = game:GetService("TweenService")
+
+local Trucks = {}
+
+local SPEED = 45 -- Studs pro Sekunde auf der Straße
+local LANE_Z = -32 -- Fahrspur (relativ zum Grundstück)
+local PARK_Z = -15 -- Mitte des LKWs, wenn er an der Rampe steht
+local ROAD_END = 140
+
+local CAB_COLORS = {
+	Color3.fromRGB(220, 50, 50),
+	Color3.fromRGB(40, 110, 220),
+	Color3.fromRGB(250, 170, 20),
+	Color3.fromRGB(40, 170, 90),
+	Color3.fromRGB(130, 70, 200),
+	Color3.fromRGB(240, 240, 240),
+}
+
+local function add(model, name, size, pos, color, material, props)
+	local p = Instance.new("Part")
+	p.Name = name
+	p.Anchored = true
+	p.CanCollide = false
+	p.CanQuery = false
+	p.CanTouch = false
+	p.Size = size
+	p.CFrame = CFrame.new(pos)
+	p.Color = color
+	p.Material = material or Enum.Material.SmoothPlastic
+	p.TopSurface = Enum.SurfaceType.Smooth
+	p.BottomSurface = Enum.SurfaceType.Smooth
+	for k, v in pairs(props or {}) do
+		p[k] = v
+	end
+	p.Parent = model
+	return p
+end
+
+-- LKW zeigt mit der Front nach -Z, Heck (Ladetür) bei +Z
+function Trucks.Build(stripeColor, title)
+	local m = Instance.new("Model")
+	m.Name = "Truck"
+	local root = add(m, "Root", Vector3.new(1, 1, 1), Vector3.zero, Color3.new(), nil, { Transparency = 1 })
+	m.PrimaryPart = root
+
+	local cab = CAB_COLORS[math.random(1, #CAB_COLORS)]
+	add(m, "Chassis", Vector3.new(6, 1, 28), Vector3.new(0, 1.6, 0), Color3.fromRGB(40, 40, 45), Enum.Material.Metal)
+	add(m, "Cab", Vector3.new(7, 7, 6), Vector3.new(0, 4.6, -11.5), cab, Enum.Material.SmoothPlastic)
+	add(m, "CabTop", Vector3.new(7, 1.5, 4), Vector3.new(0, 8.8, -10.5), cab, Enum.Material.SmoothPlastic)
+	add(m, "Windshield", Vector3.new(6.2, 2.8, 0.2), Vector3.new(0, 6.1, -14.55), Color3.fromRGB(30, 40, 60), Enum.Material.Glass, { Transparency = 0.2 })
+	add(m, "Bumper", Vector3.new(7.2, 1, 0.6), Vector3.new(0, 1.5, -14.7), Color3.fromRGB(120, 120, 125), Enum.Material.Metal)
+	for _, x in ipairs({ -2.6, 2.6 }) do
+		add(m, "Headlight", Vector3.new(1.1, 0.6, 0.1), Vector3.new(x, 2.7, -14.6), Color3.fromRGB(255, 250, 210), Enum.Material.Neon)
+	end
+
+	local trailer = add(m, "Trailer", Vector3.new(8, 9, 22), Vector3.new(0, 6.6, 3.5), Color3.fromRGB(235, 235, 240), Enum.Material.SmoothPlastic)
+	for _, x in ipairs({ -4.05, 4.05 }) do
+		add(m, "Stripe", Vector3.new(0.1, 1.4, 20), Vector3.new(x, 5, 3.5), stripeColor, Enum.Material.SmoothPlastic)
+	end
+	add(m, "Rear", Vector3.new(7.6, 8.4, 0.2), Vector3.new(0, 6.6, 14.55), Color3.fromRGB(190, 190, 195), Enum.Material.CorrodedMetal)
+	for _, x in ipairs({ -3.2, 3.2 }) do
+		add(m, "Taillight", Vector3.new(0.8, 0.5, 0.1), Vector3.new(x, 2.4, 14.6), Color3.fromRGB(255, 40, 40), Enum.Material.Neon)
+	end
+
+	for _, z in ipairs({ -11, 6, 9.5, 12.5 }) do
+		for _, x in ipairs({ -3.4, 3.4 }) do
+			add(m, "Wheel", Vector3.new(1.2, 3, 3), Vector3.new(x, 1.5, z), Color3.fromRGB(20, 20, 20), Enum.Material.SmoothPlastic, { Shape = Enum.PartType.Cylinder })
+		end
+	end
+
+	-- Anzeige über dem LKW (Ladung / Zeit)
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "Info"
+	gui.Size = UDim2.new(14, 0, 4, 0)
+	gui.StudsOffset = Vector3.new(0, 7.5, 0)
+	gui.LightInfluence = 0
+	gui.MaxDistance = 250
+	gui.Parent = trailer
+	local label = Instance.new("TextLabel")
+	label.Name = "Text"
+	label.Size = UDim2.fromScale(1, 1)
+	label.BackgroundTransparency = 1
+	label.TextScaled = true
+	label.Font = Enum.Font.FredokaOne
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.TextStrokeTransparency = 0
+	label.Text = title or ""
+	label.Parent = gui
+
+	-- Hier hängt später der „Entladen/Beladen“-Prompt
+	local att = Instance.new("Attachment")
+	att.Name = "PromptPoint"
+	att.Position = Vector3.new(0, -2.5, 1)
+	att.Parent = m.Rear
+
+	return m
+end
+
+local function moveTo(model, target, duration, style)
+	if not model.Parent then
+		return
+	end
+	local cv = Instance.new("CFrameValue")
+	cv.Value = model:GetPivot()
+	local conn = cv.Changed:Connect(function(v)
+		if model.Parent then
+			model:PivotTo(v)
+		end
+	end)
+	local tween = TweenService:Create(cv, TweenInfo.new(duration, style or Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Value = target })
+	tween:Play()
+	tween.Completed:Wait()
+	conn:Disconnect()
+	cv:Destroy()
+end
+
+local FACE_WEST = CFrame.Angles(0, math.rad(90), 0) -- Front zeigt nach -X (Fahrtrichtung)
+
+-- Fährt auf der Straße heran und setzt rückwärts an die Rampe (blockiert, bis er steht)
+function Trucks.Arrive(model, origin, dockX)
+	local start = origin * CFrame.new(ROAD_END, 0, LANE_Z) * FACE_WEST
+	local pass = origin * CFrame.new(dockX - 18, 0, LANE_Z) * FACE_WEST
+	local park = origin * CFrame.new(dockX, 0, PARK_Z)
+	model:PivotTo(start)
+	moveTo(model, pass, math.abs(ROAD_END - (dockX - 18)) / SPEED, Enum.EasingStyle.Quad)
+	moveTo(model, park, 2.5)
+end
+
+-- Fährt von der Rampe weg und verschwindet
+function Trucks.Leave(model, origin, dockX)
+	local exit = origin * CFrame.new(dockX - 18, 0, LANE_Z) * FACE_WEST
+	local gone = origin * CFrame.new(-ROAD_END, 0, LANE_Z) * FACE_WEST
+	moveTo(model, exit, 2.2)
+	moveTo(model, gone, math.abs((dockX - 18) + ROAD_END) / SPEED, Enum.EasingStyle.Quad)
+	model:Destroy()
+end
+
+return Trucks
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX00000007"><Properties><string name="Name">World</string><ProtectedString name="Source"><![CDATA[-- Lager-Imperium – baut die Map: Straße + 6 Grundstücke mit LKW-Hof
+-- Stell in den Spieleinstellungen „Max. Spieler“ auf 6 (ein Grundstück pro Spieler).
+
+local World = {}
+
+local function part(props)
+	local p = Instance.new("Part")
+	p.Anchored = true
+	p.TopSurface = Enum.SurfaceType.Smooth
+	p.BottomSurface = Enum.SurfaceType.Smooth
+	local parent = props.Parent
+	props.Parent = nil
+	for k, v in pairs(props) do
+		p[k] = v
+	end
+	p.Parent = parent
+	return p
+end
+
+function World.Build(Config)
+	local old = workspace:FindFirstChild("LagerWorld")
+	if old then
+		old:Destroy()
+	end
+	local folder = Instance.new("Folder")
+	folder.Name = "LagerWorld"
+	folder.Parent = workspace
+
+	if not workspace:FindFirstChild("Baseplate") then
+		part({
+			Name = "Baseplate",
+			Size = Vector3.new(1400, 2, 1400),
+			Position = Vector3.new(0, -1, 0),
+			Color = Color3.fromRGB(95, 170, 85),
+			Material = Enum.Material.Grass,
+			Parent = workspace,
+		})
+	end
+
+	for _, d in ipairs(workspace:GetDescendants()) do
+		if d:IsA("SpawnLocation") then
+			d:Destroy()
+		end
+	end
+
+	local plotW = Config.ChunksX * Config.ChunkTiles * Config.TileSize -- 160
+	local plotD = Config.ChunksZ * Config.ChunkTiles * Config.TileSize -- 128
+	local yard = 24
+	local roadW = 24
+	local gap = 24
+	local spacing = plotW + gap
+	local roadLen = spacing * 3 + 200
+
+	-- Straße
+	part({
+		Name = "Road",
+		Size = Vector3.new(roadLen, 0.2, roadW),
+		Position = Vector3.new(0, 0.1, 0),
+		Color = Color3.fromRGB(45, 45, 50),
+		Material = Enum.Material.Asphalt,
+		Parent = folder,
+	})
+	for x = -roadLen / 2 + 6, roadLen / 2 - 6, 16 do
+		part({
+			Name = "Dash",
+			Size = Vector3.new(8, 0.05, 0.6),
+			Position = Vector3.new(x, 0.22, 0),
+			Color = Color3.new(1, 1, 1),
+			Material = Enum.Material.SmoothPlastic,
+			CanCollide = false,
+			Parent = folder,
+		})
+	end
+
+	local spawn = Instance.new("SpawnLocation")
+	spawn.Name = "Spawn"
+	spawn.Anchored = true
+	spawn.Size = Vector3.new(10, 0.4, 10)
+	spawn.Position = Vector3.new(0, 0.3, 0)
+	spawn.Transparency = 1
+	spawn.CanCollide = false
+	spawn.Neutral = true
+	spawn.Duration = 0
+	spawn.Parent = folder
+
+	local plots = {}
+	local plotFolder = Instance.new("Folder")
+	plotFolder.Name = "Plots"
+	plotFolder.Parent = workspace
+
+	local index = 0
+	for _, side in ipairs({ 1, -1 }) do
+		for col = -1, 1 do
+			index += 1
+			local front = roadW / 2 + yard
+			local origin = CFrame.new(col * spacing, 0.2, side * front)
+			if side == -1 then
+				origin *= CFrame.Angles(0, math.pi, 0)
+			end
+
+			local f = Instance.new("Folder")
+			f.Name = "Plot_" .. index
+			f:SetAttribute("Index", index)
+			f:SetAttribute("OwnerId", 0)
+			f:SetAttribute("Origin", origin)
+			f.Parent = plotFolder
+
+			-- LKW-Hof (zwischen Straße und Grundstück)
+			part({
+				Name = "Yard",
+				Size = Vector3.new(plotW, 0.2, yard),
+				CFrame = origin * CFrame.new(0, -0.1, -yard / 2),
+				Color = Color3.fromRGB(120, 120, 125),
+				Material = Enum.Material.Concrete,
+				Parent = f,
+			})
+			-- Umrandung des Grundstücks (zeigt, wie groß es maximal werden kann)
+			for _, b in ipairs({
+				{ Vector3.new(plotW, 0.3, 0.6), Vector3.new(0, 0, plotD) },
+				{ Vector3.new(0.6, 0.3, plotD), Vector3.new(-plotW / 2, 0, plotD / 2) },
+				{ Vector3.new(0.6, 0.3, plotD), Vector3.new(plotW / 2, 0, plotD / 2) },
+			}) do
+				part({
+					Name = "Border",
+					Size = b[1],
+					CFrame = origin * CFrame.new(b[2]),
+					Color = Color3.fromRGB(255, 255, 255),
+					Material = Enum.Material.SmoothPlastic,
+					Transparency = 0.4,
+					CanCollide = false,
+					Parent = f,
+				})
+			end
+
+			-- Schild am Hof
+			local signPost = part({
+				Name = "SignPost",
+				Size = Vector3.new(0.6, 9, 0.6),
+				CFrame = origin * CFrame.new(plotW / 2 - 6, 4.5, -yard + 2),
+				Color = Color3.fromRGB(60, 60, 70),
+				Material = Enum.Material.Metal,
+				Parent = f,
+			})
+			local board = part({
+				Name = "SignBoard",
+				Size = Vector3.new(14, 4, 0.4),
+				CFrame = signPost.CFrame * CFrame.new(-6, 3, 0),
+				Color = Color3.fromRGB(30, 30, 45),
+				Parent = f,
+			})
+			local gui = Instance.new("SurfaceGui")
+			gui.Face = Enum.NormalId.Front
+			gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+			gui.PixelsPerStud = 30
+			gui.LightInfluence = 0
+			gui.Parent = board
+			local signLabel = Instance.new("TextLabel")
+			signLabel.Size = UDim2.fromScale(1, 1)
+			signLabel.BackgroundTransparency = 1
+			signLabel.Text = "Freies Grundstück"
+			signLabel.TextColor3 = Color3.fromRGB(255, 210, 60)
+			signLabel.TextScaled = true
+			signLabel.Font = Enum.Font.FredokaOne
+			signLabel.Parent = gui
+
+			local ground = Instance.new("Folder")
+			ground.Name = "Ground"
+			ground.Parent = f
+			local items = Instance.new("Folder")
+			items.Name = "Items"
+			items.Parent = f
+			local trucks = Instance.new("Folder")
+			trucks.Name = "Trucks"
+			trucks.Parent = f
+
+			table.insert(plots, {
+				Index = index,
+				Folder = f,
+				Origin = origin,
+				Ground = ground,
+				ItemsFolder = items,
+				Trucks = trucks,
+				SignLabel = signLabel,
+			})
+		end
+	end
+
+	return { Plots = plots }
+end
+
+return World
+]]></ProtectedString></Properties></Item></Item></Item><Item class="StarterPlayer" referent="RBX00000016"><Properties><string name="Name">StarterPlayer</string></Properties><Item class="StarterPlayerScripts" referent="RBX00000015"><Properties><string name="Name">StarterPlayerScripts</string></Properties><Item class="Folder" referent="RBX00000012"><Properties><string name="Name">Client</string></Properties><Item class="ModuleScript" referent="RBX00000009"><Properties><string name="Name">BuildMode</string><ProtectedString name="Source"><![CDATA[-- Lager-Imperium – Bau-Modus auf dem Client
+-- Platzieren (mit grüner/roter Vorschau), Drehen, Abreißen und Flächen kaufen.
+-- PC: Maus zeigt die Position, Linksklick = platzieren, R = drehen, Q = fertig.
+-- Handy: Tippen = Position wählen, dann ✔ drücken.
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Config = require(Shared:WaitForChild("Config"))
+local Items = require(Shared:WaitForChild("Items"))
+
+local player = Players.LocalPlayer
+local T = Config.TileSize
+local CHUNK = Config.ChunkTiles * T
+local HALF_W = Config.ChunksX * CHUNK / 2
+local OK_COLOR = Color3.fromRGB(70, 255, 110)
+local BAD_COLOR = Color3.fromRGB(255, 60, 60)
+
+local BuildMode = {}
+
+local ctx
+local mode
+local current = { rot = 0, tx = 0, tz = 0, valid = false, reason = "" }
+local ghost, ghostHighlight
+local gridFolder, expandFolder
+local hoverHighlight
+local pointer
+local touchStart
+local occ, occDirty = { Object = {}, Floor = {} }, true
+local watchedPlot
+local plotConns = {}
+local renderConn
+local lastChunkSig = ""
+
+---------------------------------------------------------------- Grundstück & Belegung
+local function myPlot()
+	local plots = workspace:FindFirstChild("Plots")
+	if not plots then
+		return nil
+	end
+	for _, f in ipairs(plots:GetChildren()) do
+		if f:GetAttribute("OwnerId") == player.UserId then
+			return f
+		end
+	end
+end
+BuildMode.MyPlot = myPlot
+
+local function watchPlot(plot)
+	for _, c in ipairs(plotConns) do
+		c:Disconnect()
+	end
+	plotConns = {}
+	watchedPlot = plot
+	occDirty = true
+	local items = plot:WaitForChild("Items")
+	table.insert(plotConns, items.ChildAdded:Connect(function()
+		occDirty = true
+	end))
+	table.insert(plotConns, items.ChildRemoved:Connect(function()
+		occDirty = true
+	end))
+end
+
+local function rebuildOcc(plot)
+	occ = { Object = {}, Floor = {} }
+	for _, m in ipairs(plot.Items:GetChildren()) do
+		local def = Items.ById[m:GetAttribute("ItemId")]
+		local tx, tz, rot = m:GetAttribute("Tx"), m:GetAttribute("Tz"), m:GetAttribute("Rot")
+		if def and tx and tz and rot then
+			local w, d = Items.Footprint(def, rot)
+			for x = tx, tx + w - 1 do
+				for z = tz, tz + d - 1 do
+					occ[def.Layer][x .. "," .. z] = true
+				end
+			end
+		end
+	end
+	occDirty = false
+end
+
+local function ownsChunk(state, cx, cz)
+	return state.Chunks[cx .. "," .. cz] == true
+end
+
+local function canBuyChunk(state, cx, cz)
+	if ownsChunk(state, cx, cz) then
+		return false
+	end
+	for _, n in ipairs({ { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } }) do
+		if ownsChunk(state, cx + n[1], cz + n[2]) then
+			return true
+		end
+	end
+	return false
+end
+
+local function chunkSig(state)
+	local keys = {}
+	for k in pairs(state.Chunks) do
+		table.insert(keys, k)
+	end
+	table.sort(keys)
+	return table.concat(keys, ";")
+end
+
+---------------------------------------------------------------- Zeiger → Boden
+local function pointerRay()
+	local cam = workspace.CurrentCamera
+	if pointer then
+		return cam:ScreenPointToRay(pointer.X, pointer.Y)
+	end
+	if UserInputService.TouchEnabled and not UserInputService.MouseEnabled then
+		local v = cam.ViewportSize
+		return cam:ViewportPointToRay(v.X / 2, v.Y / 2)
+	end
+	local m = UserInputService:GetMouseLocation()
+	return cam:ViewportPointToRay(m.X, m.Y)
+end
+
+local function planePoint(origin)
+	local ray = pointerRay()
+	local dy = ray.Direction.Y
+	if math.abs(dy) < 1e-4 then
+		return nil
+	end
+	local t = (origin.Y - ray.Origin.Y) / dy
+	if t < 0 then
+		return nil
+	end
+	return ray.Origin + ray.Direction * t
+end
+
+local function raycastIn(instances)
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Include
+	params.FilterDescendantsInstances = instances
+	local ray = pointerRay()
+	return workspace:Raycast(ray.Origin, ray.Direction * 1500, params)
+end
+
+local function hoveredModel(plot)
+	local hit = raycastIn({ plot.Items })
+	local inst = hit and hit.Instance
+	while inst and inst.Parent ~= plot.Items do
+		inst = inst.Parent
+	end
+	return inst
+end
+
+local function hoveredChunk()
+	if not expandFolder then
+		return nil
+	end
+	local hit = raycastIn({ expandFolder })
+	return hit and hit.Instance
+end
+
+---------------------------------------------------------------- Visuelles: Vorschau, Raster, Flächen
+local function clearVisuals()
+	if ghost then
+		ghost:Destroy()
+		ghost = nil
+	end
+	if gridFolder then
+		gridFolder:Destroy()
+		gridFolder = nil
+	end
+	if expandFolder then
+		expandFolder:Destroy()
+		expandFolder = nil
+	end
+	if hoverHighlight then
+		hoverHighlight:Destroy()
+		hoverHighlight = nil
+	end
+end
+
+local function line(parent, size, cf)
+	local p = Instance.new("Part")
+	p.Anchored = true
+	p.CanCollide = false
+	p.CanQuery = false
+	p.CanTouch = false
+	p.CastShadow = false
+	p.Material = Enum.Material.Neon
+	p.Color = Color3.new(1, 1, 1)
+	p.Transparency = 0.65
+	p.Size = size
+	p.CFrame = cf
+	p.Parent = parent
+end
+
+local function buildGrid(plot, state)
+	if gridFolder then
+		gridFolder:Destroy()
+	end
+	gridFolder = Instance.new("Folder")
+	gridFolder.Name = "BuildGrid"
+	local o = plot:GetAttribute("Origin")
+	for key in pairs(state.Chunks) do
+		local cx, cz = string.match(key, "^(%-?%d+),(%-?%d+)$")
+		cx, cz = tonumber(cx), tonumber(cz)
+		if cx and cz then
+			local x0, z0 = -HALF_W + cx * CHUNK, cz * CHUNK
+			for i = 0, Config.ChunkTiles do
+				line(gridFolder, Vector3.new(0.12, 0.05, CHUNK), o * CFrame.new(x0 + i * T, 0.04, z0 + CHUNK / 2))
+				line(gridFolder, Vector3.new(CHUNK, 0.05, 0.12), o * CFrame.new(x0 + CHUNK / 2, 0.04, z0 + i * T))
+			end
+		end
+	end
+	gridFolder.Parent = workspace
+end
+
+local function buildExpand(plot, state)
+	if expandFolder then
+		expandFolder:Destroy()
+	end
+	expandFolder = Instance.new("Folder")
+	expandFolder.Name = "ExpandPreview"
+	local o = plot:GetAttribute("Origin")
+	for cx = 0, Config.ChunksX - 1 do
+		for cz = 0, Config.ChunksZ - 1 do
+			if canBuyChunk(state, cx, cz) then
+				local p = Instance.new("Part")
+				p.Name = "Chunk"
+				p.Anchored = true
+				p.CanCollide = false
+				p.CastShadow = false
+				p.Material = Enum.Material.Neon
+				p.Color = OK_COLOR
+				p.Transparency = 0.75
+				p.Size = Vector3.new(CHUNK - 1, 3, CHUNK - 1)
+				p.CFrame = o * CFrame.new(-HALF_W + (cx + 0.5) * CHUNK, 1.5, (cz + 0.5) * CHUNK)
+				p:SetAttribute("Cx", cx)
+				p:SetAttribute("Cz", cz)
+				local gui = Instance.new("BillboardGui")
+				gui.Size = UDim2.new(18, 0, 6, 0)
+				gui.StudsOffset = Vector3.new(0, 5, 0)
+				gui.LightInfluence = 0
+				gui.Parent = p
+				local l = Instance.new("TextLabel")
+				l.Size = UDim2.fromScale(1, 1)
+				l.BackgroundTransparency = 1
+				l.TextScaled = true
+				l.Font = Enum.Font.FredokaOne
+				l.TextColor3 = Color3.new(1, 1, 1)
+				l.TextStrokeTransparency = 0
+				l.Text = "🧱 Fläche kaufen\n💰 " .. Config.Format(state.ChunkPrice)
+				l.Parent = gui
+				p.Parent = expandFolder
+			end
+		end
+	end
+	expandFolder.Parent = workspace
+end
+
+local function makeGhost(def)
+	if ghost then
+		ghost:Destroy()
+	end
+	ghost = Items.Build(def, { OwnerName = player.DisplayName })
+	for _, d in ipairs(ghost:GetDescendants()) do
+		if d:IsA("BasePart") and d.Transparency >= 1 then
+			d:Destroy()
+		elseif d:IsA("BasePart") then
+			d.Transparency = math.max(d.Transparency, 0.3)
+			d.CanCollide = false
+			d.CanQuery = false
+			d.CanTouch = false
+			d.CastShadow = false
+		elseif d:IsA("Light") then
+			d:Destroy()
+		end
+	end
+	ghostHighlight = Instance.new("Highlight")
+	ghostHighlight.FillTransparency = 0.55
+	ghostHighlight.OutlineTransparency = 0
+	ghostHighlight.Parent = ghost
+	ghost.Parent = workspace
+end
+
+local function setHover(target, color)
+	if not target then
+		if hoverHighlight then
+			hoverHighlight.Enabled = false
+		end
+		return
+	end
+	if not hoverHighlight or not hoverHighlight.Parent then
+		hoverHighlight = Instance.new("Highlight")
+		hoverHighlight.FillTransparency = 0.5
+	end
+	hoverHighlight.FillColor = color
+	hoverHighlight.OutlineColor = color
+	hoverHighlight.Adornee = target
+	hoverHighlight.Parent = target
+	hoverHighlight.Enabled = true
+end
+
+---------------------------------------------------------------- Jeder Frame im Bau-Modus
+local function update()
+	local plot = myPlot()
+	local state = ctx.getState()
+	if not plot or not state then
+		return
+	end
+	if plot ~= watchedPlot then
+		watchPlot(plot)
+	end
+	local o = plot:GetAttribute("Origin")
+
+	if mode == "place" then
+		local sig = chunkSig(state)
+		if sig ~= lastChunkSig then
+			lastChunkSig = sig
+			buildGrid(plot, state)
+		end
+		if occDirty then
+			rebuildOcc(plot)
+		end
+		local def = current.def
+		local rot = def.Dock and 0 or current.rot
+		local point = planePoint(o)
+		if point then
+			local lp = o:PointToObjectSpace(point)
+			local w, d = Items.Footprint(def, rot)
+			current.tx = math.floor(lp.X / T - w / 2 + 0.5)
+			current.tz = def.Dock and 0 or math.floor(lp.Z / T - d / 2 + 0.5)
+		end
+		local ok, reason = Items.Validate(def, current.tx, current.tz, rot, function(cx, cz)
+			return ownsChunk(state, cx, cz)
+		end, function(layer, x, z)
+			return not occ[layer][x .. "," .. z]
+		end)
+		if ok and state.Level < def.Level then
+			ok, reason = false, "🔒 Ab Level " .. def.Level
+		end
+		if ok and state.Coins < def.Price then
+			ok, reason = false, "Nicht genug Münzen 💸"
+		end
+		current.valid, current.reason, current.usedRot = ok, reason, rot
+		ghost:PivotTo(o * Items.LocalCFrame(def, current.tx, current.tz, rot))
+		ghostHighlight.FillColor = ok and OK_COLOR or BAD_COLOR
+		ghostHighlight.OutlineColor = ok and OK_COLOR or BAD_COLOR
+		ctx.onInfo(string.format("%s  •  %s 💰", def.Name, Config.Format(def.Price)), ok and "" or reason)
+	elseif mode == "delete" then
+		local model = hoveredModel(plot)
+		setHover(model, BAD_COLOR)
+		local def = model and Items.ById[model:GetAttribute("ItemId")]
+		if def then
+			ctx.onInfo("🗑 " .. def.Name .. "  •  +" .. Config.Format(math.floor(def.Price * Config.RemoveRefund)) .. " 💰 zurück", "")
+		else
+			ctx.onInfo("🗑 Klicke/tippe auf ein Objekt zum Abreißen", "")
+		end
+	elseif mode == "expand" then
+		local sig = chunkSig(state) .. state.ChunkPrice
+		if sig ~= lastChunkSig then
+			lastChunkSig = sig
+			buildExpand(plot, state)
+		end
+		local chunk = hoveredChunk()
+		setHover(chunk, OK_COLOR)
+		local canAfford = state.Coins >= state.ChunkPrice
+		ctx.onInfo("🧱 Neue Fläche: " .. Config.Format(state.ChunkPrice) .. " 💰", canAfford and "" or "Noch nicht genug Münzen")
+	end
+end
+
+local function act()
+	local plot = myPlot()
+	if not plot then
+		return
+	end
+	if mode == "place" then
+		if current.valid then
+			ctx.R.Place:FireServer(current.def.Id, current.tx, current.tz, current.usedRot)
+			occDirty = true
+		elseif current.reason and current.reason ~= "" then
+			ctx.toast(current.reason, "bad")
+		end
+	elseif mode == "delete" then
+		local model = hoveredModel(plot)
+		if model then
+			ctx.R.Remove:FireServer(model:GetAttribute("Uid"))
+		end
+	elseif mode == "expand" then
+		local chunk = hoveredChunk()
+		if chunk then
+			ctx.R.BuyChunk:FireServer(chunk:GetAttribute("Cx"), chunk:GetAttribute("Cz"))
+		end
+	end
+end
+
+---------------------------------------------------------------- Öffentliche Funktionen
+local function start(newMode)
+	BuildMode.Stop()
+	mode = newMode
+	lastChunkSig = ""
+	pointer = nil
+	renderConn = RunService.RenderStepped:Connect(update)
+	ctx.onChanged(mode)
+end
+
+function BuildMode.StartPlace(itemId)
+	local def = Items.ById[itemId]
+	if not def then
+		return
+	end
+	start("place")
+	current.def = def
+	makeGhost(def)
+end
+
+function BuildMode.StartDelete()
+	start("delete")
+end
+
+function BuildMode.StartExpand()
+	start("expand")
+end
+
+function BuildMode.Stop()
+	if renderConn then
+		renderConn:Disconnect()
+		renderConn = nil
+	end
+	clearVisuals()
+	local was = mode
+	mode = nil
+	if was and ctx then
+		ctx.onChanged(nil)
+	end
+end
+
+function BuildMode.Mode()
+	return mode
+end
+
+function BuildMode.Rotate()
+	current.rot = (current.rot + 1) % 4
+end
+
+function BuildMode.Confirm()
+	act()
+end
+
+function BuildMode.Init(context)
+	ctx = context
+
+	UserInputService.InputBegan:Connect(function(input, processed)
+		if not mode or processed then
+			return
+		end
+		if input.KeyCode == Enum.KeyCode.R then
+			BuildMode.Rotate()
+		elseif input.KeyCode == Enum.KeyCode.Q then
+			BuildMode.Stop()
+		elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
+			pointer = nil
+			act()
+		elseif input.UserInputType == Enum.UserInputType.Touch then
+			touchStart = Vector2.new(input.Position.X, input.Position.Y)
+		end
+	end)
+
+	UserInputService.InputEnded:Connect(function(input)
+		if not mode or input.UserInputType ~= Enum.UserInputType.Touch or not touchStart then
+			return
+		end
+		local pos = Vector2.new(input.Position.X, input.Position.Y)
+		local moved = (pos - touchStart).Magnitude
+		touchStart = nil
+		if moved < 20 then
+			pointer = pos
+			if mode ~= "place" then
+				act()
+			end
+		end
+	end)
+end
+
+return BuildMode
+]]></ProtectedString></Properties></Item><Item class="LocalScript" referent="RBX00000010"><Properties><string name="Name">Client</string><ProtectedString name="Source"><![CDATA[-- Lager-Imperium – Client: HUD, Auftrags-Tafel, Bau-Menü, Ausrüstung, Codes, Tutorial
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Config = require(Shared:WaitForChild("Config"))
+local Items = require(Shared:WaitForChild("Items"))
+local UI = require(script.Parent:WaitForChild("UI"))
+local BuildMode = require(script.Parent:WaitForChild("BuildMode"))
+
+local remotes = ReplicatedStorage:WaitForChild("Remotes")
+local R = {}
+for _, name in ipairs({ "Place", "Remove", "BuyChunk", "AcceptOrder", "CancelOrder", "BuyTool", "Drop", "Redeem", "RequestState", "State", "Notify" }) do
+	R[name] = remotes:WaitForChild(name)
+end
+
+local player = Players.LocalPlayer
+local fmt = Config.Format
+local new, label, button = UI.new, UI.label, UI.button
+
+local state
+local stateAt = os.clock()
+
+local gui = new("ScreenGui", {
+	Name = "LagerUI",
+	ResetOnSpawn = false,
+	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+	Parent = player:WaitForChild("PlayerGui"),
+})
+UI.initToasts(gui)
+
+---------------------------------------------------------------- HUD oben
+local top = UI.scaled(new("Frame", {
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, 4),
+	Size = UDim2.fromOffset(520, 112),
+	BackgroundTransparency = 1,
+	Parent = gui,
+}))
+local coinsLabel = label({ Size = UDim2.new(1, 0, 0, 46), Text = "💰 0", TextColor3 = UI.YELLOW, TextStrokeTransparency = 0, Parent = top })
+local levelBar = new("Frame", {
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, 50),
+	Size = UDim2.fromOffset(380, 24),
+	BackgroundColor3 = UI.DARK,
+	Parent = top,
+}, { UI.corner(10), UI.stroke(2) })
+local levelFill = new("Frame", { Size = UDim2.fromScale(0, 1), BackgroundColor3 = Color3.fromRGB(160, 90, 255), Parent = levelBar }, { UI.corner(10) })
+local levelText = label({ Size = UDim2.fromScale(1, 1), Text = "⭐ Level 1", ZIndex = 2, Parent = levelBar })
+local infoLabel = label({ Position = UDim2.fromOffset(0, 78), Size = UDim2.new(1, 0, 0, 24), Text = "", Parent = top })
+
+local hintLabel = UI.scaled(label({
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, 118),
+	Size = UDim2.fromOffset(700, 30),
+	Text = "",
+	TextColor3 = UI.YELLOW,
+	TextStrokeTransparency = 0,
+	Parent = gui,
+}))
+
+---------------------------------------------------------------- Tragen (unten Mitte)
+local carryFrame = UI.scaled(new("Frame", {
+	AnchorPoint = Vector2.new(0.5, 1),
+	Position = UDim2.new(0.5, 0, 1, -14),
+	Size = UDim2.fromOffset(420, 54),
+	BackgroundColor3 = UI.DARK,
+	BackgroundTransparency = 0.15,
+	Visible = false,
+	Parent = gui,
+}, { UI.corner(14), UI.stroke(3) }))
+local carryLabel = label({ Position = UDim2.fromOffset(12, 6), Size = UDim2.new(1, -150, 1, -12), TextXAlignment = Enum.TextXAlignment.Left, Text = "", Parent = carryFrame })
+local dropBtn = button("Abstellen", UI.RED, { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -8, 0.5, 0), Size = UDim2.fromOffset(130, 40), Parent = carryFrame })
+
+---------------------------------------------------------------- Menü links
+local menu = UI.scaled(new("Frame", {
+	AnchorPoint = Vector2.new(0, 0.5),
+	Position = UDim2.new(0, 10, 0.5, 0),
+	Size = UDim2.fromOffset(160, 420),
+	BackgroundTransparency = 1,
+	Parent = gui,
+}, { new("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }) }))
+local function menuButton(text, color, order)
+	return button(text, color, { Size = UDim2.fromOffset(160, 58), LayoutOrder = order, Parent = menu })
+end
+local ordersBtn = menuButton("📋 Aufträge", Color3.fromRGB(255, 140, 30), 1)
+local buildBtn = menuButton("🔨 Bauen", UI.BLUE, 2)
+local expandBtn = menuButton("🧱 Erweitern", Color3.fromRGB(40, 180, 120), 3)
+local deleteBtn = menuButton("🗑 Abreißen", UI.RED, 4)
+local toolsBtn = menuButton("🛠 Ausrüstung", Color3.fromRGB(150, 90, 230), 5)
+local codesBtn = menuButton("🎟 Codes", Color3.fromRGB(255, 90, 140), 6)
+
+---------------------------------------------------------------- Laufende Aufträge (rechts)
+local tracker = UI.scaled(new("Frame", {
+	AnchorPoint = Vector2.new(1, 0),
+	Position = UDim2.new(1, -10, 0, 60),
+	Size = UDim2.fromOffset(300, 420),
+	BackgroundTransparency = 1,
+	Parent = gui,
+}, { new("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }) }))
+
+---------------------------------------------------------------- Bau-Leiste (unten, im Bau-Modus)
+local buildBar = UI.scaled(new("Frame", {
+	AnchorPoint = Vector2.new(0.5, 1),
+	Position = UDim2.new(0.5, 0, 1, -14),
+	Size = UDim2.fromOffset(600, 118),
+	BackgroundColor3 = UI.DARK,
+	BackgroundTransparency = 0.1,
+	Visible = false,
+	Parent = gui,
+}, { UI.corner(16), UI.stroke(3) }))
+local buildInfo = label({ Position = UDim2.fromOffset(12, 6), Size = UDim2.new(1, -24, 0, 28), Text = "", Parent = buildBar })
+local buildReason = label({ Position = UDim2.fromOffset(12, 34), Size = UDim2.new(1, -24, 0, 20), Text = "", TextColor3 = Color3.fromRGB(255, 120, 120), Parent = buildBar })
+local rotateBtn = button("↻ Drehen (R)", UI.BLUE, { Position = UDim2.fromOffset(12, 60), Size = UDim2.fromOffset(180, 48), Parent = buildBar })
+local confirmBtn = button("✔ Platzieren", UI.GREEN, { Position = UDim2.fromOffset(210, 60), Size = UDim2.fromOffset(180, 48), Parent = buildBar })
+local doneBtn = button("✖ Fertig (Q)", UI.GRAY, { Position = UDim2.fromOffset(408, 60), Size = UDim2.fromOffset(180, 48), Parent = buildBar })
+
+---------------------------------------------------------------- Fenster: Aufträge
+local ordersPanel, ordersContent = UI.panel(gui, "📋 AUFTRAGS-TAFEL", Vector2.new(600, 500))
+label({ Size = UDim2.new(1, 0, 0, 24), Text = "Neue Angebote", TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 11, Parent = ordersContent })
+local offersList = UI.scroll(ordersContent, { Position = UDim2.fromOffset(0, 28), Size = UDim2.new(1, 0, 0, 250), ZIndex = 11 })
+new("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = offersList })
+label({ Position = UDim2.fromOffset(0, 286), Size = UDim2.new(1, 0, 0, 24), Text = "Laufende Aufträge", TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 11, Parent = ordersContent })
+local activeList = UI.scroll(ordersContent, { Position = UDim2.fromOffset(0, 314), Size = UDim2.new(1, 0, 1, -314), ZIndex = 11 })
+new("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = activeList })
+
+---------------------------------------------------------------- Fenster: Bauen
+local buildPanel, buildContent = UI.panel(gui, "🔨 BAUEN", Vector2.new(660, 520))
+local tabs = new("Frame", { Size = UDim2.new(1, 0, 0, 44), BackgroundTransparency = 1, ZIndex = 11, Parent = buildContent }, {
+	new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }),
+})
+local itemGrid = UI.scroll(buildContent, { Position = UDim2.fromOffset(0, 54), Size = UDim2.new(1, 0, 1, -54), ZIndex = 11 })
+new("UIGridLayout", { CellSize = UDim2.fromOffset(196, 186), CellPadding = UDim2.fromOffset(8, 8), SortOrder = Enum.SortOrder.LayoutOrder, Parent = itemGrid })
+
+---------------------------------------------------------------- Fenster: Ausrüstung & Codes
+local toolsPanel, toolsContent = UI.panel(gui, "🛠 AUSRÜSTUNG", Vector2.new(480, 320))
+local toolCurrent = label({ Size = UDim2.new(1, 0, 0, 34), Text = "", ZIndex = 11, Parent = toolsContent })
+local toolNext = label({ Position = UDim2.fromOffset(0, 44), Size = UDim2.new(1, 0, 0, 28), Text = "", TextColor3 = Color3.fromRGB(190, 190, 220), ZIndex = 11, Parent = toolsContent })
+local toolBuy = button("Kaufen", UI.GREEN, { Position = UDim2.fromOffset(0, 90), Size = UDim2.new(1, 0, 0, 58), ZIndex = 11, Parent = toolsContent })
+label({ Position = UDim2.fromOffset(0, 160), Size = UDim2.new(1, 0, 0, 50), Text = "Mehr tragen = weniger laufen!\nSpäter übernehmen Gabelstapler die Arbeit.", TextColor3 = Color3.fromRGB(190, 190, 220), ZIndex = 11, Parent = toolsContent })
+
+local codesPanel, codesContent = UI.panel(gui, "🎟 CODES", Vector2.new(460, 260))
+local codeBox = new("TextBox", {
+	Size = UDim2.new(1, 0, 0, 54),
+	BackgroundColor3 = UI.WHITE,
+	TextColor3 = UI.DARK,
+	PlaceholderText = "Code eingeben…",
+	Text = "",
+	Font = UI.FONT,
+	TextScaled = true,
+	ClearTextOnFocus = false,
+	ZIndex = 11,
+	Parent = codesContent,
+}, { UI.corner(12), UI.stroke(3) })
+local redeemBtn = button("Einlösen", Color3.fromRGB(255, 90, 140), { Position = UDim2.fromOffset(0, 66), Size = UDim2.new(1, 0, 0, 54), ZIndex = 11, Parent = codesContent })
+label({ Position = UDim2.fromOffset(0, 130), Size = UDim2.new(1, 0, 0, 24), Text = "Neue Codes gibt's auf unserem TikTok! 👀", TextColor3 = Color3.fromRGB(190, 190, 220), ZIndex = 11, Parent = codesContent })
+
+---------------------------------------------------------------- Hilfsfunktionen
+local function timeLeft(o)
+	if not o.Arrived then
+		return o.TimeLeft
+	end
+	return o.TimeLeft - (os.clock() - stateAt)
+end
+
+local function kindText(kind)
+	if kind == "In" then
+		return "⬇ WARENEINGANG", Color3.fromRGB(110, 220, 255)
+	end
+	return "⬆ WARENAUSGANG", Color3.fromRGB(255, 170, 70)
+end
+
+local function clearList(list)
+	for _, c in ipairs(list:GetChildren()) do
+		if c:IsA("GuiObject") then
+			c:Destroy()
+		end
+	end
+end
+
+local function progressBar(parent, pos, size, frac, color)
+	local bg = new("Frame", { Position = pos, Size = size, BackgroundColor3 = UI.DARK, ZIndex = 12, Parent = parent }, { UI.corner(8) })
+	new("Frame", { Size = UDim2.fromScale(math.clamp(frac, 0, 1), 1), BackgroundColor3 = color, ZIndex = 13, Parent = bg }, { UI.corner(8) })
+	return bg
+end
+
+---------------------------------------------------------------- Rendern
+local function renderOrders()
+	if not state then
+		return
+	end
+	clearList(offersList)
+	for i, o in ipairs(state.Offers) do
+		local g = Config.GoodsById[o.Goods]
+		local head, headColor = kindText(o.Kind)
+		local card = new("Frame", { LayoutOrder = i, Size = UDim2.new(1, -12, 0, 92), BackgroundColor3 = UI.CARD, ZIndex = 11, Parent = offersList }, { UI.corner(12) })
+		label({ Position = UDim2.fromOffset(12, 6), Size = UDim2.new(0.62, 0, 0, 24), Text = head, TextColor3 = headColor, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 12, Parent = card })
+		label({ Position = UDim2.fromOffset(12, 32), Size = UDim2.new(0.62, 0, 0, 24), Text = string.format("%s %d× %s  •  %s", g.Icon, o.Amount, g.Name, o.Client), TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 12, Parent = card })
+		local detail = string.format("⏱ %s Zeit  •  läuft ab in %s", Config.FormatTime(o.Time), Config.FormatTime(o.ExpiresIn - (os.clock() - stateAt)))
+		local detailColor = Color3.fromRGB(190, 190, 220)
+		if o.Kind == "Out" then
+			local have = state.Stock[o.Goods] or 0
+			detail = string.format("Auf Lager: %d / %d  •  ⏱ %s", have, o.Amount, Config.FormatTime(o.Time))
+			if have < o.Amount then
+				detailColor = Color3.fromRGB(255, 120, 120)
+			end
+		elseif state.Capacity - state.Used < o.Amount then
+			detail ..= "  •  ⚠ wenig Platz!"
+			detailColor = Color3.fromRGB(255, 200, 120)
+		end
+		label({ Position = UDim2.fromOffset(12, 60), Size = UDim2.new(0.62, 0, 0, 20), Text = detail, TextColor3 = detailColor, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 12, Parent = card })
+		label({ AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -10, 0, 6), Size = UDim2.fromOffset(170, 32), Text = "💰 +" .. fmt(o.Reward), TextColor3 = UI.YELLOW, ZIndex = 12, Parent = card })
+		local accept = button(state.FreeDocks > 0 and "Annehmen" or "Rampe belegt", state.FreeDocks > 0 and UI.GREEN or UI.GRAY, {
+			AnchorPoint = Vector2.new(1, 0),
+			Position = UDim2.new(1, -10, 0, 44),
+			Size = UDim2.fromOffset(170, 40),
+			ZIndex = 12,
+			Parent = card,
+		})
+		accept.Activated:Connect(function()
+			UI.bounce(accept)
+			R.AcceptOrder:FireServer(o.Id)
+		end)
+	end
+
+	clearList(activeList)
+	if #state.Active == 0 then
+		label({ Size = UDim2.new(1, -12, 0, 30), Text = "Keine laufenden Aufträge", TextColor3 = Color3.fromRGB(160, 160, 180), ZIndex = 12, Parent = activeList })
+	end
+	for i, o in ipairs(state.Active) do
+		local g = Config.GoodsById[o.Goods]
+		local head, headColor = kindText(o.Kind)
+		local card = new("Frame", { LayoutOrder = i, Size = UDim2.new(1, -12, 0, 64), BackgroundColor3 = UI.CARD, ZIndex = 11, Parent = activeList }, { UI.corner(12) })
+		local status = o.Arrived and ("⏱ " .. Config.FormatTime(timeLeft(o))) or "🚚 unterwegs"
+		label({ Position = UDim2.fromOffset(12, 6), Size = UDim2.new(1, -140, 0, 24), Text = string.format("%s  %s %d/%d  %s", head, g.Icon, o.Done, o.Amount, status), TextColor3 = headColor, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 12, Parent = card })
+		progressBar(card, UDim2.fromOffset(12, 38), UDim2.new(1, -140, 0, 16), o.Done / o.Amount, headColor)
+		local cancel = button("Abbrechen", UI.RED, { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -10, 0.5, 0), Size = UDim2.fromOffset(110, 40), ZIndex = 12, Parent = card })
+		cancel.Activated:Connect(function()
+			R.CancelOrder:FireServer(o.Id)
+		end)
+	end
+end
+
+local function renderTracker()
+	clearList(tracker)
+	if not state then
+		return
+	end
+	for i, o in ipairs(state.Active) do
+		local g = Config.GoodsById[o.Goods]
+		local _, color = kindText(o.Kind)
+		local card = new("Frame", { LayoutOrder = i, Size = UDim2.new(1, 0, 0, 58), BackgroundColor3 = UI.DARK, BackgroundTransparency = 0.15, Parent = tracker }, { UI.corner(12), UI.stroke(2) })
+		local left = timeLeft(o)
+		local status = o.Arrived and ("⏱ " .. Config.FormatTime(left)) or "🚚 unterwegs"
+		label({
+			Position = UDim2.fromOffset(10, 4),
+			Size = UDim2.new(1, -20, 0, 26),
+			Text = string.format("%s %s %d/%d   %s", o.Kind == "In" and "⬇" or "⬆", g.Icon, o.Done, o.Amount, status),
+			TextColor3 = (o.Arrived and left < 20) and Color3.fromRGB(255, 90, 90) or UI.WHITE,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = card,
+		})
+		progressBar(card, UDim2.fromOffset(10, 34), UDim2.new(1, -20, 0, 14), o.Done / o.Amount, color)
+	end
+end
+
+-- Bau-Menü: Karten mit 3D-Vorschau (werden einmal erstellt)
+local itemCards = {}
+local currentTab = Items.Categories[1]
+local tabButtons = {}
+
+local function makePreview(parent, def)
+	local vp = new("ViewportFrame", {
+		Position = UDim2.fromOffset(6, 30),
+		Size = UDim2.new(1, -12, 0, 86),
+		BackgroundColor3 = Color3.fromRGB(70, 75, 100),
+		Ambient = Color3.fromRGB(200, 200, 200),
+		LightDirection = Vector3.new(-1, -2, -1),
+		ZIndex = 12,
+		Parent = parent,
+	}, { UI.corner(10) })
+	local model = Items.Build(def, { OwnerName = player.DisplayName })
+	model.Parent = vp
+	local cf, size = model:GetBoundingBox()
+	local cam = new("Camera", { FieldOfView = 40, Parent = vp })
+	local dist = size.Magnitude * 1.25 + 2
+	cam.CFrame = CFrame.lookAt(cf.Position + Vector3.new(dist * 0.6, dist * 0.55, -dist * 0.7), cf.Position)
+	vp.CurrentCamera = cam
+end
+
+local function buildItemCards()
+	for _, def in ipairs(Items.List) do
+		local card = new("TextButton", { Text = "", LayoutOrder = def.Order, BackgroundColor3 = UI.CARD, AutoButtonColor = true, ZIndex = 11, Parent = itemGrid }, { UI.corner(12), UI.stroke(2) })
+		label({ Position = UDim2.fromOffset(6, 4), Size = UDim2.new(1, -12, 0, 24), Text = def.Name, ZIndex = 12, Parent = card })
+		makePreview(card, def)
+		label({ Position = UDim2.fromOffset(6, 120), Size = UDim2.new(1, -12, 0, 32), Text = def.Desc or "", TextWrapped = true, TextColor3 = Color3.fromRGB(190, 190, 220), ZIndex = 12, Parent = card })
+		local price = label({ Position = UDim2.fromOffset(6, 154), Size = UDim2.new(1, -12, 0, 26), Text = "", ZIndex = 12, Parent = card })
+		card.Activated:Connect(function()
+			if state and state.Level < def.Level then
+				UI.toast("🔒 Ab Level " .. def.Level, "bad")
+				return
+			end
+			UI.closePanels()
+			BuildMode.StartPlace(def.Id)
+		end)
+		itemCards[def.Id] = { Card = card, Price = price, Def = def }
+	end
+end
+
+local function renderBuild()
+	for _, b in pairs(tabButtons) do
+		b.BackgroundColor3 = b.Name == currentTab and UI.BLUE or UI.GRAY
+	end
+	for _, c in pairs(itemCards) do
+		local def = c.Def
+		c.Card.Visible = def.Cat == currentTab
+		if state then
+			if state.Level < def.Level then
+				c.Price.Text = "🔒 Level " .. def.Level
+				c.Price.TextColor3 = Color3.fromRGB(200, 200, 200)
+			else
+				c.Price.Text = "💰 " .. fmt(def.Price)
+				c.Price.TextColor3 = state.Coins >= def.Price and UI.YELLOW or Color3.fromRGB(255, 110, 110)
+			end
+		end
+	end
+end
+
+for i, cat in ipairs(Items.Categories) do
+	local b = button(cat, UI.GRAY, { Name = cat, LayoutOrder = i, Size = UDim2.fromOffset(148, 42), ZIndex = 12, Parent = tabs })
+	b.Activated:Connect(function()
+		currentTab = cat
+		renderBuild()
+	end)
+	tabButtons[cat] = b
+end
+buildItemCards()
+
+local function renderTools()
+	if not state then
+		return
+	end
+	local t, nt = Config.Tools[state.Tool], Config.Tools[state.Tool + 1]
+	toolCurrent.Text = string.format("🛠 %s – trägt %d Kiste%s", t.Name, t.Carry, t.Carry == 1 and "" or "n")
+	if nt then
+		toolNext.Text = string.format("Nächste: %s – trägt %d Kisten", nt.Name, nt.Carry)
+		if state.Level < nt.Level then
+			toolBuy.Text = "🔒 Ab Level " .. nt.Level
+			toolBuy.BackgroundColor3 = UI.GRAY
+		else
+			toolBuy.Text = "Kaufen – " .. fmt(nt.Price) .. " 💰"
+			toolBuy.BackgroundColor3 = state.Coins >= nt.Price and UI.GREEN or UI.GRAY
+		end
+	else
+		toolNext.Text = "Du hast die beste Ausrüstung! 😎"
+		toolBuy.Text = "MAX"
+		toolBuy.BackgroundColor3 = UI.GRAY
+	end
+end
+
+local function hintText()
+	if not state then
+		return ""
+	end
+	if state.PlotIndex == 0 then
+		return "Server voll – kein Grundstück frei."
+	end
+	if state.OrdersDone < 3 then
+		local a = state.Active[1]
+		local carrying = state.Carry.Count > 0
+		if not a then
+			return "👉 Öffne 📋 Aufträge und nimm einen Auftrag an!"
+		elseif not a.Arrived then
+			return "🚚 Der LKW fährt gerade zu deiner Laderampe…"
+		elseif a.Kind == "In" then
+			return carrying and "👉 Bring die Kisten zu einem Regal und drücke E (Einlagern)" or "👉 Geh hinten an den LKW und drücke E (Entladen)"
+		else
+			return carrying and "👉 Bring die Kisten zum LKW und drücke E (Beladen)" or "👉 Hol die Ware aus einem Regal: F (Auslagern)"
+		end
+	end
+	if state.Capacity > 0 and state.Used >= state.Capacity then
+		return "📦 Lager voll! Bau mehr Regale (🔨 Bauen → Lager)"
+	end
+	return ""
+end
+
+local function renderHUD()
+	coinsLabel.Text = "💰 " .. fmt(state.Coins)
+	levelFill.Size = UDim2.fromScale(math.clamp(state.XP / state.XPNeed, 0, 1), 1)
+	levelText.Text = string.format("⭐ Level %d  •  %s / %s XP", state.Level, fmt(state.XP), fmt(state.XPNeed))
+	infoLabel.Text = string.format("📦 Lager %s/%s   🚚 Rampen frei: %d/%d", fmt(state.Used), fmt(state.Capacity), state.FreeDocks, state.Docks)
+	hintLabel.Text = hintText()
+
+	local c = state.Carry
+	if c.Count > 0 and not BuildMode.Mode() then
+		local g = Config.GoodsById[c.Goods]
+		carryLabel.Text = string.format("🤲 %d/%d  %s %s", c.Count, state.CarryMax, g and g.Icon or "📦", g and g.Name or "")
+		carryFrame.Visible = true
+	else
+		carryFrame.Visible = false
+	end
+end
+
+local function applyState(s)
+	state = s
+	stateAt = os.clock()
+	renderHUD()
+	renderTracker()
+	if ordersPanel.Visible then
+		renderOrders()
+	end
+	if buildPanel.Visible then
+		renderBuild()
+	end
+	if toolsPanel.Visible then
+		renderTools()
+	end
+end
+
+R.State.OnClientEvent:Connect(applyState)
+R.Notify.OnClientEvent:Connect(UI.toast)
+
+-- Countdown-Anzeigen jede Sekunde auffrischen
+task.spawn(function()
+	while true do
+		task.wait(1)
+		if state then
+			renderTracker()
+			if ordersPanel.Visible then
+				renderOrders()
+			end
+		end
+	end
+end)
+
+---------------------------------------------------------------- Bau-Modus anbinden
+BuildMode.Init({
+	R = R,
+	getState = function()
+		return state
+	end,
+	toast = UI.toast,
+	onInfo = function(text, reason)
+		buildInfo.Text = text
+		buildReason.Text = reason or ""
+	end,
+	onChanged = function(mode)
+		buildBar.Visible = mode ~= nil
+		rotateBtn.Visible = mode == "place"
+		confirmBtn.Visible = mode == "place"
+		deleteBtn.Text = mode == "delete" and "✖ Stopp" or "🗑 Abreißen"
+		expandBtn.Text = mode == "expand" and "✖ Stopp" or "🧱 Erweitern"
+		pcall(function()
+			ProximityPromptService.Enabled = mode == nil
+		end)
+		if mode then
+			UI.closePanels()
+		end
+		if state then
+			renderHUD()
+		end
+	end,
+})
+
+rotateBtn.Activated:Connect(function()
+	UI.bounce(rotateBtn)
+	BuildMode.Rotate()
+end)
+confirmBtn.Activated:Connect(function()
+	UI.bounce(confirmBtn)
+	BuildMode.Confirm()
+end)
+doneBtn.Activated:Connect(function()
+	BuildMode.Stop()
+end)
+
+---------------------------------------------------------------- Menü-Buttons
+ordersBtn.Activated:Connect(function()
+	UI.bounce(ordersBtn)
+	BuildMode.Stop()
+	UI.toggle(ordersPanel)
+	renderOrders()
+end)
+buildBtn.Activated:Connect(function()
+	UI.bounce(buildBtn)
+	BuildMode.Stop()
+	UI.toggle(buildPanel)
+	renderBuild()
+end)
+expandBtn.Activated:Connect(function()
+	UI.bounce(expandBtn)
+	if BuildMode.Mode() == "expand" then
+		BuildMode.Stop()
+	else
+		BuildMode.StartExpand()
+	end
+end)
+deleteBtn.Activated:Connect(function()
+	UI.bounce(deleteBtn)
+	if BuildMode.Mode() == "delete" then
+		BuildMode.Stop()
+	else
+		BuildMode.StartDelete()
+	end
+end)
+toolsBtn.Activated:Connect(function()
+	UI.bounce(toolsBtn)
+	BuildMode.Stop()
+	UI.toggle(toolsPanel)
+	renderTools()
+end)
+codesBtn.Activated:Connect(function()
+	UI.bounce(codesBtn)
+	BuildMode.Stop()
+	UI.toggle(codesPanel)
+end)
+toolBuy.Activated:Connect(function()
+	UI.bounce(toolBuy)
+	R.BuyTool:FireServer()
+end)
+redeemBtn.Activated:Connect(function()
+	UI.bounce(redeemBtn)
+	R.Redeem:FireServer(codeBox.Text)
+	codeBox.Text = ""
+end)
+dropBtn.Activated:Connect(function()
+	R.Drop:FireServer()
+end)
+
+---------------------------------------------------------------- Prompts fremder Lager ausblenden
+local function checkPrompt(p)
+	if p:IsA("ProximityPrompt") then
+		local owner = p:GetAttribute("OwnerId")
+		if owner and owner ~= player.UserId then
+			p.Enabled = false
+		end
+	end
+end
+local plotsFolder = workspace:WaitForChild("Plots")
+for _, d in ipairs(plotsFolder:GetDescendants()) do
+	checkPrompt(d)
+end
+plotsFolder.DescendantAdded:Connect(checkPrompt)
+
+---------------------------------------------------------------- Start
+local function hookCamera()
+	local cam = workspace.CurrentCamera
+	if cam then
+		cam:GetPropertyChangedSignal("ViewportSize"):Connect(UI.updateScale)
+	end
+	UI.updateScale()
+end
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(hookCamera)
+hookCamera()
+
+R.RequestState:FireServer()
+]]></ProtectedString></Properties></Item><Item class="ModuleScript" referent="RBX00000011"><Properties><string name="Name">UI</string><ProtectedString name="Source"><![CDATA[-- Lager-Imperium – UI-Baukasten (Buttons, Fenster, Benachrichtigungen)
+
+local TweenService = game:GetService("TweenService")
+
+local UI = {}
+
+UI.FONT = Enum.Font.FredokaOne
+UI.WHITE = Color3.new(1, 1, 1)
+UI.DARK = Color3.fromRGB(28, 30, 42)
+UI.CARD = Color3.fromRGB(48, 52, 72)
+UI.GREEN = Color3.fromRGB(60, 190, 90)
+UI.RED = Color3.fromRGB(230, 70, 70)
+UI.GRAY = Color3.fromRGB(110, 110, 120)
+UI.YELLOW = Color3.fromRGB(255, 200, 40)
+UI.BLUE = Color3.fromRGB(60, 140, 255)
+
+function UI.new(class, props, children)
+	local inst = Instance.new(class)
+	local parent
+	for k, v in pairs(props or {}) do
+		if k == "Parent" then
+			parent = v
+		else
+			inst[k] = v
+		end
+	end
+	for _, child in ipairs(children or {}) do
+		child.Parent = inst
+	end
+	inst.Parent = parent
+	return inst
+end
+local new = UI.new
+
+function UI.corner(r)
+	return new("UICorner", { CornerRadius = UDim.new(0, r or 12) })
+end
+
+function UI.stroke(thickness, color)
+	return new("UIStroke", { Thickness = thickness or 3, Color = color or Color3.new(0, 0, 0), ApplyStrokeMode = Enum.ApplyStrokeMode.Border })
+end
+
+function UI.padding(px)
+	local u = UDim.new(0, px)
+	return new("UIPadding", { PaddingTop = u, PaddingBottom = u, PaddingLeft = u, PaddingRight = u })
+end
+
+function UI.label(props)
+	props.BackgroundTransparency = 1
+	props.Font = UI.FONT
+	if props.TextScaled == nil then
+		props.TextScaled = true
+	end
+	props.TextColor3 = props.TextColor3 or UI.WHITE
+	props.TextStrokeTransparency = props.TextStrokeTransparency or 0.4
+	return new("TextLabel", props)
+end
+
+function UI.button(text, color, props)
+	props.Text = text
+	props.BackgroundColor3 = color
+	props.Font = UI.FONT
+	props.TextScaled = true
+	props.TextColor3 = UI.WHITE
+	props.TextStrokeTransparency = 0.4
+	props.AutoButtonColor = true
+	local b = new("TextButton", props, { UI.corner(12), UI.stroke(3), UI.padding(6) })
+	new("UIScale", { Name = "Bounce", Parent = b })
+	return b
+end
+
+function UI.bounce(gui)
+	local s = gui:FindFirstChild("Bounce")
+	if s then
+		s.Scale = 0.88
+		TweenService:Create(s, TweenInfo.new(0.15, Enum.EasingStyle.Back), { Scale = 1 }):Play()
+	end
+end
+
+---------------------------------------------------------------- Skalierung (Handy + PC)
+local scalers = {}
+
+function UI.scaled(frame)
+	table.insert(scalers, new("UIScale", { Parent = frame }))
+	UI.updateScale()
+	return frame
+end
+
+function UI.updateScale()
+	local cam = workspace.CurrentCamera
+	local scale = cam and math.clamp(cam.ViewportSize.Y / 800, 0.5, 1.15) or 1
+	for _, s in ipairs(scalers) do
+		s.Scale = scale
+	end
+end
+
+---------------------------------------------------------------- Fenster
+local panels = {}
+
+function UI.panel(gui, title, size)
+	local frame = UI.scaled(new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromOffset(size.X, size.Y),
+		BackgroundColor3 = UI.DARK,
+		Visible = false,
+		ZIndex = 10,
+		Parent = gui,
+	}, { UI.corner(18), UI.stroke(4) }))
+	UI.label({ Position = UDim2.fromOffset(0, 10), Size = UDim2.new(1, 0, 0, 40), Text = title, ZIndex = 11, Parent = frame })
+	local close = UI.button("X", UI.RED, {
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -10, 0, 10),
+		Size = UDim2.fromOffset(42, 42),
+		ZIndex = 11,
+		Parent = frame,
+	})
+	close.Activated:Connect(function()
+		frame.Visible = false
+	end)
+	local content = new("Frame", {
+		Position = UDim2.fromOffset(14, 60),
+		Size = UDim2.new(1, -28, 1, -74),
+		BackgroundTransparency = 1,
+		ZIndex = 11,
+		Parent = frame,
+	})
+	table.insert(panels, frame)
+	return frame, content
+end
+
+function UI.closePanels()
+	for _, p in ipairs(panels) do
+		p.Visible = false
+	end
+end
+
+function UI.toggle(frame)
+	local show = not frame.Visible
+	UI.closePanels()
+	frame.Visible = show
+end
+
+function UI.scroll(parent, props)
+	props.BackgroundTransparency = 1
+	props.BorderSizePixel = 0
+	props.ScrollBarThickness = 8
+	props.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	props.CanvasSize = UDim2.new()
+	props.Parent = parent
+	return new("ScrollingFrame", props)
+end
+
+---------------------------------------------------------------- Benachrichtigungen
+local toastHolder
+local toastCount = 0
+local toastColors = {
+	good = Color3.fromRGB(100, 235, 120),
+	bad = Color3.fromRGB(255, 100, 100),
+	record = Color3.fromRGB(255, 215, 60),
+	info = UI.WHITE,
+}
+
+function UI.initToasts(gui)
+	toastHolder = UI.scaled(new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 120),
+		Size = UDim2.fromOffset(620, 220),
+		BackgroundTransparency = 1,
+		ZIndex = 20,
+		Parent = gui,
+	}, {
+		new("UIListLayout", { Padding = UDim.new(0, 4), HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder }),
+	}))
+end
+
+function UI.toast(text, kind)
+	if not toastHolder then
+		return
+	end
+	toastCount += 1
+	local t = UI.label({
+		Size = UDim2.new(1, 0, 0, kind == "record" and 42 or 32),
+		Text = text,
+		TextColor3 = toastColors[kind] or UI.WHITE,
+		TextStrokeTransparency = 0,
+		LayoutOrder = toastCount,
+		ZIndex = 20,
+		Parent = toastHolder,
+	})
+	local labels = {}
+	for _, c in ipairs(toastHolder:GetChildren()) do
+		if c:IsA("TextLabel") then
+			table.insert(labels, c)
+		end
+	end
+	table.sort(labels, function(a, b)
+		return a.LayoutOrder < b.LayoutOrder
+	end)
+	for i = 1, #labels - 5 do
+		labels[i]:Destroy()
+	end
+	task.delay(3, function()
+		if t.Parent then
+			local tween = TweenService:Create(t, TweenInfo.new(0.5), { TextTransparency = 1, TextStrokeTransparency = 1 })
+			tween:Play()
+			tween.Completed:Wait()
+			t:Destroy()
+		end
+	end)
+end
+
+return UI
+]]></ProtectedString></Properties></Item></Item></Item></Item></roblox>

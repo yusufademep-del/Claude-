@@ -1,605 +1,556 @@
--- Pump & Fly – Client: komplette UI per Code, Steuerung, Flug-Animation
--- PC: E gedrückt halten = pumpen, F = starten. Handy: Buttons.
+-- Lager-Imperium – Client: HUD, Auftrags-Tafel, Bau-Menü, Ausrüstung, Codes, Tutorial
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local MarketplaceService = game:GetService("MarketplaceService")
+local ProximityPromptService = game:GetService("ProximityPromptService")
 
-local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Config = require(Shared:WaitForChild("Config"))
+local Items = require(Shared:WaitForChild("Items"))
+local UI = require(script.Parent:WaitForChild("UI"))
+local BuildMode = require(script.Parent:WaitForChild("BuildMode"))
+
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local R = {}
-for _, name in ipairs({ "Pump", "Launch", "Buy", "Rebirth", "Redeem", "ClaimGift", "RequestState", "State", "Flight", "FlightEnd", "Notify" }) do
+for _, name in ipairs({ "Place", "Remove", "BuyChunk", "AcceptOrder", "CancelOrder", "BuyTool", "Drop", "Redeem", "RequestState", "State", "Notify" }) do
 	R[name] = remotes:WaitForChild(name)
 end
 
 local player = Players.LocalPlayer
 local fmt = Config.Format
-local FONT = Enum.Font.FredokaOne
-local WHITE = Color3.new(1, 1, 1)
-local DARK = Color3.fromRGB(30, 30, 45)
+local new, label, button = UI.new, UI.label, UI.button
 
----------------------------------------------------------------- UI-Helfer
-local function new(class, props, children)
-	local inst = Instance.new(class)
-	local parent
-	for k, v in pairs(props or {}) do
-		if k == "Parent" then
-			parent = v
-		else
-			inst[k] = v
-		end
-	end
-	for _, child in ipairs(children or {}) do
-		child.Parent = inst
-	end
-	inst.Parent = parent
-	return inst
-end
-
-local function corner(r)
-	return new("UICorner", { CornerRadius = UDim.new(0, r or 12) })
-end
-
-local function stroke(thickness, color)
-	return new("UIStroke", {
-		Thickness = thickness or 3,
-		Color = color or Color3.new(0, 0, 0),
-		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-	})
-end
-
-local function label(props)
-	props.BackgroundTransparency = 1
-	props.Font = FONT
-	props.TextScaled = true
-	props.TextColor3 = props.TextColor3 or WHITE
-	props.TextStrokeTransparency = props.TextStrokeTransparency or 0.3
-	return new("TextLabel", props)
-end
-
-local function button(text, color, props)
-	props.Text = text
-	props.BackgroundColor3 = color
-	props.Font = FONT
-	props.TextScaled = true
-	props.TextColor3 = WHITE
-	props.TextStrokeTransparency = 0.3
-	props.AutoButtonColor = true
-	local b = new("TextButton", props, {
-		corner(14),
-		stroke(3),
-		new("UIPadding", {
-			PaddingTop = UDim.new(0, 6),
-			PaddingBottom = UDim.new(0, 6),
-			PaddingLeft = UDim.new(0, 8),
-			PaddingRight = UDim.new(0, 8),
-		}),
-	})
-	new("UIScale", { Name = "Bounce", Parent = b })
-	return b
-end
-
-local function bounce(gui)
-	local s = gui:FindFirstChild("Bounce")
-	if s then
-		s.Scale = 0.88
-		TweenService:Create(s, TweenInfo.new(0.15, Enum.EasingStyle.Back), { Scale = 1 }):Play()
-	end
-end
+local state
+local stateAt = os.clock()
 
 local gui = new("ScreenGui", {
-	Name = "PumpFlyUI",
+	Name = "LagerUI",
 	ResetOnSpawn = false,
 	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 	Parent = player:WaitForChild("PlayerGui"),
 })
+UI.initToasts(gui)
 
--- Skaliert alle Bereiche passend zur Bildschirmgröße (Handy + PC)
-local scalers = {}
-local function scaled(frame)
-	table.insert(scalers, new("UIScale", { Parent = frame }))
-	return frame
-end
-local function updateScale()
-	local cam = workspace.CurrentCamera
-	local scale = cam and math.clamp(cam.ViewportSize.Y / 760, 0.5, 1.2) or 1
-	for _, s in ipairs(scalers) do
-		s.Scale = scale
-	end
-end
-
----------------------------------------------------------------- Oben: Münzen + Infos
-local top = scaled(new("Frame", {
+---------------------------------------------------------------- HUD oben
+local top = UI.scaled(new("Frame", {
 	AnchorPoint = Vector2.new(0.5, 0),
-	Position = UDim2.new(0.5, 0, 0, 8),
-	Size = UDim2.fromOffset(460, 90),
+	Position = UDim2.new(0.5, 0, 0, 4),
+	Size = UDim2.fromOffset(520, 112),
 	BackgroundTransparency = 1,
 	Parent = gui,
 }))
-local coinsLabel = label({
-	Size = UDim2.new(1, 0, 0, 56),
-	Text = "💰 0",
-	TextColor3 = Color3.fromRGB(255, 220, 60),
-	TextStrokeTransparency = 0,
+local coinsLabel = label({ Size = UDim2.new(1, 0, 0, 46), Text = "💰 0", TextColor3 = UI.YELLOW, TextStrokeTransparency = 0, Parent = top })
+local levelBar = new("Frame", {
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, 50),
+	Size = UDim2.fromOffset(380, 24),
+	BackgroundColor3 = UI.DARK,
 	Parent = top,
-})
-local infoLabel = label({
-	Position = UDim2.fromOffset(0, 58),
-	Size = UDim2.new(1, 0, 0, 26),
-	Text = "",
-	Parent = top,
-})
+}, { UI.corner(10), UI.stroke(2) })
+local levelFill = new("Frame", { Size = UDim2.fromScale(0, 1), BackgroundColor3 = Color3.fromRGB(160, 90, 255), Parent = levelBar }, { UI.corner(10) })
+local levelText = label({ Size = UDim2.fromScale(1, 1), Text = "⭐ Level 1", ZIndex = 2, Parent = levelBar })
+local infoLabel = label({ Position = UDim2.fromOffset(0, 78), Size = UDim2.new(1, 0, 0, 24), Text = "", Parent = top })
 
----------------------------------------------------------------- Unten: Luft-Balken + Pumpen/Starten
-local bottom = scaled(new("Frame", {
+local hintLabel = UI.scaled(label({
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0, 118),
+	Size = UDim2.fromOffset(700, 30),
+	Text = "",
+	TextColor3 = UI.YELLOW,
+	TextStrokeTransparency = 0,
+	Parent = gui,
+}))
+
+---------------------------------------------------------------- Tragen (unten Mitte)
+local carryFrame = UI.scaled(new("Frame", {
 	AnchorPoint = Vector2.new(0.5, 1),
-	Position = UDim2.new(0.5, 0, 1, -16),
-	Size = UDim2.fromOffset(400, 190),
-	BackgroundTransparency = 1,
+	Position = UDim2.new(0.5, 0, 1, -14),
+	Size = UDim2.fromOffset(420, 54),
+	BackgroundColor3 = UI.DARK,
+	BackgroundTransparency = 0.15,
+	Visible = false,
 	Parent = gui,
-}))
+}, { UI.corner(14), UI.stroke(3) }))
+local carryLabel = label({ Position = UDim2.fromOffset(12, 6), Size = UDim2.new(1, -150, 1, -12), TextXAlignment = Enum.TextXAlignment.Left, Text = "", Parent = carryFrame })
+local dropBtn = button("Abstellen", UI.RED, { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -8, 0.5, 0), Size = UDim2.fromOffset(130, 40), Parent = carryFrame })
 
-local warnLabel = label({
-	Size = UDim2.new(1, 0, 0, 26),
-	Text = "",
-	TextColor3 = Color3.fromRGB(255, 80, 80),
-	TextStrokeTransparency = 0,
-	Parent = bottom,
-})
-
-local airBar = new("Frame", {
-	Position = UDim2.fromOffset(0, 30),
-	Size = UDim2.new(1, 0, 0, 38),
-	BackgroundColor3 = DARK,
-	Parent = bottom,
-}, { corner(12), stroke(3) })
-local airFill = new("Frame", {
-	Size = UDim2.new(0, 0, 1, 0),
-	BackgroundColor3 = Color3.fromRGB(90, 220, 90),
-	Parent = airBar,
-}, { corner(12) })
-local airText = label({
-	Size = UDim2.fromScale(1, 1),
-	Text = "🎈 Luft: 0 / 20",
-	ZIndex = 2,
-	Parent = airBar,
-})
-
-local pumpButton = button("🎈 PUMPEN", Color3.fromRGB(60, 190, 90), {
-	Position = UDim2.fromOffset(0, 80),
-	Size = UDim2.fromOffset(192, 84),
-	Parent = bottom,
-})
-local launchButton = button("🚀 STARTEN", Color3.fromRGB(255, 140, 30), {
-	Position = UDim2.fromOffset(208, 80),
-	Size = UDim2.fromOffset(192, 84),
-	Parent = bottom,
-})
-label({
-	Position = UDim2.fromOffset(0, 168),
-	Size = UDim2.new(1, 0, 0, 20),
-	Text = UserInputService.TouchEnabled and "PUMPEN gedrückt halten!" or "E halten = Pumpen   •   F = Starten",
-	TextTransparency = 0.2,
-	Parent = bottom,
-})
-
----------------------------------------------------------------- Links: Menü
-local menu = scaled(new("Frame", {
+---------------------------------------------------------------- Menü links
+local menu = UI.scaled(new("Frame", {
 	AnchorPoint = Vector2.new(0, 0.5),
 	Position = UDim2.new(0, 10, 0.5, 0),
-	Size = UDim2.fromOffset(150, 330),
+	Size = UDim2.fromOffset(160, 420),
 	BackgroundTransparency = 1,
 	Parent = gui,
-}, {
-	new("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }),
-}))
+}, { new("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }) }))
 local function menuButton(text, color, order)
-	return button(text, color, { Size = UDim2.fromOffset(150, 56), LayoutOrder = order, Parent = menu })
+	return button(text, color, { Size = UDim2.fromOffset(160, 58), LayoutOrder = order, Parent = menu })
 end
-local shopBtn = menuButton("🛒 Shop", Color3.fromRGB(60, 140, 255), 1)
-local rebirthBtn = menuButton("🌟 Rebirth", Color3.fromRGB(200, 80, 255), 2)
-local codesBtn = menuButton("🎟 Codes", Color3.fromRGB(255, 90, 140), 3)
-local giftBtn = menuButton("🎁 Geschenk", Color3.fromRGB(40, 200, 180), 4)
-local passBtn = menuButton("💎 2x Münzen", Color3.fromRGB(255, 190, 0), 5)
-passBtn.Visible = Config.GamePasses.DoubleCoins ~= 0
+local ordersBtn = menuButton("📋 Aufträge", Color3.fromRGB(255, 140, 30), 1)
+local buildBtn = menuButton("🔨 Bauen", UI.BLUE, 2)
+local expandBtn = menuButton("🧱 Erweitern", Color3.fromRGB(40, 180, 120), 3)
+local deleteBtn = menuButton("🗑 Abreißen", UI.RED, 4)
+local toolsBtn = menuButton("🛠 Ausrüstung", Color3.fromRGB(150, 90, 230), 5)
+local codesBtn = menuButton("🎟 Codes", Color3.fromRGB(255, 90, 140), 6)
 
----------------------------------------------------------------- Fenster (Shop, Rebirth, Codes)
-local panels = {}
-local function panel(title, height)
-	local frame = scaled(new("Frame", {
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromOffset(480, height),
-		BackgroundColor3 = DARK,
-		Visible = false,
-		ZIndex = 5,
-		Parent = gui,
-	}, { corner(18), stroke(4) }))
-	label({ Position = UDim2.fromOffset(0, 8), Size = UDim2.new(1, 0, 0, 44), Text = title, ZIndex = 6, Parent = frame })
-	local close = button("X", Color3.fromRGB(230, 60, 60), {
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -10, 0, 10),
-		Size = UDim2.fromOffset(44, 44),
-		ZIndex = 6,
-		Parent = frame,
-	})
-	close.Activated:Connect(function()
-		frame.Visible = false
-	end)
-	local content = new("Frame", {
-		Position = UDim2.fromOffset(16, 62),
-		Size = UDim2.new(1, -32, 1, -76),
-		BackgroundTransparency = 1,
-		ZIndex = 6,
-		Parent = frame,
-	})
-	table.insert(panels, frame)
-	return frame, content
-end
+---------------------------------------------------------------- Laufende Aufträge (rechts)
+local tracker = UI.scaled(new("Frame", {
+	AnchorPoint = Vector2.new(1, 0),
+	Position = UDim2.new(1, -10, 0, 60),
+	Size = UDim2.fromOffset(300, 420),
+	BackgroundTransparency = 1,
+	Parent = gui,
+}, { new("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }) }))
 
-local function toggle(frame)
-	local show = not frame.Visible
-	for _, p in ipairs(panels) do
-		p.Visible = false
-	end
-	frame.Visible = show
-end
+---------------------------------------------------------------- Bau-Leiste (unten, im Bau-Modus)
+local buildBar = UI.scaled(new("Frame", {
+	AnchorPoint = Vector2.new(0.5, 1),
+	Position = UDim2.new(0.5, 0, 1, -14),
+	Size = UDim2.fromOffset(600, 118),
+	BackgroundColor3 = UI.DARK,
+	BackgroundTransparency = 0.1,
+	Visible = false,
+	Parent = gui,
+}, { UI.corner(16), UI.stroke(3) }))
+local buildInfo = label({ Position = UDim2.fromOffset(12, 6), Size = UDim2.new(1, -24, 0, 28), Text = "", Parent = buildBar })
+local buildReason = label({ Position = UDim2.fromOffset(12, 34), Size = UDim2.new(1, -24, 0, 20), Text = "", TextColor3 = Color3.fromRGB(255, 120, 120), Parent = buildBar })
+local rotateBtn = button("↻ Drehen (R)", UI.BLUE, { Position = UDim2.fromOffset(12, 60), Size = UDim2.fromOffset(180, 48), Parent = buildBar })
+local confirmBtn = button("✔ Platzieren", UI.GREEN, { Position = UDim2.fromOffset(210, 60), Size = UDim2.fromOffset(180, 48), Parent = buildBar })
+local doneBtn = button("✖ Fertig (Q)", UI.GRAY, { Position = UDim2.fromOffset(408, 60), Size = UDim2.fromOffset(180, 48), Parent = buildBar })
 
--- Shop
-local shopPanel, shopContent = panel("🛒 SHOP", 360)
-local function shopRow(y, buyText)
-	local row = new("Frame", {
-		Position = UDim2.fromOffset(0, y),
-		Size = UDim2.new(1, 0, 0, 130),
-		BackgroundColor3 = Color3.fromRGB(50, 50, 75),
-		ZIndex = 6,
-		Parent = shopContent,
-	}, { corner(14) })
-	local current = label({ Position = UDim2.fromOffset(12, 8), Size = UDim2.new(1, -24, 0, 30), TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 7, Parent = row })
-	local nextL = label({ Position = UDim2.fromOffset(12, 40), Size = UDim2.new(1, -24, 0, 26), TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = Color3.fromRGB(190, 190, 220), ZIndex = 7, Parent = row })
-	local buy = button(buyText, Color3.fromRGB(60, 190, 90), { Position = UDim2.fromOffset(12, 74), Size = UDim2.new(1, -24, 0, 46), ZIndex = 7, Parent = row })
-	return current, nextL, buy
-end
-local balloonCurrent, balloonNext, buyBalloon = shopRow(0, "Kaufen")
-local pumpCurrent, pumpNext, buyPump = shopRow(144, "Kaufen")
+---------------------------------------------------------------- Fenster: Aufträge
+local ordersPanel, ordersContent = UI.panel(gui, "📋 AUFTRAGS-TAFEL", Vector2.new(600, 500))
+label({ Size = UDim2.new(1, 0, 0, 24), Text = "Neue Angebote", TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 11, Parent = ordersContent })
+local offersList = UI.scroll(ordersContent, { Position = UDim2.fromOffset(0, 28), Size = UDim2.new(1, 0, 0, 250), ZIndex = 11 })
+new("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = offersList })
+label({ Position = UDim2.fromOffset(0, 286), Size = UDim2.new(1, 0, 0, 24), Text = "Laufende Aufträge", TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 11, Parent = ordersContent })
+local activeList = UI.scroll(ordersContent, { Position = UDim2.fromOffset(0, 314), Size = UDim2.new(1, 0, 1, -314), ZIndex = 11 })
+new("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, Parent = activeList })
 
--- Rebirth
-local rebirthPanel, rebirthContent = panel("🌟 REBIRTH", 300)
-local rebirthInfo = label({
-	Size = UDim2.new(1, 0, 0, 140),
-	TextScaled = true,
-	TextWrapped = true,
-	ZIndex = 7,
-	Parent = rebirthContent,
+---------------------------------------------------------------- Fenster: Bauen
+local buildPanel, buildContent = UI.panel(gui, "🔨 BAUEN", Vector2.new(660, 520))
+local tabs = new("Frame", { Size = UDim2.new(1, 0, 0, 44), BackgroundTransparency = 1, ZIndex = 11, Parent = buildContent }, {
+	new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }),
 })
-local doRebirth = button("REBIRTH!", Color3.fromRGB(200, 80, 255), { Position = UDim2.fromOffset(0, 154), Size = UDim2.new(1, 0, 0, 60), ZIndex = 7, Parent = rebirthContent })
+local itemGrid = UI.scroll(buildContent, { Position = UDim2.fromOffset(0, 54), Size = UDim2.new(1, 0, 1, -54), ZIndex = 11 })
+new("UIGridLayout", { CellSize = UDim2.fromOffset(196, 186), CellPadding = UDim2.fromOffset(8, 8), SortOrder = Enum.SortOrder.LayoutOrder, Parent = itemGrid })
 
--- Codes
-local codesPanel, codesContent = panel("🎟 CODES", 250)
+---------------------------------------------------------------- Fenster: Ausrüstung & Codes
+local toolsPanel, toolsContent = UI.panel(gui, "🛠 AUSRÜSTUNG", Vector2.new(480, 320))
+local toolCurrent = label({ Size = UDim2.new(1, 0, 0, 34), Text = "", ZIndex = 11, Parent = toolsContent })
+local toolNext = label({ Position = UDim2.fromOffset(0, 44), Size = UDim2.new(1, 0, 0, 28), Text = "", TextColor3 = Color3.fromRGB(190, 190, 220), ZIndex = 11, Parent = toolsContent })
+local toolBuy = button("Kaufen", UI.GREEN, { Position = UDim2.fromOffset(0, 90), Size = UDim2.new(1, 0, 0, 58), ZIndex = 11, Parent = toolsContent })
+label({ Position = UDim2.fromOffset(0, 160), Size = UDim2.new(1, 0, 0, 50), Text = "Mehr tragen = weniger laufen!\nSpäter übernehmen Gabelstapler die Arbeit.", TextColor3 = Color3.fromRGB(190, 190, 220), ZIndex = 11, Parent = toolsContent })
+
+local codesPanel, codesContent = UI.panel(gui, "🎟 CODES", Vector2.new(460, 260))
 local codeBox = new("TextBox", {
-	Size = UDim2.new(1, 0, 0, 56),
-	BackgroundColor3 = WHITE,
-	TextColor3 = DARK,
+	Size = UDim2.new(1, 0, 0, 54),
+	BackgroundColor3 = UI.WHITE,
+	TextColor3 = UI.DARK,
 	PlaceholderText = "Code eingeben…",
 	Text = "",
-	Font = FONT,
+	Font = UI.FONT,
 	TextScaled = true,
 	ClearTextOnFocus = false,
-	ZIndex = 7,
+	ZIndex = 11,
 	Parent = codesContent,
-}, { corner(12), stroke(3) })
-local redeemBtn = button("Einlösen", Color3.fromRGB(255, 90, 140), { Position = UDim2.fromOffset(0, 70), Size = UDim2.new(1, 0, 0, 56), ZIndex = 7, Parent = codesContent })
-label({ Position = UDim2.fromOffset(0, 136), Size = UDim2.new(1, 0, 0, 24), Text = "Neue Codes gibt's auf unserem TikTok! 👀", TextColor3 = Color3.fromRGB(190, 190, 220), ZIndex = 7, Parent = codesContent })
+}, { UI.corner(12), UI.stroke(3) })
+local redeemBtn = button("Einlösen", Color3.fromRGB(255, 90, 140), { Position = UDim2.fromOffset(0, 66), Size = UDim2.new(1, 0, 0, 54), ZIndex = 11, Parent = codesContent })
+label({ Position = UDim2.fromOffset(0, 130), Size = UDim2.new(1, 0, 0, 24), Text = "Neue Codes gibt's auf unserem TikTok! 👀", TextColor3 = Color3.fromRGB(190, 190, 220), ZIndex = 11, Parent = codesContent })
 
----------------------------------------------------------------- Benachrichtigungen + Flug-Anzeige
-local toastHolder = scaled(new("Frame", {
-	AnchorPoint = Vector2.new(0.5, 0),
-	Position = UDim2.new(0.5, 0, 0, 105),
-	Size = UDim2.fromOffset(560, 220),
-	BackgroundTransparency = 1,
-	Parent = gui,
-}, {
-	new("UIListLayout", { Padding = UDim.new(0, 6), HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder }),
-}))
+---------------------------------------------------------------- Hilfsfunktionen
+local function timeLeft(o)
+	if not o.Arrived then
+		return o.TimeLeft
+	end
+	return o.TimeLeft - (os.clock() - stateAt)
+end
 
-local toastColors = {
-	good = Color3.fromRGB(90, 230, 110),
-	bad = Color3.fromRGB(255, 90, 90),
-	record = Color3.fromRGB(255, 215, 60),
-	info = WHITE,
-}
-local toastCount = 0
-local function toast(text, kind)
-	toastCount += 1
-	local t = label({
-		Size = UDim2.new(1, 0, 0, kind == "record" and 46 or 34),
-		Text = text,
-		TextColor3 = toastColors[kind] or WHITE,
-		TextStrokeTransparency = 0,
-		LayoutOrder = toastCount,
-		Parent = toastHolder,
-	})
-	local items = toastHolder:GetChildren()
-	if #items > 6 then
-		for _, c in ipairs(items) do
-			if c:IsA("TextLabel") then
-				c:Destroy()
-				break
+local function kindText(kind)
+	if kind == "In" then
+		return "⬇ WARENEINGANG", Color3.fromRGB(110, 220, 255)
+	end
+	return "⬆ WARENAUSGANG", Color3.fromRGB(255, 170, 70)
+end
+
+local function clearList(list)
+	for _, c in ipairs(list:GetChildren()) do
+		if c:IsA("GuiObject") then
+			c:Destroy()
+		end
+	end
+end
+
+local function progressBar(parent, pos, size, frac, color)
+	local bg = new("Frame", { Position = pos, Size = size, BackgroundColor3 = UI.DARK, ZIndex = 12, Parent = parent }, { UI.corner(8) })
+	new("Frame", { Size = UDim2.fromScale(math.clamp(frac, 0, 1), 1), BackgroundColor3 = color, ZIndex = 13, Parent = bg }, { UI.corner(8) })
+	return bg
+end
+
+---------------------------------------------------------------- Rendern
+local function renderOrders()
+	if not state then
+		return
+	end
+	clearList(offersList)
+	for i, o in ipairs(state.Offers) do
+		local g = Config.GoodsById[o.Goods]
+		local head, headColor = kindText(o.Kind)
+		local card = new("Frame", { LayoutOrder = i, Size = UDim2.new(1, -12, 0, 92), BackgroundColor3 = UI.CARD, ZIndex = 11, Parent = offersList }, { UI.corner(12) })
+		label({ Position = UDim2.fromOffset(12, 6), Size = UDim2.new(0.62, 0, 0, 24), Text = head, TextColor3 = headColor, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 12, Parent = card })
+		label({ Position = UDim2.fromOffset(12, 32), Size = UDim2.new(0.62, 0, 0, 24), Text = string.format("%s %d× %s  •  %s", g.Icon, o.Amount, g.Name, o.Client), TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 12, Parent = card })
+		local detail = string.format("⏱ %s Zeit  •  läuft ab in %s", Config.FormatTime(o.Time), Config.FormatTime(o.ExpiresIn - (os.clock() - stateAt)))
+		local detailColor = Color3.fromRGB(190, 190, 220)
+		if o.Kind == "Out" then
+			local have = state.Stock[o.Goods] or 0
+			detail = string.format("Auf Lager: %d / %d  •  ⏱ %s", have, o.Amount, Config.FormatTime(o.Time))
+			if have < o.Amount then
+				detailColor = Color3.fromRGB(255, 120, 120)
+			end
+		elseif state.Capacity - state.Used < o.Amount then
+			detail ..= "  •  ⚠ wenig Platz!"
+			detailColor = Color3.fromRGB(255, 200, 120)
+		end
+		label({ Position = UDim2.fromOffset(12, 60), Size = UDim2.new(0.62, 0, 0, 20), Text = detail, TextColor3 = detailColor, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 12, Parent = card })
+		label({ AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -10, 0, 6), Size = UDim2.fromOffset(170, 32), Text = "💰 +" .. fmt(o.Reward), TextColor3 = UI.YELLOW, ZIndex = 12, Parent = card })
+		local accept = button(state.FreeDocks > 0 and "Annehmen" or "Rampe belegt", state.FreeDocks > 0 and UI.GREEN or UI.GRAY, {
+			AnchorPoint = Vector2.new(1, 0),
+			Position = UDim2.new(1, -10, 0, 44),
+			Size = UDim2.fromOffset(170, 40),
+			ZIndex = 12,
+			Parent = card,
+		})
+		accept.Activated:Connect(function()
+			UI.bounce(accept)
+			R.AcceptOrder:FireServer(o.Id)
+		end)
+	end
+
+	clearList(activeList)
+	if #state.Active == 0 then
+		label({ Size = UDim2.new(1, -12, 0, 30), Text = "Keine laufenden Aufträge", TextColor3 = Color3.fromRGB(160, 160, 180), ZIndex = 12, Parent = activeList })
+	end
+	for i, o in ipairs(state.Active) do
+		local g = Config.GoodsById[o.Goods]
+		local head, headColor = kindText(o.Kind)
+		local card = new("Frame", { LayoutOrder = i, Size = UDim2.new(1, -12, 0, 64), BackgroundColor3 = UI.CARD, ZIndex = 11, Parent = activeList }, { UI.corner(12) })
+		local status = o.Arrived and ("⏱ " .. Config.FormatTime(timeLeft(o))) or "🚚 unterwegs"
+		label({ Position = UDim2.fromOffset(12, 6), Size = UDim2.new(1, -140, 0, 24), Text = string.format("%s  %s %d/%d  %s", head, g.Icon, o.Done, o.Amount, status), TextColor3 = headColor, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 12, Parent = card })
+		progressBar(card, UDim2.fromOffset(12, 38), UDim2.new(1, -140, 0, 16), o.Done / o.Amount, headColor)
+		local cancel = button("Abbrechen", UI.RED, { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -10, 0.5, 0), Size = UDim2.fromOffset(110, 40), ZIndex = 12, Parent = card })
+		cancel.Activated:Connect(function()
+			R.CancelOrder:FireServer(o.Id)
+		end)
+	end
+end
+
+local function renderTracker()
+	clearList(tracker)
+	if not state then
+		return
+	end
+	for i, o in ipairs(state.Active) do
+		local g = Config.GoodsById[o.Goods]
+		local _, color = kindText(o.Kind)
+		local card = new("Frame", { LayoutOrder = i, Size = UDim2.new(1, 0, 0, 58), BackgroundColor3 = UI.DARK, BackgroundTransparency = 0.15, Parent = tracker }, { UI.corner(12), UI.stroke(2) })
+		local left = timeLeft(o)
+		local status = o.Arrived and ("⏱ " .. Config.FormatTime(left)) or "🚚 unterwegs"
+		label({
+			Position = UDim2.fromOffset(10, 4),
+			Size = UDim2.new(1, -20, 0, 26),
+			Text = string.format("%s %s %d/%d   %s", o.Kind == "In" and "⬇" or "⬆", g.Icon, o.Done, o.Amount, status),
+			TextColor3 = (o.Arrived and left < 20) and Color3.fromRGB(255, 90, 90) or UI.WHITE,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Parent = card,
+		})
+		progressBar(card, UDim2.fromOffset(10, 34), UDim2.new(1, -20, 0, 14), o.Done / o.Amount, color)
+	end
+end
+
+-- Bau-Menü: Karten mit 3D-Vorschau (werden einmal erstellt)
+local itemCards = {}
+local currentTab = Items.Categories[1]
+local tabButtons = {}
+
+local function makePreview(parent, def)
+	local vp = new("ViewportFrame", {
+		Position = UDim2.fromOffset(6, 30),
+		Size = UDim2.new(1, -12, 0, 86),
+		BackgroundColor3 = Color3.fromRGB(70, 75, 100),
+		Ambient = Color3.fromRGB(200, 200, 200),
+		LightDirection = Vector3.new(-1, -2, -1),
+		ZIndex = 12,
+		Parent = parent,
+	}, { UI.corner(10) })
+	local model = Items.Build(def, { OwnerName = player.DisplayName })
+	model.Parent = vp
+	local cf, size = model:GetBoundingBox()
+	local cam = new("Camera", { FieldOfView = 40, Parent = vp })
+	local dist = size.Magnitude * 1.25 + 2
+	cam.CFrame = CFrame.lookAt(cf.Position + Vector3.new(dist * 0.6, dist * 0.55, -dist * 0.7), cf.Position)
+	vp.CurrentCamera = cam
+end
+
+local function buildItemCards()
+	for _, def in ipairs(Items.List) do
+		local card = new("TextButton", { Text = "", LayoutOrder = def.Order, BackgroundColor3 = UI.CARD, AutoButtonColor = true, ZIndex = 11, Parent = itemGrid }, { UI.corner(12), UI.stroke(2) })
+		label({ Position = UDim2.fromOffset(6, 4), Size = UDim2.new(1, -12, 0, 24), Text = def.Name, ZIndex = 12, Parent = card })
+		makePreview(card, def)
+		label({ Position = UDim2.fromOffset(6, 120), Size = UDim2.new(1, -12, 0, 32), Text = def.Desc or "", TextWrapped = true, TextColor3 = Color3.fromRGB(190, 190, 220), ZIndex = 12, Parent = card })
+		local price = label({ Position = UDim2.fromOffset(6, 154), Size = UDim2.new(1, -12, 0, 26), Text = "", ZIndex = 12, Parent = card })
+		card.Activated:Connect(function()
+			if state and state.Level < def.Level then
+				UI.toast("🔒 Ab Level " .. def.Level, "bad")
+				return
+			end
+			UI.closePanels()
+			BuildMode.StartPlace(def.Id)
+		end)
+		itemCards[def.Id] = { Card = card, Price = price, Def = def }
+	end
+end
+
+local function renderBuild()
+	for _, b in pairs(tabButtons) do
+		b.BackgroundColor3 = b.Name == currentTab and UI.BLUE or UI.GRAY
+	end
+	for _, c in pairs(itemCards) do
+		local def = c.Def
+		c.Card.Visible = def.Cat == currentTab
+		if state then
+			if state.Level < def.Level then
+				c.Price.Text = "🔒 Level " .. def.Level
+				c.Price.TextColor3 = Color3.fromRGB(200, 200, 200)
+			else
+				c.Price.Text = "💰 " .. fmt(def.Price)
+				c.Price.TextColor3 = state.Coins >= def.Price and UI.YELLOW or Color3.fromRGB(255, 110, 110)
 			end
 		end
 	end
-	task.delay(2.5, function()
-		if t.Parent then
-			local tween = TweenService:Create(t, TweenInfo.new(0.5), { TextTransparency = 1, TextStrokeTransparency = 1 })
-			tween:Play()
-			tween.Completed:Wait()
-			t:Destroy()
-		end
-	end)
 end
 
-local flightLabel = label({
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	Position = UDim2.fromScale(0.5, 0.36),
-	Size = UDim2.fromScale(0.6, 0.12),
-	Text = "",
-	TextStrokeTransparency = 0,
-	Visible = false,
-	Parent = gui,
-})
+for i, cat in ipairs(Items.Categories) do
+	local b = button(cat, UI.GRAY, { Name = cat, LayoutOrder = i, Size = UDim2.fromOffset(148, 42), ZIndex = 12, Parent = tabs })
+	b.Activated:Connect(function()
+		currentTab = cat
+		renderBuild()
+	end)
+	tabButtons[cat] = b
+end
+buildItemCards()
 
----------------------------------------------------------------- Zustand vom Server anzeigen
-local state
-local giftReadyAt = 0
+local function renderTools()
+	if not state then
+		return
+	end
+	local t, nt = Config.Tools[state.Tool], Config.Tools[state.Tool + 1]
+	toolCurrent.Text = string.format("🛠 %s – trägt %d Kiste%s", t.Name, t.Carry, t.Carry == 1 and "" or "n")
+	if nt then
+		toolNext.Text = string.format("Nächste: %s – trägt %d Kisten", nt.Name, nt.Carry)
+		if state.Level < nt.Level then
+			toolBuy.Text = "🔒 Ab Level " .. nt.Level
+			toolBuy.BackgroundColor3 = UI.GRAY
+		else
+			toolBuy.Text = "Kaufen – " .. fmt(nt.Price) .. " 💰"
+			toolBuy.BackgroundColor3 = state.Coins >= nt.Price and UI.GREEN or UI.GRAY
+		end
+	else
+		toolNext.Text = "Du hast die beste Ausrüstung! 😎"
+		toolBuy.Text = "MAX"
+		toolBuy.BackgroundColor3 = UI.GRAY
+	end
+end
+
+local function hintText()
+	if not state then
+		return ""
+	end
+	if state.PlotIndex == 0 then
+		return "Server voll – kein Grundstück frei."
+	end
+	if state.OrdersDone < 3 then
+		local a = state.Active[1]
+		local carrying = state.Carry.Count > 0
+		if not a then
+			return "👉 Öffne 📋 Aufträge und nimm einen Auftrag an!"
+		elseif not a.Arrived then
+			return "🚚 Der LKW fährt gerade zu deiner Laderampe…"
+		elseif a.Kind == "In" then
+			return carrying and "👉 Bring die Kisten zu einem Regal und drücke E (Einlagern)" or "👉 Geh hinten an den LKW und drücke E (Entladen)"
+		else
+			return carrying and "👉 Bring die Kisten zum LKW und drücke E (Beladen)" or "👉 Hol die Ware aus einem Regal: F (Auslagern)"
+		end
+	end
+	if state.Capacity > 0 and state.Used >= state.Capacity then
+		return "📦 Lager voll! Bau mehr Regale (🔨 Bauen → Lager)"
+	end
+	return ""
+end
+
+local function renderHUD()
+	coinsLabel.Text = "💰 " .. fmt(state.Coins)
+	levelFill.Size = UDim2.fromScale(math.clamp(state.XP / state.XPNeed, 0, 1), 1)
+	levelText.Text = string.format("⭐ Level %d  •  %s / %s XP", state.Level, fmt(state.XP), fmt(state.XPNeed))
+	infoLabel.Text = string.format("📦 Lager %s/%s   🚚 Rampen frei: %d/%d", fmt(state.Used), fmt(state.Capacity), state.FreeDocks, state.Docks)
+	hintLabel.Text = hintText()
+
+	local c = state.Carry
+	if c.Count > 0 and not BuildMode.Mode() then
+		local g = Config.GoodsById[c.Goods]
+		carryLabel.Text = string.format("🤲 %d/%d  %s %s", c.Count, state.CarryMax, g and g.Icon or "📦", g and g.Name or "")
+		carryFrame.Visible = true
+	else
+		carryFrame.Visible = false
+	end
+end
 
 local function applyState(s)
 	state = s
-	coinsLabel.Text = "💰 " .. fmt(s.Coins)
-
-	local info = string.format("⚡ x%s Boost   🏆 Rekord: %s Studs", Config.FormatMult(s.Multiplier), fmt(s.BestHeight))
-	if s.FriendBoost > 0 then
-		info ..= string.format("   👥 +%d%%", math.floor(s.FriendBoost * 100 + 0.5))
+	stateAt = os.clock()
+	renderHUD()
+	renderTracker()
+	if ordersPanel.Visible then
+		renderOrders()
 	end
-	infoLabel.Text = info
-
-	local fill = math.clamp(s.Air / s.Capacity, 0, 1)
-	TweenService:Create(airFill, TweenInfo.new(0.12), {
-		Size = UDim2.new(fill, 0, 1, 0),
-		BackgroundColor3 = Color3.fromRGB(90, 220, 90):Lerp(Color3.fromRGB(255, 50, 50), fill),
-	}):Play()
-	airText.Text = string.format("🎈 Luft: %s / %s   →  %s Studs", fmt(s.Air), fmt(s.Capacity), fmt(s.Air * Config.LiftPerAir))
-	if fill >= 0.85 then
-		warnLabel.Text = "⚠ GLEICH PLATZT ES! ⚠"
-	elseif fill >= 0.65 then
-		warnLabel.Text = "Riskant… 😬"
-	else
-		warnLabel.Text = ""
+	if buildPanel.Visible then
+		renderBuild()
 	end
-
-	local canLaunch = s.Air >= Config.LaunchMinAir and not s.Flying
-	launchButton.BackgroundColor3 = canLaunch and Color3.fromRGB(255, 140, 30) or Color3.fromRGB(120, 120, 120)
-
-	-- Shop
-	local b, nb = Config.Balloons[s.Balloon], Config.Balloons[s.Balloon + 1]
-	balloonCurrent.Text = string.format("🎈 %s (%s Luft)", b.Name, fmt(b.Capacity))
-	balloonNext.Text = nb and string.format("Nächster: %s (%s Luft)", nb.Name, fmt(nb.Capacity)) or "MAX erreicht!"
-	buyBalloon.Text = nb and ("Kaufen – " .. fmt(nb.Price) .. " 💰") or "MAX"
-	buyBalloon.BackgroundColor3 = (nb and s.Coins >= nb.Price) and Color3.fromRGB(60, 190, 90) or Color3.fromRGB(110, 110, 110)
-
-	local p, np = Config.Pumps[s.Pump], Config.Pumps[s.Pump + 1]
-	pumpCurrent.Text = string.format("💨 %s (%s pro Pump)", p.Name, fmt(p.Power))
-	pumpNext.Text = np and string.format("Nächste: %s (%s pro Pump)", np.Name, fmt(np.Power)) or "MAX erreicht!"
-	buyPump.Text = np and ("Kaufen – " .. fmt(np.Price) .. " 💰") or "MAX"
-	buyPump.BackgroundColor3 = (np and s.Coins >= np.Price) and Color3.fromRGB(60, 190, 90) or Color3.fromRGB(110, 110, 110)
-
-	-- Rebirth
-	local cost = Config.RebirthCost(s.Rebirths)
-	local nextMult = 1 + (s.Rebirths + 1) * Config.RebirthBonus
-	rebirthInfo.Text = string.format(
-		"Rebirths: %d\nSetzt Münzen, Ballon & Pumpe zurück.\nDafür DAUERHAFT x%s Münzen!\nKosten: %s 💰",
-		s.Rebirths,
-		Config.FormatMult(nextMult),
-		fmt(cost)
-	)
-	doRebirth.BackgroundColor3 = s.Coins >= cost and Color3.fromRGB(200, 80, 255) or Color3.fromRGB(110, 110, 110)
-
-	giftReadyAt = os.clock() + s.GiftIn
-	passBtn.Text = s.HasDouble and "💎 2x AKTIV" or "💎 2x Münzen"
+	if toolsPanel.Visible then
+		renderTools()
+	end
 end
 
 R.State.OnClientEvent:Connect(applyState)
-R.Notify.OnClientEvent:Connect(toast)
+R.Notify.OnClientEvent:Connect(UI.toast)
 
--- Geschenk-Countdown
+-- Countdown-Anzeigen jede Sekunde auffrischen
 task.spawn(function()
 	while true do
-		local left = math.max(0, math.ceil(giftReadyAt - os.clock()))
-		if left == 0 then
-			giftBtn.Text = "🎁 ABHOLEN!"
-		else
-			giftBtn.Text = string.format("🎁 %d:%02d", left // 60, left % 60)
-		end
-		task.wait(0.5)
-	end
-end)
-
----------------------------------------------------------------- Pumpen (gedrückt halten)
-local holding = false
-local function startPumping()
-	if holding then
-		return
-	end
-	holding = true
-	task.spawn(function()
-		while holding do
-			if state and not state.Flying then
-				R.Pump:FireServer()
-				bounce(pumpButton)
+		task.wait(1)
+		if state then
+			renderTracker()
+			if ordersPanel.Visible then
+				renderOrders()
 			end
-			task.wait(0.1)
 		end
-	end)
-end
-local function stopPumping()
-	holding = false
-end
-
-local function launch()
-	if state and not state.Flying then
-		stopPumping()
-		bounce(launchButton)
-		R.Launch:FireServer()
-	end
-end
-
-local function isPress(input)
-	return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
-end
-
-pumpButton.InputBegan:Connect(function(input)
-	if isPress(input) then
-		startPumping()
 	end
 end)
-launchButton.Activated:Connect(launch)
 
-UserInputService.InputBegan:Connect(function(input, processed)
-	if processed then
-		return
-	end
-	if input.KeyCode == Enum.KeyCode.E then
-		startPumping()
-	elseif input.KeyCode == Enum.KeyCode.F then
-		launch()
-	end
+---------------------------------------------------------------- Bau-Modus anbinden
+BuildMode.Init({
+	R = R,
+	getState = function()
+		return state
+	end,
+	toast = UI.toast,
+	onInfo = function(text, reason)
+		buildInfo.Text = text
+		buildReason.Text = reason or ""
+	end,
+	onChanged = function(mode)
+		buildBar.Visible = mode ~= nil
+		rotateBtn.Visible = mode == "place"
+		confirmBtn.Visible = mode == "place"
+		deleteBtn.Text = mode == "delete" and "✖ Stopp" or "🗑 Abreißen"
+		expandBtn.Text = mode == "expand" and "✖ Stopp" or "🧱 Erweitern"
+		pcall(function()
+			ProximityPromptService.Enabled = mode == nil
+		end)
+		if mode then
+			UI.closePanels()
+		end
+		if state then
+			renderHUD()
+		end
+	end,
+})
+
+rotateBtn.Activated:Connect(function()
+	UI.bounce(rotateBtn)
+	BuildMode.Rotate()
 end)
-UserInputService.InputEnded:Connect(function(input)
-	if isPress(input) or input.KeyCode == Enum.KeyCode.E then
-		stopPumping()
-	end
+confirmBtn.Activated:Connect(function()
+	UI.bounce(confirmBtn)
+	BuildMode.Confirm()
+end)
+doneBtn.Activated:Connect(function()
+	BuildMode.Stop()
 end)
 
 ---------------------------------------------------------------- Menü-Buttons
-shopBtn.Activated:Connect(function()
-	bounce(shopBtn)
-	toggle(shopPanel)
+ordersBtn.Activated:Connect(function()
+	UI.bounce(ordersBtn)
+	BuildMode.Stop()
+	UI.toggle(ordersPanel)
+	renderOrders()
 end)
-rebirthBtn.Activated:Connect(function()
-	bounce(rebirthBtn)
-	toggle(rebirthPanel)
+buildBtn.Activated:Connect(function()
+	UI.bounce(buildBtn)
+	BuildMode.Stop()
+	UI.toggle(buildPanel)
+	renderBuild()
 end)
-codesBtn.Activated:Connect(function()
-	bounce(codesBtn)
-	toggle(codesPanel)
-end)
-giftBtn.Activated:Connect(function()
-	bounce(giftBtn)
-	R.ClaimGift:FireServer()
-end)
-passBtn.Activated:Connect(function()
-	bounce(passBtn)
-	if Config.GamePasses.DoubleCoins ~= 0 and not (state and state.HasDouble) then
-		MarketplaceService:PromptGamePassPurchase(player, Config.GamePasses.DoubleCoins)
+expandBtn.Activated:Connect(function()
+	UI.bounce(expandBtn)
+	if BuildMode.Mode() == "expand" then
+		BuildMode.Stop()
+	else
+		BuildMode.StartExpand()
 	end
 end)
-
-buyBalloon.Activated:Connect(function()
-	bounce(buyBalloon)
-	R.Buy:FireServer("Balloon")
+deleteBtn.Activated:Connect(function()
+	UI.bounce(deleteBtn)
+	if BuildMode.Mode() == "delete" then
+		BuildMode.Stop()
+	else
+		BuildMode.StartDelete()
+	end
 end)
-buyPump.Activated:Connect(function()
-	bounce(buyPump)
-	R.Buy:FireServer("Pump")
+toolsBtn.Activated:Connect(function()
+	UI.bounce(toolsBtn)
+	BuildMode.Stop()
+	UI.toggle(toolsPanel)
+	renderTools()
 end)
-doRebirth.Activated:Connect(function()
-	bounce(doRebirth)
-	R.Rebirth:FireServer()
+codesBtn.Activated:Connect(function()
+	UI.bounce(codesBtn)
+	BuildMode.Stop()
+	UI.toggle(codesPanel)
+end)
+toolBuy.Activated:Connect(function()
+	UI.bounce(toolBuy)
+	R.BuyTool:FireServer()
 end)
 redeemBtn.Activated:Connect(function()
-	bounce(redeemBtn)
+	UI.bounce(redeemBtn)
 	R.Redeem:FireServer(codeBox.Text)
 	codeBox.Text = ""
 end)
+dropBtn.Activated:Connect(function()
+	R.Drop:FireServer()
+end)
 
----------------------------------------------------------------- Flug (rein optisch – Belohnung berechnet der Server)
-local flight
-
-local function endFlight()
-	if flight then
-		flight.conn:Disconnect()
-		flight.align:Destroy()
-		flight.attachment:Destroy()
-		flight = nil
-	end
-	flightLabel.Visible = false
-end
-
-R.Flight.OnClientEvent:Connect(function(height, duration)
-	endFlight()
-	local char = player.Character
-	local root = char and char:FindFirstChild("HumanoidRootPart")
-	if not root then
-		return
-	end
-	stopPumping()
-
-	local attachment = new("Attachment", { Parent = root })
-	local align = new("AlignPosition", {
-		Mode = Enum.PositionAlignmentMode.OneAttachment,
-		Attachment0 = attachment,
-		MaxForce = 1e9,
-		MaxVelocity = 1e6,
-		Responsiveness = 120,
-		Position = root.Position,
-		Parent = root,
-	})
-
-	local start = root.Position
-	local t0 = os.clock()
-	local lastZone
-	flightLabel.Visible = true
-	local conn = RunService.Heartbeat:Connect(function()
-		local a = math.clamp((os.clock() - t0) / duration, 0, 1)
-		local y = height * (1 - (1 - a) ^ 3)
-		align.Position = start + Vector3.new(0, y, 0)
-		local zone = Config.GetZone(y)
-		flightLabel.Text = string.format("⬆ %s Studs\n%s %s", fmt(y), zone.Icon, zone.Name)
-		flightLabel.TextColor3 = zone.Color
-		if zone ~= lastZone then
-			if lastZone then
-				toast(string.format("%s %s erreicht! x%s", zone.Icon, zone.Name, Config.FormatMult(zone.Multiplier)), "record")
-			end
-			lastZone = zone
+---------------------------------------------------------------- Prompts fremder Lager ausblenden
+local function checkPrompt(p)
+	if p:IsA("ProximityPrompt") then
+		local owner = p:GetAttribute("OwnerId")
+		if owner and owner ~= player.UserId then
+			p.Enabled = false
 		end
-	end)
-	flight = { conn = conn, align = align, attachment = attachment }
-end)
-
-R.FlightEnd.OnClientEvent:Connect(function(spawnCFrame)
-	endFlight()
-	local char = player.Character
-	local root = char and char:FindFirstChild("HumanoidRootPart")
-	if root then
-		root.AssemblyLinearVelocity = Vector3.zero
-		char:PivotTo(spawnCFrame)
 	end
-end)
-
-player.CharacterAdded:Connect(function()
-	endFlight()
-	stopPumping()
-end)
+end
+local plotsFolder = workspace:WaitForChild("Plots")
+for _, d in ipairs(plotsFolder:GetDescendants()) do
+	checkPrompt(d)
+end
+plotsFolder.DescendantAdded:Connect(checkPrompt)
 
 ---------------------------------------------------------------- Start
 local function hookCamera()
 	local cam = workspace.CurrentCamera
 	if cam then
-		cam:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
+		cam:GetPropertyChangedSignal("ViewportSize"):Connect(UI.updateScale)
 	end
-	updateScale()
+	UI.updateScale()
 end
 workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(hookCamera)
 hookCamera()

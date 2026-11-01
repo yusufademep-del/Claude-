@@ -1,273 +1,191 @@
--- Pump & Fly – baut die Map per Code (Spawn, Zonen-Ringe, Wolken, Bestenliste)
--- Du musst nichts bauen: einfach eine leere Baseplate nehmen und starten.
+-- Lager-Imperium – baut die Map: Straße + 6 Grundstücke mit LKW-Hof
+-- Stell in den Spieleinstellungen „Max. Spieler“ auf 6 (ein Grundstück pro Spieler).
 
 local World = {}
 
-local function make(class, props)
-	local inst = Instance.new(class)
+local function part(props)
+	local p = Instance.new("Part")
+	p.Anchored = true
+	p.TopSurface = Enum.SurfaceType.Smooth
+	p.BottomSurface = Enum.SurfaceType.Smooth
 	local parent = props.Parent
 	props.Parent = nil
 	for k, v in pairs(props) do
-		inst[k] = v
+		p[k] = v
 	end
-	inst.Parent = parent
-	return inst
-end
-
-local function part(props)
-	props.Anchored = true
-	props.TopSurface = Enum.SurfaceType.Smooth
-	props.BottomSurface = Enum.SurfaceType.Smooth
-	if props.CanCollide == nil then
-		props.CanCollide = false
-	end
-	return make("Part", props)
-end
-
-local function billboard(adornee, text, color, size)
-	local gui = make("BillboardGui", {
-		Size = UDim2.new(size.X, 0, size.Y, 0),
-		LightInfluence = 0,
-		MaxDistance = 2000,
-		Parent = adornee,
-	})
-	make("TextLabel", {
-		Size = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 1,
-		Text = text,
-		TextColor3 = color,
-		TextStrokeTransparency = 0,
-		TextScaled = true,
-		Font = Enum.Font.FredokaOne,
-		Parent = gui,
-	})
-	return gui
-end
-
-local function buildZones(folder, Config, rng)
-	for index, zone in ipairs(Config.Zones) do
-		if zone.Height > 0 then
-			local h = zone.Height
-			local nextZone = Config.Zones[index + 1]
-			local top = nextZone and nextZone.Height or (h + 8000)
-
-			-- Leuchtender Rahmen, durch den man fliegt
-			local size, t = 140, 3
-			for _, def in ipairs({
-				{ Vector3.new(0, h, size / 2), Vector3.new(size, t, t) },
-				{ Vector3.new(0, h, -size / 2), Vector3.new(size, t, t) },
-				{ Vector3.new(size / 2, h, 0), Vector3.new(t, t, size) },
-				{ Vector3.new(-size / 2, h, 0), Vector3.new(t, t, size) },
-			}) do
-				part({
-					Name = zone.Name .. "Ring",
-					Position = def[1],
-					Size = def[2],
-					Color = zone.Color,
-					Material = Enum.Material.Neon,
-					Transparency = 0.15,
-					CastShadow = false,
-					CanQuery = false,
-					Parent = folder,
-				})
-			end
-
-			local labelAnchor = part({
-				Name = zone.Name .. "Label",
-				Position = Vector3.new(0, h + 15, size / 2),
-				Size = Vector3.new(1, 1, 1),
-				Transparency = 1,
-				CanQuery = false,
-				Parent = folder,
-			})
-			billboard(
-				labelAnchor,
-				string.format("%s %s  •  x%s Münzen", zone.Icon, string.upper(zone.Name), Config.FormatMult(zone.Multiplier)),
-				zone.Color,
-				Vector2.new(80, 14)
-			)
-
-			-- Deko pro Zone
-			local count = (zone.Decor == "clouds" or zone.Decor == "storm") and 18 or 30
-			for _ = 1, count do
-				local pos = Vector3.new(rng:NextNumber(-500, 500), rng:NextNumber(h, top), rng:NextNumber(-500, 500))
-				if zone.Decor == "clouds" or zone.Decor == "storm" then
-					local w = rng:NextNumber(25, 60)
-					part({
-						Name = "Cloud",
-						Shape = Enum.PartType.Ball,
-						Size = Vector3.new(w, w, w),
-						Position = pos,
-						Color = zone.Decor == "storm" and Color3.fromRGB(90, 90, 105) or Color3.new(1, 1, 1),
-						Material = Enum.Material.SmoothPlastic,
-						Transparency = 0.25,
-						CastShadow = false,
-						CanQuery = false,
-						Parent = folder,
-					})
-				else
-					local s = rng:NextNumber(1, 4)
-					part({
-						Name = "Star",
-						Shape = Enum.PartType.Ball,
-						Size = Vector3.new(s, s, s),
-						Position = pos,
-						Color = zone.Decor == "void" and Color3.fromRGB(200, 120, 255) or Color3.new(1, 1, 0.85),
-						Material = Enum.Material.Neon,
-						CastShadow = false,
-						CanQuery = false,
-						Parent = folder,
-					})
-				end
-			end
-
-			if zone.Decor == "moon" then
-				part({
-					Name = "Moon",
-					Shape = Enum.PartType.Ball,
-					Size = Vector3.new(400, 400, 400),
-					Position = Vector3.new(700, h + 600, -700),
-					Color = Color3.fromRGB(200, 200, 190),
-					Material = Enum.Material.Slate,
-					CastShadow = false,
-					CanQuery = false,
-					Parent = folder,
-				})
-			end
-		end
-	end
-end
-
-local function buildLeaderboard(folder)
-	local board = part({
-		Name = "Bestenliste",
-		Size = Vector3.new(18, 14, 1),
-		CFrame = CFrame.new(0, 9, -30) * CFrame.Angles(0, math.pi, 0),
-		Color = Color3.fromRGB(35, 35, 55),
-		Material = Enum.Material.SmoothPlastic,
-		CanCollide = true,
-		Parent = folder,
-	})
-	local gui = make("SurfaceGui", {
-		Face = Enum.NormalId.Front,
-		SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud,
-		PixelsPerStud = 40,
-		LightInfluence = 0,
-		Parent = board,
-	})
-	make("TextLabel", {
-		Size = UDim2.new(1, 0, 0.16, 0),
-		BackgroundTransparency = 1,
-		Text = "🏆 HÖCHSTE FLÜGE (WELTWEIT)",
-		TextColor3 = Color3.fromRGB(255, 215, 60),
-		TextScaled = true,
-		Font = Enum.Font.FredokaOne,
-		Parent = gui,
-	})
-	local list = make("Frame", {
-		Position = UDim2.new(0.05, 0, 0.18, 0),
-		Size = UDim2.new(0.9, 0, 0.8, 0),
-		BackgroundTransparency = 1,
-		Parent = gui,
-	})
-	make("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Parent = list })
-
-	local rows = {}
-	for i = 1, 10 do
-		rows[i] = make("TextLabel", {
-			LayoutOrder = i,
-			Size = UDim2.new(1, 0, 0.1, 0),
-			BackgroundTransparency = 1,
-			Text = i == 1 and "Lade…" or "",
-			TextColor3 = Color3.new(1, 1, 1),
-			TextXAlignment = Enum.TextXAlignment.Left,
-			TextScaled = true,
-			Font = Enum.Font.FredokaOne,
-			Parent = list,
-		})
-	end
-
-	return function(entries, format)
-		if not entries then
-			rows[1].Text = "Bestenliste nur im veröffentlichten Spiel"
-			return
-		end
-		local medals = { "🥇", "🥈", "🥉" }
-		for i = 1, 10 do
-			local e = entries[i]
-			rows[i].Text = e and string.format("%s %d. %s – %s Studs", medals[i] or "  ", i, e.Name, format(e.Value)) or ""
-		end
-	end
+	p.Parent = parent
+	return p
 end
 
 function World.Build(Config)
-	local old = workspace:FindFirstChild("PumpFlyWorld")
+	local old = workspace:FindFirstChild("LagerWorld")
 	if old then
 		old:Destroy()
 	end
-	local folder = make("Folder", { Name = "PumpFlyWorld", Parent = workspace })
-	local rng = Random.new(1337)
+	local folder = Instance.new("Folder")
+	folder.Name = "LagerWorld"
+	folder.Parent = workspace
 
-	-- Boden, falls keine Baseplate existiert
 	if not workspace:FindFirstChild("Baseplate") then
 		part({
 			Name = "Baseplate",
-			Size = Vector3.new(1024, 2, 1024),
+			Size = Vector3.new(1400, 2, 1400),
 			Position = Vector3.new(0, -1, 0),
-			Color = Color3.fromRGB(100, 190, 90),
+			Color = Color3.fromRGB(95, 170, 85),
 			Material = Enum.Material.Grass,
-			CanCollide = true,
-			Parent = folder,
+			Parent = workspace,
 		})
 	end
 
-	-- Fremde Spawns entfernen, damit alle auf unserer Plattform starten
 	for _, d in ipairs(workspace:GetDescendants()) do
 		if d:IsA("SpawnLocation") then
 			d:Destroy()
 		end
 	end
 
+	local plotW = Config.ChunksX * Config.ChunkTiles * Config.TileSize -- 160
+	local plotD = Config.ChunksZ * Config.ChunkTiles * Config.TileSize -- 128
+	local yard = 24
+	local roadW = 24
+	local gap = 24
+	local spacing = plotW + gap
+	local roadLen = spacing * 3 + 200
+
+	-- Straße
 	part({
-		Name = "SpawnPlatform",
-		Shape = Enum.PartType.Cylinder,
-		Size = Vector3.new(1, 70, 70),
-		CFrame = CFrame.new(0, 0.5, 0) * CFrame.Angles(0, 0, math.rad(90)),
-		Color = Color3.fromRGB(255, 200, 80),
-		Material = Enum.Material.SmoothPlastic,
-		CanCollide = true,
+		Name = "Road",
+		Size = Vector3.new(roadLen, 0.2, roadW),
+		Position = Vector3.new(0, 0.1, 0),
+		Color = Color3.fromRGB(45, 45, 50),
+		Material = Enum.Material.Asphalt,
 		Parent = folder,
 	})
-	local spawn = make("SpawnLocation", {
-		Name = "Spawn",
-		Anchored = true,
-		Size = Vector3.new(12, 1, 12),
-		Position = Vector3.new(0, 1.5, 0),
-		Color = Color3.fromRGB(255, 120, 180),
-		Material = Enum.Material.Neon,
-		Duration = 0,
-		Neutral = true,
-		Parent = folder,
-	})
+	for x = -roadLen / 2 + 6, roadLen / 2 - 6, 16 do
+		part({
+			Name = "Dash",
+			Size = Vector3.new(8, 0.05, 0.6),
+			Position = Vector3.new(x, 0.22, 0),
+			Color = Color3.new(1, 1, 1),
+			Material = Enum.Material.SmoothPlastic,
+			CanCollide = false,
+			Parent = folder,
+		})
+	end
 
-	local tip = part({
-		Name = "Tipp",
-		Size = Vector3.new(1, 1, 1),
-		Position = Vector3.new(0, 14, 25),
-		Transparency = 1,
-		Parent = folder,
-	})
-	billboard(tip, "🎈 Pumpe so viel du dich traust… 💥 aber nicht zu viel!", Color3.new(1, 1, 1), Vector2.new(40, 5))
+	local spawn = Instance.new("SpawnLocation")
+	spawn.Name = "Spawn"
+	spawn.Anchored = true
+	spawn.Size = Vector3.new(10, 0.4, 10)
+	spawn.Position = Vector3.new(0, 0.3, 0)
+	spawn.Transparency = 1
+	spawn.CanCollide = false
+	spawn.Neutral = true
+	spawn.Duration = 0
+	spawn.Parent = folder
 
-	buildZones(folder, Config, rng)
-	local setBoard = buildLeaderboard(folder)
+	local plots = {}
+	local plotFolder = Instance.new("Folder")
+	plotFolder.Name = "Plots"
+	plotFolder.Parent = workspace
 
-	return {
-		SpawnCFrame = spawn.CFrame + Vector3.new(0, 4, 0),
-		SetBoard = function(entries)
-			setBoard(entries, Config.Format)
-		end,
-	}
+	local index = 0
+	for _, side in ipairs({ 1, -1 }) do
+		for col = -1, 1 do
+			index += 1
+			local front = roadW / 2 + yard
+			local origin = CFrame.new(col * spacing, 0.2, side * front)
+			if side == -1 then
+				origin *= CFrame.Angles(0, math.pi, 0)
+			end
+
+			local f = Instance.new("Folder")
+			f.Name = "Plot_" .. index
+			f:SetAttribute("Index", index)
+			f:SetAttribute("OwnerId", 0)
+			f:SetAttribute("Origin", origin)
+			f.Parent = plotFolder
+
+			-- LKW-Hof (zwischen Straße und Grundstück)
+			part({
+				Name = "Yard",
+				Size = Vector3.new(plotW, 0.2, yard),
+				CFrame = origin * CFrame.new(0, -0.1, -yard / 2),
+				Color = Color3.fromRGB(120, 120, 125),
+				Material = Enum.Material.Concrete,
+				Parent = f,
+			})
+			-- Umrandung des Grundstücks (zeigt, wie groß es maximal werden kann)
+			for _, b in ipairs({
+				{ Vector3.new(plotW, 0.3, 0.6), Vector3.new(0, 0, plotD) },
+				{ Vector3.new(0.6, 0.3, plotD), Vector3.new(-plotW / 2, 0, plotD / 2) },
+				{ Vector3.new(0.6, 0.3, plotD), Vector3.new(plotW / 2, 0, plotD / 2) },
+			}) do
+				part({
+					Name = "Border",
+					Size = b[1],
+					CFrame = origin * CFrame.new(b[2]),
+					Color = Color3.fromRGB(255, 255, 255),
+					Material = Enum.Material.SmoothPlastic,
+					Transparency = 0.4,
+					CanCollide = false,
+					Parent = f,
+				})
+			end
+
+			-- Schild am Hof
+			local signPost = part({
+				Name = "SignPost",
+				Size = Vector3.new(0.6, 9, 0.6),
+				CFrame = origin * CFrame.new(plotW / 2 - 6, 4.5, -yard + 2),
+				Color = Color3.fromRGB(60, 60, 70),
+				Material = Enum.Material.Metal,
+				Parent = f,
+			})
+			local board = part({
+				Name = "SignBoard",
+				Size = Vector3.new(14, 4, 0.4),
+				CFrame = signPost.CFrame * CFrame.new(-6, 3, 0),
+				Color = Color3.fromRGB(30, 30, 45),
+				Parent = f,
+			})
+			local gui = Instance.new("SurfaceGui")
+			gui.Face = Enum.NormalId.Front
+			gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+			gui.PixelsPerStud = 30
+			gui.LightInfluence = 0
+			gui.Parent = board
+			local signLabel = Instance.new("TextLabel")
+			signLabel.Size = UDim2.fromScale(1, 1)
+			signLabel.BackgroundTransparency = 1
+			signLabel.Text = "Freies Grundstück"
+			signLabel.TextColor3 = Color3.fromRGB(255, 210, 60)
+			signLabel.TextScaled = true
+			signLabel.Font = Enum.Font.FredokaOne
+			signLabel.Parent = gui
+
+			local ground = Instance.new("Folder")
+			ground.Name = "Ground"
+			ground.Parent = f
+			local items = Instance.new("Folder")
+			items.Name = "Items"
+			items.Parent = f
+			local trucks = Instance.new("Folder")
+			trucks.Name = "Trucks"
+			trucks.Parent = f
+
+			table.insert(plots, {
+				Index = index,
+				Folder = f,
+				Origin = origin,
+				Ground = ground,
+				ItemsFolder = items,
+				Trucks = trucks,
+				SignLabel = signLabel,
+			})
+		end
+	end
+
+	return { Plots = plots }
 end
 
 return World
