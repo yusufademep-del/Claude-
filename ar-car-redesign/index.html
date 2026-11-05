@@ -1,0 +1,788 @@
+<title>AR Car Werkstatt</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="AR Car – Ihre freie Kfz-Werkstatt für alle Marken: Inspektion, HU/AU, Reifen, Diagnose, Klima und Reparatur.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: dark workshop-at-night stage; 3D wheel hero, then a calm editorial column of service cards, process rail, tread-gauge tool, contact. */
+:root {
+  --bg: #0d1317;          /* blue graphite, like a painted workshop floor at night */
+  --bg-2: #131c22;
+  --surface: #18232b;
+  --line: #26343e;
+  --fg: #eef2f4;
+  --muted: #94a3ad;
+  --accent: #ffb03b;      /* indicator amber */
+  --accent-ink: #1a1206;
+  --steel: #7fb4d1;
+  --ok: #4fd18b; --warn: #ffb03b; --bad: #ff5a4e;
+  --font-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r: 18px;
+  --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #eef1f2; --bg-2: #e3e8ea; --surface: #ffffff; --line: #cfd8dc;
+    --fg: #0f1a20; --muted: #51616b; --accent: #e08a00; --accent-ink: #1a1206; --steel: #2d6f93;
+    --ok: #13894b; --warn: #b86e00; --bad: #c8291e; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #eef1f2; --bg-2: #e3e8ea; --surface: #ffffff; --line: #cfd8dc;
+  --fg: #0f1a20; --muted: #51616b; --accent: #e08a00; --accent-ink: #1a1206; --steel: #2d6f93;
+  --ok: #13894b; --warn: #b86e00; --bad: #c8291e; color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: auto; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 17px; line-height: 1.6;
+  overflow-x: hidden; -webkit-font-smoothing: antialiased;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--bg); }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.02; letter-spacing: -0.01em; }
+h2 { font-size: clamp(2.1rem, 5vw, 3.8rem); font-weight: 800; font-stretch: 112%; }
+.eyebrow { font-family: var(--font-mono); font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); display: inline-flex; gap: .6em; align-items: center; }
+.eyebrow::before { content: ""; width: 26px; height: 2px; background: currentColor; }
+.lede { color: var(--muted); max-width: 58ch; font-size: 1.1rem; }
+section { position: relative; }
+
+/* ---------- Nav ---------- */
+.nav {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50;
+  transition: background .4s, border-color .4s, backdrop-filter .4s;
+  border-bottom: 1px solid transparent;
+}
+.nav.scrolled { background: color-mix(in srgb, var(--bg) 78%, transparent); backdrop-filter: blur(14px) saturate(1.3); -webkit-backdrop-filter: blur(14px) saturate(1.3); border-color: var(--line); }
+.nav .wrap { display: flex; align-items: center; gap: 24px; padding-block: 16px; }
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--font-display); font-weight: 900; font-stretch: 125%; font-size: 1.35rem; letter-spacing: .02em; }
+.logo-mark { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--accent); position: relative; display: grid; place-items: center; }
+.logo-mark::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.logo span { color: var(--accent); }
+.nav-links { display: flex; gap: 28px; margin-left: auto; list-style: none; padding: 0; margin-block: 0; }
+.nav-links a { text-decoration: none; color: var(--muted); font-weight: 500; font-size: .96rem; position: relative; transition: color .25s; }
+.nav-links a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.nav-links a:hover { color: var(--fg); }
+.nav-links a:hover::after { transform: scaleX(1); }
+.btn {
+  --mx: 0px; --my: 0px;
+  display: inline-flex; align-items: center; gap: .6em; padding: .85em 1.4em; border-radius: 999px;
+  font-weight: 600; text-decoration: none; border: 0; cursor: pointer; font: 600 1rem var(--font-body);
+  transform: translate(var(--mx), var(--my)); transition: transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .3s, background .3s;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 30px -10px color-mix(in srgb, var(--accent) 70%, transparent); }
+.btn-primary:hover { box-shadow: 0 16px 40px -10px color-mix(in srgb, var(--accent) 90%, transparent); }
+.btn-ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+.btn-ghost:hover { border-color: var(--fg); }
+.btn svg { width: 18px; height: 18px; transition: transform .3s; }
+.btn:hover svg { transform: translateX(4px); }
+.menu-btn { display: none; margin-left: auto; background: none; border: 1px solid var(--line); color: var(--fg); border-radius: 12px; width: 44px; height: 44px; cursor: pointer; }
+@media (max-width: 860px) {
+  .nav-links, .nav .btn { display: none; }
+  .menu-btn { display: grid; place-items: center; }
+  .nav.open .nav-links { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg); padding: 20px var(--gutter-r) 28px var(--gutter-l); border-bottom: 1px solid var(--line); gap: 18px; }
+  .nav.open .nav-links a { font-size: 1.2rem; color: var(--fg); }
+}
+
+/* ---------- Hero ---------- */
+.hero { padding-block: clamp(24px, 5vw, 56px) clamp(40px, 7vw, 90px); overflow: hidden; }
+.hero::before {
+  content: ""; position: absolute; inset: -20% -10% auto auto; width: 70vw; height: 70vw; max-width: 900px; max-height: 900px;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%);
+  filter: blur(20px); pointer-events: none;
+}
+.hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 24px; align-items: center; position: relative; }
+.hero h1 { font-size: clamp(2.9rem, 7.4vw, 6.4rem); font-weight: 900; font-stretch: 118%; letter-spacing: -0.02em; }
+.hero h1 .line { display: block; overflow: hidden; padding-bottom: .06em; }
+.hero h1 .line > span { display: inline-block; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero p.lede { margin: 26px 0 32px; }
+.hero-cta { display: flex; flex-wrap: wrap; gap: 12px; }
+.hero-facts { display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 40px; padding: 0; list-style: none; font-family: var(--font-mono); font-size: .82rem; color: var(--muted); }
+.hero-facts li { display: flex; align-items: center; gap: 8px; }
+.hero-facts li::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 20%, transparent); }
+.stage { position: relative; aspect-ratio: 1 / 1; max-width: 100%; }
+.stage canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; touch-action: pan-y; }
+.stage::after { /* floor shadow */
+  content: ""; position: absolute; left: 18%; right: 18%; bottom: 4%; height: 8%;
+  background: radial-gradient(closest-side, rgba(0,0,0,.55), transparent); filter: blur(6px); z-index: -1;
+}
+.stage-hud { position: absolute; font-family: var(--font-mono); font-size: .72rem; color: var(--muted); letter-spacing: .08em; pointer-events: none; }
+.stage-hud b { display: block; color: var(--fg); font-size: 1.05rem; font-weight: 600; letter-spacing: 0; }
+.hud-a { top: 10%; left: 0; } .hud-b { bottom: 14%; right: 0; text-align: right; }
+.hud-a::after, .hud-b::before { content: ""; display: block; width: 60px; height: 1px; background: var(--line); margin-top: 8px; }
+.hud-b::before { margin: 0 0 8px auto; }
+.stage-fallback { position: absolute; inset: 12%; border-radius: 50%; border: 28px solid #1d2329; box-shadow: inset 0 0 0 12px #8b98a3; display: none; }
+.no-webgl .stage-fallback { display: block; }
+@media (max-width: 860px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .stage { order: -1; width: min(100%, 460px); margin: 0 auto -10px; }
+  .hud-a, .hud-b { display: none; }
+}
+
+/* ---------- Marquee ---------- */
+.marquee { border-block: 1px solid var(--line); background: var(--bg-2); overflow: hidden; padding-block: 18px; }
+.marquee-track { display: flex; gap: 48px; width: max-content; animation: marquee 38s linear infinite; }
+.marquee span { font-family: var(--font-display); font-stretch: 125%; font-weight: 800; font-size: clamp(1.2rem, 2.6vw, 1.9rem); text-transform: uppercase; white-space: nowrap; display: inline-flex; align-items: center; gap: 48px; color: var(--fg); }
+.marquee span::after { content: ""; width: 12px; height: 12px; border: 3px solid var(--accent); border-radius: 50%; }
+.marquee span:nth-child(even) { color: transparent; -webkit-text-stroke: 1.2px var(--muted); }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+/* ---------- Services ---------- */
+.services { padding-block: clamp(70px, 10vw, 140px); }
+.sec-head { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 60px; align-items: end; margin-bottom: 56px; }
+.sec-head > * { min-width: 0; }
+.sec-head h2 { margin-top: 14px; }
+@media (max-width: 860px) { .sec-head { grid-template-columns: 1fr; } }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; perspective: 1200px; }
+@media (max-width: 980px) { .cards { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px) { .cards { grid-template-columns: 1fr; } }
+.card {
+  --rx: 0deg; --ry: 0deg; --px: 50%; --py: 50%;
+  position: relative; padding: 30px 28px 28px; border-radius: var(--r);
+  background: var(--surface); border: 1px solid var(--line);
+  transform: rotateX(var(--rx)) rotateY(var(--ry)); transform-style: preserve-3d;
+  transition: transform .5s cubic-bezier(.2,.8,.2,1), border-color .3s;
+  overflow: hidden; min-width: 0;
+}
+.card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(420px circle at var(--px) var(--py), color-mix(in srgb, var(--accent) 16%, transparent), transparent 45%);
+  opacity: 0; transition: opacity .3s;
+}
+.card:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); transition: transform .12s linear, border-color .3s; }
+.card:hover::before { opacity: 1; }
+.card .ic { width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); transform: translateZ(40px); }
+.card .ic svg { width: 28px; height: 28px; }
+.card h3 { font-size: 1.45rem; font-weight: 800; font-stretch: 110%; margin: 22px 0 10px; transform: translateZ(30px); }
+.card p { color: var(--muted); margin: 0 0 18px; transform: translateZ(20px); }
+.card .spec { font-family: var(--font-mono); font-size: .76rem; color: var(--steel); letter-spacing: .04em; border-top: 1px dashed var(--line); padding-top: 14px; transform: translateZ(14px); }
+
+/* ---------- Season / tread gauge ---------- */
+.season { padding-block: clamp(70px, 10vw, 130px); background: var(--bg-2); border-block: 1px solid var(--line); overflow: hidden; }
+.season-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 56px; align-items: center; }
+.season-grid > * { min-width: 0; }
+@media (max-width: 900px) { .season-grid { grid-template-columns: 1fr; } }
+.oo { display: flex; gap: 14px; margin: 26px 0; flex-wrap: wrap; }
+.oo div { padding: 14px 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.oo b { display: block; font-family: var(--font-display); font-stretch: 120%; font-size: 1.6rem; font-weight: 900; color: var(--accent); }
+.oo small { color: var(--muted); font-size: .85rem; }
+.gauge { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: clamp(20px, 3vw, 34px); }
+.gauge-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.gauge-top label { font-family: var(--font-mono); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.mm { font-family: var(--font-display); font-stretch: 125%; font-weight: 900; font-size: clamp(3rem, 8vw, 4.6rem); line-height: 1; font-variant-numeric: tabular-nums; }
+.mm small { font-size: .4em; color: var(--muted); font-weight: 600; margin-left: 6px; }
+.tread-svg { width: 100%; height: auto; display: block; margin: 18px 0 8px; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 99px; background: linear-gradient(90deg, var(--bad) 0 12%, var(--warn) 12% 38%, var(--ok) 38% 100%); outline-offset: 6px; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%; background: var(--fg); border: 6px solid var(--bg); box-shadow: 0 0 0 2px var(--fg); cursor: grab; }
+input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--fg); border: 6px solid var(--bg); box-shadow: 0 0 0 2px var(--fg); cursor: grab; }
+.ticks { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: .72rem; color: var(--muted); margin-top: 8px; }
+.verdict { margin-top: 22px; display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; border-radius: 14px; background: color-mix(in srgb, var(--v, var(--ok)) 12%, transparent); border: 1px solid color-mix(in srgb, var(--v, var(--ok)) 40%, transparent); transition: background .3s, border-color .3s; }
+.verdict .pill { flex: none; font-family: var(--font-mono); font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; background: var(--v, var(--ok)); color: var(--bg); margin-top: 2px; }
+.verdict p { margin: 0; font-size: .98rem; }
+
+/* ---------- Process ---------- */
+.process { padding-block: clamp(70px, 10vw, 140px); }
+.steps { position: relative; display: grid; gap: 0; margin-top: 56px; max-width: 900px; }
+.rail { position: absolute; left: 27px; top: 10px; bottom: 10px; width: 2px; background: var(--line); }
+.rail i { position: absolute; inset: 0; background: var(--accent); transform-origin: top; transform: scaleY(0); }
+.step { display: grid; grid-template-columns: 56px 1fr; gap: 26px; padding-block: 22px; position: relative; }
+.step .num { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--bg); border: 2px solid var(--line); font-family: var(--font-mono); font-weight: 600; transition: border-color .4s, color .4s, box-shadow .4s; z-index: 1; }
+.step.on .num { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 15%, transparent); }
+.step h3 { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; font-stretch: 112%; margin-top: 10px; }
+.step p { color: var(--muted); margin: 8px 0 0; max-width: 56ch; }
+
+/* ---------- Why ---------- */
+.why { padding-block: 0 clamp(70px, 10vw, 140px); }
+.why-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; grid-auto-rows: minmax(180px, auto); gap: 18px; }
+@media (max-width: 900px) { .why-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .why-grid { grid-template-columns: 1fr; } }
+.tile { border-radius: var(--r); padding: 28px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; justify-content: space-between; gap: 18px; min-width: 0; }
+.tile.big { grid-row: span 2; background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 22%, var(--surface)), var(--surface) 60%); }
+@media (max-width: 560px) { .tile.big { grid-row: auto; } }
+.tile .k { font-family: var(--font-display); font-stretch: 125%; font-weight: 900; font-size: clamp(2.2rem, 5vw, 3.4rem); line-height: 1; }
+.tile.big .k { font-size: clamp(3rem, 8vw, 5.6rem); color: var(--accent); }
+.tile p { margin: 0; color: var(--muted); }
+.tile h3 { font-size: 1.25rem; font-stretch: 110%; font-weight: 800; }
+
+/* ---------- Contact ---------- */
+.contact { padding-block: clamp(70px, 10vw, 140px); background: var(--bg-2); border-top: 1px solid var(--line); }
+.contact-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 48px; margin-top: 48px; }
+.contact-grid > * { min-width: 0; }
+@media (max-width: 900px) { .contact-grid { grid-template-columns: 1fr; } }
+.info { display: grid; gap: 18px; align-content: start; }
+.info-row { display: grid; grid-template-columns: 44px 1fr; gap: 16px; align-items: start; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.info-row .ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.info-row .ic svg { width: 22px; height: 22px; }
+.info-row small { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.info-row div > b { display: block; font-size: 1.08rem; user-select: all; }
+.ph { color: var(--steel); font-style: italic; font-weight: 500; }
+.hours { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-top: 6px; }
+.hours td { padding: 4px 0; border-bottom: 1px dashed var(--line); font-size: .96rem; }
+.hours td:last-child { text-align: right; font-family: var(--font-mono); font-size: .88rem; }
+.hours tr.today td { color: var(--accent); font-weight: 600; }
+.open-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: .76rem; margin-top: 10px; color: var(--muted); }
+.open-badge i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.open-badge.is-open i { background: var(--ok); animation: pulse 1.8s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
+form.req { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: clamp(22px, 3vw, 36px); display: grid; gap: 16px; }
+.row2 { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+@media (max-width: 560px) { .row2 { grid-template-columns: minmax(0,1fr); } }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field label { font-size: .86rem; font-weight: 600; color: var(--muted); }
+.field input, .field select, .field textarea { width: 100%; min-width: 0; max-width: 100%; font: inherit; font-size: 1rem; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; transition: border-color .2s, box-shadow .2s; }
+.field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+.field textarea { resize: vertical; min-height: 110px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; position: relative; }
+.chips input { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.chips label { padding: 8px 14px; border-radius: 99px; border: 1px solid var(--line); cursor: pointer; font-size: .92rem; color: var(--fg); transition: all .2s; user-select: none; }
+.chips input:checked + label { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.chips input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+.form-note { font-size: .85rem; color: var(--muted); margin: 0; }
+.form-ok { display: none; padding: 14px 16px; border-radius: 12px; background: color-mix(in srgb, var(--ok) 14%, transparent); border: 1px solid color-mix(in srgb, var(--ok) 45%, transparent); }
+.form-ok.show { display: block; animation: rise .5s cubic-bezier(.2,.8,.2,1); }
+@keyframes rise { from { transform: translateY(10px); opacity: 0; } }
+
+/* ---------- Footer ---------- */
+footer { padding-block: 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: .92rem; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: center; justify-content: space-between; }
+footer nav { display: flex; gap: 22px; flex-wrap: wrap; }
+footer a { text-decoration: none; } footer a:hover { color: var(--fg); }
+
+/* progress bar */
+.progress { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; height: 3px; width: 100%; background: var(--accent); transform-origin: left; transform: scaleX(0); z-index: 70; }
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
+  .card, .btn { transition: none; }
+  .open-badge.is-open i { animation: none; }
+}
+</style>
+
+<div class="progress" aria-hidden="true"></div>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a href="#top" class="logo" aria-label="AR Car Startseite"><span class="logo-mark" aria-hidden="true"></span>AR<span>·</span>CAR</a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#leistungen">Leistungen</a></li>
+      <li><a href="#reifen">Reifen-Check</a></li>
+      <li><a href="#ablauf">Ablauf</a></li>
+      <li><a href="#kontakt">Kontakt</a></li>
+    </ul>
+    <a href="#kontakt" class="btn btn-primary magnetic">Termin anfragen
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <button class="menu-btn" id="menuBtn" aria-label="Menü öffnen" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">Freie Kfz-Werkstatt · Alle Marken</span>
+        <h1 style="margin-top:18px">
+          <span class="line"><span>Ihr Auto.</span></span>
+          <span class="line"><span>In besten</span></span>
+          <span class="line"><span><em>Händen.</em></span></span>
+        </h1>
+        <p class="lede">Inspektion, HU/AU, Reifen, Diagnose und Reparatur aus einer Hand. Wir sagen Ihnen vorher, was gemacht werden muss und was es kostet. Ohne Überraschungen bei der Abholung.</p>
+        <div class="hero-cta">
+          <a href="#kontakt" class="btn btn-primary magnetic">Termin anfragen
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a href="#leistungen" class="btn btn-ghost magnetic">Leistungen ansehen</a>
+        </div>
+        <ul class="hero-facts">
+          <li>Festpreis vor Auftrag</li>
+          <li>Service nach Herstellervorgaben</li>
+          <li>Ersatzteile in Erstausrüster-Qualität</li>
+        </ul>
+      </div>
+      <div class="stage" id="stage" aria-label="3D-Modell eines Rads mit Bremsscheibe und Bremssattel">
+        <div class="stage-fallback"></div>
+        <div class="stage-hud hud-a">BREMSSCHEIBE<b>Ø 330 mm</b></div>
+        <div class="stage-hud hud-b">ANZUGSMOMENT<b id="rpm">120 Nm</b></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>Inspektion</span><span>HU / AU</span><span>Reifenservice</span><span>Fehlerdiagnose</span><span>Klimaservice</span><span>Bremsen</span><span>Ölwechsel</span><span>Unfallreparatur</span>
+      <span>Inspektion</span><span>HU / AU</span><span>Reifenservice</span><span>Fehlerdiagnose</span><span>Klimaservice</span><span>Bremsen</span><span>Ölwechsel</span><span>Unfallreparatur</span>
+    </div>
+  </div>
+
+  <section class="services" id="leistungen">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="eyebrow reveal">Leistungen</span>
+          <h2 class="reveal">Alles, was Ihr Auto braucht.</h2>
+        </div>
+        <p class="lede reveal">Vom kleinen Ölwechsel bis zur großen Reparatur. Wir arbeiten an allen Marken und halten uns an die Vorgaben des Herstellers. So bleibt auch die Garantie erhalten.</p>
+      </div>
+      <div class="cards">
+        <article class="card tilt">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg></div>
+          <h3>Inspektion &amp; Wartung</h3>
+          <p>Service nach Herstellerplan mit Eintrag ins Serviceheft. Ölwechsel, Filter, Zündkerzen und alles, was ansteht.</p>
+          <div class="spec">Intervall laut Serviceheft · alle Marken</div>
+        </article>
+        <article class="card tilt">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
+          <h3>HU / AU</h3>
+          <p>Die Hauptuntersuchung mit Abgasuntersuchung bei uns im Haus. Kleine Mängel beheben wir direkt vorher.</p>
+          <div class="spec">Fällig alle 24 Monate · Neuwagen nach 36</div>
+        </article>
+        <article class="card tilt">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3v5.5M12 15.5V21M3 12h5.5M15.5 12H21"/></svg></div>
+          <h3>Reifen &amp; Räder</h3>
+          <p>Wechsel, Wuchten, Einlagerung und neue Reifen. Achsvermessung, damit nichts schief läuft.</p>
+          <div class="spec">Mindestprofil 1,6 mm · empfohlen 4 mm im Winter</div>
+        </article>
+        <article class="card tilt">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M7 21h10M12 17v4M7 12l2-3 2 4 2-2 1.5 1H17"/></svg></div>
+          <h3>Fehlerdiagnose</h3>
+          <p>Motorleuchte an? Wir lesen den Fehlerspeicher aus, finden die Ursache und erklären Ihnen das Ergebnis verständlich.</p>
+          <div class="spec">OBD-Diagnose · Elektrik · Steuergeräte</div>
+        </article>
+        <article class="card tilt">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2v20M4.9 4.9l14.2 14.2M2 12h20M4.9 19.1L19.1 4.9"/></svg></div>
+          <h3>Klimaservice</h3>
+          <p>Kältemittel prüfen und auffüllen, Desinfektion und neuer Innenraumfilter. Für klare Scheiben und frische Luft.</p>
+          <div class="spec">Empfohlen alle 1–2 Jahre</div>
+        </article>
+        <article class="card tilt">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/><path d="M4 9a10 10 0 0 1 5-5" stroke-width="3" stroke-linecap="round"/></svg></div>
+          <h3>Bremsen &amp; Fahrwerk</h3>
+          <p>Beläge, Scheiben, Bremsflüssigkeit, Stoßdämpfer. Wir prüfen alles und machen nur, was wirklich nötig ist.</p>
+          <div class="spec">Bremsflüssigkeit alle 2 Jahre wechseln</div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="season" id="reifen">
+    <div class="wrap season-grid">
+      <div>
+        <span class="eyebrow reveal">Winterreifen-Zeit</span>
+        <h2 class="reveal" style="margin-top:14px">Wie viel Profil haben Ihre Reifen noch?</h2>
+        <p class="lede reveal" style="margin-top:20px">Faustregel: Winterreifen von O bis O, also von Oktober bis Ostern. Schieben Sie den Regler auf die gemessene Profiltiefe und sehen Sie sofort, ob Ihre Reifen den Winter noch schaffen.</p>
+        <div class="oo reveal">
+          <div><b>O → O</b><small>Oktober bis Ostern</small></div>
+          <div><b>1,6 mm</b><small>gesetzliches Minimum</small></div>
+          <div><b>4 mm</b><small>Empfehlung im Winter</small></div>
+        </div>
+        <a href="#kontakt" class="btn btn-primary magnetic" data-service="Reifen">Reifenwechsel anfragen
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+      <div class="gauge reveal">
+        <div class="gauge-top">
+          <label for="tread">Gemessene Profiltiefe</label>
+          <div class="mm"><span id="mmVal">5,0</span><small>mm</small></div>
+        </div>
+        <svg class="tread-svg" id="treadSvg" viewBox="0 0 600 190" role="img" aria-label="Querschnitt der Lauffläche">
+          <defs>
+            <linearGradient id="rubber" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#3a444c"/><stop offset="1" stop-color="#15191d"/>
+            </linearGradient>
+          </defs>
+          <rect x="20" y="120" width="560" height="60" rx="10" fill="url(#rubber)"/>
+          <g id="blocks"></g>
+          <line x1="20" x2="580" id="limitLine" stroke="var(--bad)" stroke-width="2" stroke-dasharray="6 6"/>
+          <text x="576" id="limitText" text-anchor="end" fill="var(--bad)" font-family="JetBrains Mono, monospace" font-size="13">1,6 mm</text>
+        </svg>
+        <input type="range" id="tread" min="0.5" max="8" step="0.1" value="5" aria-describedby="verdictText">
+        <div class="ticks"><span>0,5</span><span>1,6</span><span>3</span><span>4</span><span>6</span><span>8 mm</span></div>
+        <div class="verdict" id="verdict">
+          <span class="pill" id="verdictPill">Gut</span>
+          <p id="verdictText">Genug Profil für den Winter. Wir prüfen trotzdem gern Alter und Zustand der Reifen.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="process" id="ablauf">
+    <div class="wrap">
+      <span class="eyebrow reveal">So läuft's ab</span>
+      <h2 class="reveal" style="margin-top:14px">In vier Schritten wieder auf der Straße.</h2>
+      <div class="steps" id="steps">
+        <div class="rail"><i id="railFill"></i></div>
+        <div class="step"><div class="num">1</div><div><h3>Termin anfragen</h3><p>Per Telefon oder Formular. Sagen Sie uns kurz, worum es geht. Wir melden uns mit einem passenden Termin.</p></div></div>
+        <div class="step"><div class="num">2</div><div><h3>Prüfen &amp; Angebot</h3><p>Wir schauen uns das Auto an und nennen Ihnen vorher einen klaren Preis. Ohne Ihr Okay wird nichts gemacht.</p></div></div>
+        <div class="step"><div class="num">3</div><div><h3>Reparatur</h3><p>Sauber und nach Herstellervorgaben. Taucht unterwegs etwas Neues auf, rufen wir Sie zuerst an.</p></div></div>
+        <div class="step"><div class="num">4</div><div><h3>Abholen &amp; losfahren</h3><p>Wir erklären, was gemacht wurde, und zeigen Ihnen bei Bedarf die alten Teile. Die Rechnung entspricht dem Angebot.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="why">
+    <div class="wrap">
+      <div class="why-grid">
+        <div class="tile big reveal">
+          <span class="eyebrow">Unser Versprechen</span>
+          <div>
+            <div class="k">0 €</div>
+            <h3 style="margin-top:12px">Überraschungen auf der Rechnung</h3>
+            <p style="margin-top:8px">Sie bekommen vorher ein Angebot. Wenn mehr nötig ist, fragen wir erst nach.</p>
+          </div>
+        </div>
+        <div class="tile reveal"><div class="k">Alle</div><div><h3>Marken &amp; Modelle</h3><p>Ob Kleinwagen, Kombi oder Transporter.</p></div></div>
+        <div class="tile reveal"><div class="k">1:1</div><div><h3>Direkter Ansprechpartner</h3><p>Sie sprechen mit dem, der an Ihrem Auto schraubt.</p></div></div>
+        <div class="tile reveal"><div class="k">OE</div><div><h3>Qualitätsteile</h3><p>Ersatzteile in Erstausrüster-Qualität.</p></div></div>
+        <div class="tile reveal"><div class="k">HU</div><div><h3>Prüfung im Haus</h3><p>Hauptuntersuchung ohne extra Weg.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact" id="kontakt">
+    <div class="wrap">
+      <span class="eyebrow reveal">Kontakt</span>
+      <h2 class="reveal" style="margin-top:14px">Lassen Sie uns über Ihr Auto reden.</h2>
+      <div class="contact-grid">
+        <div class="info">
+          <div class="info-row reveal">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></div>
+            <div><small>Telefon</small><b class="ph">[Telefonnummer eintragen]</b></div>
+          </div>
+          <div class="info-row reveal">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div><small>Adresse</small><b class="ph">[Straße Hausnr., PLZ Ort]</b></div>
+          </div>
+          <div class="info-row reveal">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <div style="min-width:0">
+              <small>Öffnungszeiten <span class="ph">(Beispielzeiten)</span></small>
+              <table class="hours" id="hours">
+                <tr data-d="1"><td>Montag</td><td>08:00 – 18:00</td></tr>
+                <tr data-d="2"><td>Dienstag</td><td>08:00 – 18:00</td></tr>
+                <tr data-d="3"><td>Mittwoch</td><td>08:00 – 18:00</td></tr>
+                <tr data-d="4"><td>Donnerstag</td><td>08:00 – 18:00</td></tr>
+                <tr data-d="5"><td>Freitag</td><td>08:00 – 17:00</td></tr>
+                <tr data-d="6"><td>Samstag</td><td>09:00 – 13:00</td></tr>
+                <tr data-d="0"><td>Sonntag</td><td>geschlossen</td></tr>
+              </table>
+              <div class="open-badge" id="openBadge"><i></i><span>–</span></div>
+            </div>
+          </div>
+        </div>
+
+        <form class="req reveal" id="reqForm" novalidate>
+          <div class="field">
+            <label>Worum geht es?</label>
+            <div class="chips" id="chips">
+              <input type="checkbox" id="s1" value="Inspektion"><label for="s1">Inspektion</label>
+              <input type="checkbox" id="s2" value="HU/AU"><label for="s2">HU/AU</label>
+              <input type="checkbox" id="s3" value="Reifen"><label for="s3">Reifen</label>
+              <input type="checkbox" id="s4" value="Diagnose"><label for="s4">Diagnose</label>
+              <input type="checkbox" id="s5" value="Klima"><label for="s5">Klima</label>
+              <input type="checkbox" id="s6" value="Bremsen"><label for="s6">Bremsen</label>
+              <input type="checkbox" id="s7" value="Sonstiges"><label for="s7">Sonstiges</label>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field"><label for="fName">Name</label><input id="fName" name="name" autocomplete="name" required placeholder="Max Mustermann"></div>
+            <div class="field"><label for="fPhone">Telefon</label><input id="fPhone" name="phone" type="tel" autocomplete="tel" required placeholder="0170 1234567"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label for="fCar">Fahrzeug</label><input id="fCar" name="car" placeholder="z. B. VW Golf 7, 2016"></div>
+            <div class="field"><label for="fDate">Wunschtermin</label><input id="fDate" name="date" type="date"></div>
+          </div>
+          <div class="field"><label for="fMsg">Nachricht</label><textarea id="fMsg" name="msg" placeholder="Was ist Ihnen aufgefallen? Geräusche, Warnleuchten, Kilometerstand …"></textarea></div>
+          <button class="btn btn-primary magnetic" type="submit" style="justify-self:start">Anfrage senden
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          <p class="form-note" id="formNote">Bitte Name und Telefon angeben. Wir rufen Sie zurück.</p>
+          <div class="form-ok" id="formOk" role="status"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a href="#top" class="logo" style="font-size:1.1rem"><span class="logo-mark" aria-hidden="true" style="width:26px;height:26px;border-width:2px"></span>AR<span>·</span>CAR</a>
+    <nav><a href="#leistungen">Leistungen</a><a href="#reifen">Reifen-Check</a><a href="#kontakt">Kontakt</a><a href="#top">Impressum</a><a href="#top">Datenschutz</a></nav>
+    <span>© <span id="yr">2026</span> AR Car</span>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasGsap = typeof gsap !== 'undefined';
+  if (hasGsap && typeof ScrollTrigger !== 'undefined') gsap.registerPlugin(ScrollTrigger);
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  /* ---------- smooth scroll ---------- */
+  let lenis = null;
+  if (!reduce && typeof Lenis !== 'undefined') {
+    lenis = new Lenis({ lerp: 0.09, smoothWheel: true });
+    if (hasGsap) {
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add(t => lenis.raf(t * 1000));
+      gsap.ticker.lagSmoothing(0);
+    } else {
+      const raf = t => { lenis.raf(t); requestAnimationFrame(raf); }; requestAnimationFrame(raf);
+    }
+  }
+  document.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener('click', e => {
+    const id = a.getAttribute('href'); const el = id === '#top' ? document.body : document.querySelector(id);
+    if (!el) return; e.preventDefault();
+    if (a.dataset.service) { const c = [...document.querySelectorAll('#chips input')].find(i => i.value === a.dataset.service); if (c) c.checked = true; }
+    nav.classList.remove('open'); menuBtn.setAttribute('aria-expanded', 'false');
+    if (lenis) lenis.scrollTo(el, { offset: -70, duration: 1.4 }); else el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
+  }));
+
+  /* ---------- nav ---------- */
+  const nav = document.getElementById('nav'), menuBtn = document.getElementById('menuBtn'), bar = document.querySelector('.progress');
+  menuBtn.addEventListener('click', () => { const o = nav.classList.toggle('open'); menuBtn.setAttribute('aria-expanded', String(o)); });
+  const onScroll = () => {
+    const y = window.scrollY, h = document.documentElement.scrollHeight - innerHeight;
+    nav.classList.toggle('scrolled', y > 20);
+    bar.style.transform = `scaleX(${h > 0 ? y / h : 0})`;
+  };
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  /* ---------- magnetic buttons ---------- */
+  if (!reduce && matchMedia('(pointer:fine)').matches) {
+    document.querySelectorAll('.magnetic').forEach(b => {
+      b.addEventListener('pointermove', e => { const r = b.getBoundingClientRect(); b.style.setProperty('--mx', ((e.clientX - r.left - r.width / 2) * 0.25) + 'px'); b.style.setProperty('--my', ((e.clientY - r.top - r.height / 2) * 0.35) + 'px'); });
+      b.addEventListener('pointerleave', () => { b.style.setProperty('--mx', '0px'); b.style.setProperty('--my', '0px'); });
+    });
+    /* 3D tilt cards */
+    document.querySelectorAll('.tilt').forEach(c => {
+      c.addEventListener('pointermove', e => {
+        const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        c.style.setProperty('--ry', ((x - .5) * 14) + 'deg'); c.style.setProperty('--rx', ((.5 - y) * 12) + 'deg');
+        c.style.setProperty('--px', (x * 100) + '%'); c.style.setProperty('--py', (y * 100) + '%');
+      });
+      c.addEventListener('pointerleave', () => { c.style.setProperty('--rx', '0deg'); c.style.setProperty('--ry', '0deg'); });
+    });
+  }
+
+  /* ---------- reveal animations (start from a visible state) ---------- */
+  if (hasGsap && !reduce) {
+    gsap.from('.hero h1 .line > span', { yPercent: 105, rotate: 4, duration: 1.1, ease: 'expo.out', stagger: .12, delay: .15 });
+    gsap.from(['.hero .eyebrow', '.hero .lede', '.hero-cta', '.hero-facts'], { y: 24, opacity: .2, duration: 1, ease: 'power3.out', stagger: .1, delay: .45 });
+    gsap.utils.toArray('.reveal').forEach(el => gsap.from(el, { y: 50, opacity: .55, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 90%' } }));
+    gsap.utils.toArray('.card').forEach((el, i) => gsap.from(el, { y: 80, rotateX: -18, opacity: .55, transformOrigin: '50% 100%', duration: 1.1, ease: 'expo.out', delay: (i % 3) * .08, scrollTrigger: { trigger: el, start: 'top 92%' }, clearProps: 'transform,opacity' }));
+    gsap.to('.marquee-track', { xPercent: -8, ease: 'none', scrollTrigger: { trigger: '.marquee', scrub: true } });
+    gsap.to('#railFill', { scaleY: 1, ease: 'none', scrollTrigger: { trigger: '#steps', start: 'top 65%', end: 'bottom 60%', scrub: true } });
+  }
+  document.querySelectorAll('.step').forEach(s => {
+    if (hasGsap && typeof ScrollTrigger !== 'undefined' && !reduce) ScrollTrigger.create({ trigger: s, start: 'top 62%', onEnter: () => s.classList.add('on'), onLeaveBack: () => s.classList.remove('on') });
+    else s.classList.add('on');
+  });
+  if (reduce) document.getElementById('railFill').style.transform = 'scaleY(1)';
+
+  /* ---------- tread gauge ---------- */
+  const range = document.getElementById('tread'), mmVal = document.getElementById('mmVal'), blocks = document.getElementById('blocks');
+  const vEl = document.getElementById('verdict'), vPill = document.getElementById('verdictPill'), vText = document.getElementById('verdictText');
+  const BASE = 120, SCALE = 12; // px per mm
+  const N = 9, W = 560 / N;
+  let rects = [];
+  for (let i = 0; i < N; i++) {
+    const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    r.setAttribute('x', 20 + i * W + 8); r.setAttribute('width', W - 16); r.setAttribute('rx', 5); r.setAttribute('fill', '#2b333a');
+    blocks.appendChild(r); rects.push(r);
+  }
+  const ll = document.getElementById('limitLine'), lt = document.getElementById('limitText');
+  ll.setAttribute('y1', BASE - 1.6 * SCALE); ll.setAttribute('y2', BASE - 1.6 * SCALE); lt.setAttribute('y', BASE - 1.6 * SCALE - 8);
+  let shown = 5;
+  const draw = mm => {
+    rects.forEach((r, i) => { const h = mm * SCALE * (1 - (i % 2) * 0.04) + 2; r.setAttribute('y', BASE - h); r.setAttribute('height', h + 6); });
+  };
+  const update = () => {
+    const mm = parseFloat(range.value);
+    mmVal.textContent = mm.toFixed(1).replace('.', ',');
+    let c, p, t;
+    if (mm < 1.6) { c = 'var(--bad)'; p = 'Unzulässig'; t = 'Unter 1,6 mm ist das Fahren verboten. Es drohen ab 60 € Bußgeld und ein Punkt in Flensburg. Bitte die Reifen sofort tauschen.'; }
+    else if (mm < 4) { c = 'var(--warn)'; p = 'Grenzwertig'; t = 'Noch erlaubt, aber auf Schnee und Matsch deutlich weniger Grip. Für den Winter empfehlen wir mindestens 4 mm.'; }
+    else { c = 'var(--ok)'; p = 'Gut'; t = 'Genug Profil für den Winter. Wir prüfen trotzdem gern Alter und Zustand der Reifen.'; }
+    vEl.style.setProperty('--v', c); vPill.textContent = p; vText.textContent = t;
+    if (hasGsap && !reduce) gsap.to({ v: shown }, { v: mm, duration: .5, ease: 'power3.out', onUpdate() { shown = this.targets()[0].v; draw(shown); } });
+    else { shown = mm; draw(mm); }
+  };
+  range.addEventListener('input', update); draw(5); update();
+
+  /* ---------- opening hours ---------- */
+  (() => {
+    const now = new Date(), d = now.getDay(), mins = now.getHours() * 60 + now.getMinutes();
+    const row = document.querySelector(`#hours tr[data-d="${d}"]`); if (row) row.classList.add('today');
+    const txt = row ? row.cells[1].textContent : '';
+    const m = txt.match(/(\d\d):(\d\d)\s*–\s*(\d\d):(\d\d)/), badge = document.getElementById('openBadge');
+    const open = m && mins >= (+m[1] * 60 + +m[2]) && mins < (+m[3] * 60 + +m[4]);
+    badge.classList.toggle('is-open', !!open);
+    badge.querySelector('span').textContent = open ? `Jetzt geöffnet · bis ${m[3]}:${m[4]} Uhr` : 'Gerade geschlossen';
+  })();
+
+  /* ---------- form ---------- */
+  const form = document.getElementById('reqForm');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const name = form.fName.value.trim(), phone = form.fPhone.value.trim();
+    const note = document.getElementById('formNote'), ok = document.getElementById('formOk');
+    if (!name || !phone) { note.textContent = 'Bitte Name und Telefonnummer eintragen, damit wir zurückrufen können.'; note.style.color = 'var(--bad)'; (name ? form.fPhone : form.fName).focus(); return; }
+    note.style.color = ''; note.textContent = 'Bitte Name und Telefon angeben. Wir rufen Sie zurück.';
+    const services = [...form.querySelectorAll('#chips input:checked')].map(i => i.value);
+    ok.textContent = `Danke, ${name}! Ihre Anfrage${services.length ? ' zu ' + services.join(', ') : ''} ist vorbereitet. Hinweis: In dieser Vorschau ist das Formular noch nicht mit einem Postfach verbunden.`;
+    ok.classList.add('show');
+  });
+
+  /* ---------- 3D wheel ---------- */
+  const stage = document.getElementById('stage');
+  if (typeof THREE === 'undefined') { stage.classList.add('no-webgl'); return; }
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' }); }
+  catch (e) { stage.classList.add('no-webgl'); return; }
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.25;
+  stage.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+  camera.position.set(0, 0, 8.2);
+
+  // studio environment for metal reflections
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const env = new THREE.Scene();
+  env.add(new THREE.Mesh(new THREE.BoxGeometry(30, 30, 30), new THREE.MeshBasicMaterial({ color: 0x1c262e, side: THREE.BackSide })));
+  const panel = (w, h, color, x, y, z, ry = 0, rx = 0) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide })); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); env.add(m); };
+  panel(20, 4, 0xffffff, 0, 9, 0, 0, Math.PI / 2);
+  panel(14, 3, 0xffffff, 0, 3, 12, Math.PI);
+  panel(2, 12, 0xd8ecff, -12, 1, 2, Math.PI / 2);
+  panel(2, 12, 0xffffff, 12, 1, -2, -Math.PI / 2);
+  panel(9, 1.2, 0xffb03b, 2, -4, 10, Math.PI);
+  panel(10, 8, 0x6d8ea3, 0, 0, -14);
+  scene.environment = pmrem.fromScene(env, 0.035).texture;
+
+  const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(4, 6, 6); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffb03b, 1.6); rim.position.set(-6, -2, -3); scene.add(rim);
+  scene.add(new THREE.AmbientLight(0x8fb3c9, 0.25));
+
+  const rubber = new THREE.MeshStandardMaterial({ color: 0x15181b, roughness: 0.88, metalness: 0.0 });
+  const chrome = new THREE.MeshStandardMaterial({ color: 0xd9dee2, roughness: 0.18, metalness: 1.0 });
+  const gunmetal = new THREE.MeshStandardMaterial({ color: 0x3c444b, roughness: 0.32, metalness: 1.0 });
+  const disc = new THREE.MeshStandardMaterial({ color: 0x9aa1a6, roughness: 0.42, metalness: 0.9 });
+  const amber = new THREE.MeshStandardMaterial({ color: 0xff9d1c, roughness: 0.3, metalness: 0.25 });
+
+  const root = new THREE.Group(); scene.add(root);         // tilt (mouse / scroll)
+  const spin = new THREE.Group(); root.add(spin);          // rolling
+
+  // tyre: lathe profile around Y, rotated to face +Z
+  const pts = [];
+  const rIn = 1.32, rOut = 1.86, hw = 0.5;
+  const prof = [[rIn, -hw * 0.86], [rIn + 0.08, -hw], [rOut - 0.16, -hw], [rOut - 0.03, -hw * 0.82], [rOut, -hw * 0.5], [rOut, hw * 0.5], [rOut - 0.03, hw * 0.82], [rOut - 0.16, hw], [rIn + 0.08, hw], [rIn, hw * 0.86]];
+  prof.forEach(([r, y]) => pts.push(new THREE.Vector2(r, y)));
+  const tyreGeo = new THREE.LatheGeometry(pts, 128); tyreGeo.rotateX(Math.PI / 2);
+  spin.add(new THREE.Mesh(tyreGeo, rubber));
+  // tread blocks
+  const treadCount = 56;
+  const tb = new THREE.InstancedMesh(new THREE.BoxGeometry(0.11, 0.06, 0.34), rubber, treadCount * 2);
+  const dummy = new THREE.Object3D();
+  for (let i = 0; i < treadCount; i++) for (let s = 0; s < 2; s++) {
+    const a = (i + s * 0.5) / treadCount * Math.PI * 2;
+    dummy.position.set(Math.cos(a) * (rOut + 0.02), Math.sin(a) * (rOut + 0.02), s ? 0.2 : -0.2);
+    dummy.rotation.set(0, 0, a + Math.PI / 2); dummy.rotateY(s ? 0.35 : -0.35);
+    dummy.updateMatrix(); tb.setMatrixAt(i * 2 + s, dummy.matrix);
+  }
+  spin.add(tb);
+
+  // rim barrel + lip
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(1.33, 1.33, 0.86, 96, 1, true), gunmetal); barrel.rotation.x = Math.PI / 2; spin.add(barrel);
+  const lip = new THREE.Mesh(new THREE.TorusGeometry(1.31, 0.045, 16, 128), chrome); lip.position.z = 0.42; spin.add(lip);
+  const lipIn = new THREE.Mesh(new THREE.RingGeometry(1.12, 1.31, 96), gunmetal); lipIn.position.z = 0.36; spin.add(lipIn);
+
+  // spokes: 5 double spokes, extruded
+  const spokeShape = new THREE.Shape();
+  spokeShape.moveTo(0.32, -0.09); spokeShape.lineTo(1.16, -0.07); spokeShape.quadraticCurveTo(1.2, 0, 1.16, 0.07); spokeShape.lineTo(0.32, 0.09); spokeShape.quadraticCurveTo(0.28, 0, 0.32, -0.09);
+  const spokeGeo = new THREE.ExtrudeGeometry(spokeShape, { depth: 0.1, bevelEnabled: true, bevelSize: 0.025, bevelThickness: 0.03, bevelSegments: 3, curveSegments: 10 });
+  for (let i = 0; i < 5; i++) for (const off of [-0.13, 0.13]) {
+    const m = new THREE.Mesh(spokeGeo, chrome);
+    m.rotation.z = i / 5 * Math.PI * 2 + off; m.position.z = 0.24; spin.add(m);
+  }
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.42, 0.18, 48), chrome); hub.rotation.x = Math.PI / 2; hub.position.z = 0.3; spin.add(hub);
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.06, 40), gunmetal); cap.rotation.x = Math.PI / 2; cap.position.z = 0.41; spin.add(cap);
+  const capRing = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.02, 10, 40), amber); capRing.position.z = 0.44; spin.add(capRing);
+  for (let i = 0; i < 5; i++) {
+    const a = i / 5 * Math.PI * 2 + Math.PI / 5;
+    const nut = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.09, 6), chrome); nut.rotation.x = Math.PI / 2;
+    nut.position.set(Math.cos(a) * 0.27, Math.sin(a) * 0.27, 0.42); spin.add(nut);
+  }
+  // brake disc (rotates) with drilled holes
+  const discShape = new THREE.Shape(); discShape.absarc(0, 0, 1.06, 0, Math.PI * 2, false);
+  const hole = new THREE.Path(); hole.absarc(0, 0, 0.42, 0, Math.PI * 2, true); discShape.holes.push(hole);
+  for (let ring = 0; ring < 3; ring++) for (let i = 0; i < 18; i++) {
+    const a = (i / 18 + ring * 0.018) * Math.PI * 2, r = 0.66 + ring * 0.12;
+    const h = new THREE.Path(); h.absarc(Math.cos(a) * r, Math.sin(a) * r, 0.022, 0, Math.PI * 2, true); discShape.holes.push(h);
+  }
+  const discMesh = new THREE.Mesh(new THREE.ExtrudeGeometry(discShape, { depth: 0.08, bevelEnabled: false, curveSegments: 48 }), disc);
+  discMesh.position.z = -0.12; spin.add(discMesh);
+
+  // caliper (static, follows tilt only)
+  const cal = new THREE.Shape();
+  const a0 = Math.PI * 0.62, a1 = Math.PI * 0.98, ri = 0.8, ro = 1.14;
+  cal.absarc(0, 0, ro, a0, a1, false); cal.absarc(0, 0, ri, a1, a0, true);
+  const caliper = new THREE.Mesh(new THREE.ExtrudeGeometry(cal, { depth: 0.2, bevelEnabled: true, bevelSize: 0.04, bevelThickness: 0.04, bevelSegments: 4, curveSegments: 24 }), amber);
+  caliper.position.z = -0.1; root.add(caliper);
+
+  root.rotation.set(0.12, -0.42, 0);
+
+  const resize = () => { const r = stage.getBoundingClientRect(); const s = Math.max(1, Math.round(r.width)); renderer.setSize(s, Math.max(1, Math.round(r.height)), false); camera.aspect = r.width / Math.max(1, r.height); camera.updateProjectionMatrix(); };
+  new ResizeObserver(resize).observe(stage); resize();
+
+  // interaction state
+  let mx = 0, my = 0, tx = 0, ty = 0, drag = false, lastX = 0, dragVel = 0, scrollVel = 0, lastScroll = scrollY;
+  addEventListener('pointermove', e => { mx = (e.clientX / innerWidth - .5); my = (e.clientY / innerHeight - .5); if (drag) { dragVel = (e.clientX - lastX) * 0.004; lastX = e.clientX; } }, { passive: true });
+  renderer.domElement.addEventListener('pointerdown', e => { drag = true; lastX = e.clientX; });
+  addEventListener('pointerup', () => drag = false);
+  addEventListener('scroll', () => { scrollVel += (scrollY - lastScroll) * 0.0009; lastScroll = scrollY; }, { passive: true });
+
+  // intro: roll in from the right
+  const intro = { x: reduce ? 0 : 3.5, s: reduce ? 1 : 0.7, rot: 0 };
+  if (hasGsap && !reduce) gsap.to(intro, { x: 0, s: 1, duration: 1.8, ease: 'expo.out', delay: .1 });
+  if (hasGsap && !reduce && typeof ScrollTrigger !== 'undefined') {
+    gsap.to(root.position, { y: -0.6, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
+    gsap.to(camera.position, { z: 9.6, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
+  }
+
+  let visible = true, t0 = performance.now(), base = reduce ? 0 : 0.35;
+  new IntersectionObserver(([e]) => visible = e.isIntersecting).observe(stage);
+  const tick = now => {
+    requestAnimationFrame(tick);
+    const dt = Math.min(0.05, (now - t0) / 1000); t0 = now;
+    if (!visible) return;
+    tx += (mx - tx) * 0.06; ty += (my - ty) * 0.06;
+    scrollVel *= 0.92; dragVel *= 0.94;
+    const introRoll = (intro.x) * 1.4; // rolling while it slides in
+    spin.rotation.z = -(intro.rot += (base * dt) + scrollVel + dragVel) - introRoll;
+    root.position.x = intro.x;
+    root.scale.setScalar(intro.s);
+    root.rotation.y = -0.42 + tx * 0.7 + Math.min(0.5, Math.abs(scrollVel) * 3);
+    root.rotation.x = 0.12 + ty * 0.45;
+    renderer.render(scene, camera);
+  };
+  requestAnimationFrame(tick);
+  if (hasGsap && !reduce) ScrollTrigger.refresh();
+})();
+</script>
