@@ -168,6 +168,58 @@ section { position: relative; }
 .card p { color: var(--muted); margin: 0 0 18px; transform: translateZ(20px); }
 .card .spec { font-family: var(--font-mono); font-size: .76rem; color: var(--steel); letter-spacing: .04em; border-top: 1px dashed var(--line); padding-top: 14px; transform: translateZ(14px); }
 
+
+/* ---------- Vehicles / showroom ---------- */
+.vehicles { padding-block: clamp(70px, 10vw, 140px) 0; }
+.showroom { position: relative; border-radius: 28px; overflow: hidden; border: 1px solid var(--line);
+  background: radial-gradient(120% 90% at 50% 100%, color-mix(in srgb, var(--accent) 16%, var(--bg-2)), var(--bg-2) 55%, var(--bg) 100%); }
+.showroom-canvas { position: relative; aspect-ratio: 16 / 8; max-width: 100%; cursor: grab; touch-action: pan-y; }
+.showroom-canvas:active { cursor: grabbing; }
+.showroom-canvas canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
+.sr-info { position: absolute; left: clamp(16px, 3vw, 34px); top: clamp(16px, 3vw, 30px); max-width: 60%; pointer-events: none; }
+.sr-info .tag { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.sr-info h3 { font-size: clamp(1.4rem, 3.4vw, 2.6rem); font-weight: 900; font-stretch: 118%; margin-top: 6px; }
+.sr-info .price { font-family: var(--font-display); font-stretch: 110%; font-weight: 700; font-size: clamp(1.1rem, 2.2vw, 1.6rem); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.sr-specs { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-family: var(--font-mono); font-size: .78rem; color: var(--muted); }
+.sr-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; padding: 16px clamp(16px, 3vw, 30px); border-top: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.swatches { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.swatches small { font-family: var(--font-mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.sw { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); cursor: pointer; padding: 0; background: var(--c); transition: transform .25s, border-color .25s; }
+.sw:hover { transform: scale(1.12); }
+.sw[aria-pressed="true"] { border-color: var(--fg); box-shadow: 0 0 0 3px var(--bg-2), 0 0 0 5px var(--fg); }
+.sr-hint { font-family: var(--font-mono); font-size: .74rem; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.sr-hint svg { width: 18px; height: 18px; }
+@media (max-width: 700px) { .showroom-canvas { aspect-ratio: 4 / 3; } .sr-info { position: static; max-width: none; padding: 20px 18px 0; } .showroom { display: flex; flex-direction: column; } .sr-hint { display: none; } }
+
+.v-toolbar { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; margin: 40px 0 22px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.filters button { font: 500 .94rem var(--font-body); padding: 8px 16px; border-radius: 99px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; transition: all .2s; }
+.filters button:hover { border-color: var(--fg); }
+.filters button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.v-sort { display: flex; align-items: center; gap: 10px; font-size: .9rem; color: var(--muted); }
+.v-sort select { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.v-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; perspective: 1200px; }
+@media (max-width: 980px) { .v-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) { .v-grid { grid-template-columns: minmax(0, 1fr); } }
+.vcard { padding: 0; cursor: pointer; display: flex; flex-direction: column; }
+.vcard.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.vcard .pic { position: relative; aspect-ratio: 16 / 8.5; background: radial-gradient(90% 80% at 50% 90%, color-mix(in srgb, var(--car) 30%, var(--bg-2)), var(--bg-2) 70%); display: grid; place-items: center; overflow: hidden; border-bottom: 1px solid var(--line); }
+.vcard .pic svg { width: 86%; height: auto; transform: translateZ(50px); transition: transform .6s cubic-bezier(.2,.8,.2,1); filter: drop-shadow(0 14px 12px rgba(0,0,0,.35)); }
+.vcard:hover .pic svg { transform: translateZ(50px) translateX(4%) scale(1.04); }
+.vcard .badge { position: absolute; top: 12px; left: 12px; font-family: var(--font-mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); }
+.vcard .body { padding: 20px 22px 22px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.vcard h3 { font-size: 1.25rem; margin: 0; transform: translateZ(26px); }
+.vcard .sub { color: var(--muted); font-size: .9rem; margin-top: -6px; }
+.vcard dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; margin: 0; font-size: .86rem; }
+.vcard dt { font-family: var(--font-mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.vcard dd { margin: 0 0 4px; font-variant-numeric: tabular-nums; }
+.vcard .foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 14px; border-top: 1px dashed var(--line); }
+.vcard .pr { font-family: var(--font-display); font-weight: 800; font-stretch: 112%; font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.vcard .ask { font: 600 .88rem var(--font-body); padding: 8px 14px; border-radius: 99px; border: 1px solid var(--accent); color: var(--accent); background: transparent; cursor: pointer; transition: all .2s; }
+.vcard .ask:hover { background: var(--accent); color: var(--accent-ink); }
+.v-note { margin-top: 18px; font-size: .86rem; color: var(--muted); }
+.v-empty { grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--r); }
+
 /* ---------- Season / tread gauge ---------- */
 .season { padding-block: clamp(70px, 10vw, 130px); background: var(--bg-2); border-block: 1px solid var(--line); overflow: hidden; }
 .season-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 56px; align-items: center; }
@@ -275,7 +327,8 @@ footer a { text-decoration: none; } footer a:hover { color: var(--fg); }
   <div class="wrap">
     <a href="#top" class="logo" aria-label="AR Car Startseite"><span class="logo-mark" aria-hidden="true"></span>AR<span>·</span>CAR</a>
     <ul class="nav-links" id="navLinks">
-      <li><a href="#leistungen">Leistungen</a></li>
+      <li><a href="#fahrzeuge">Fahrzeuge</a></li>
+      <li><a href="#leistungen">Werkstatt</a></li>
       <li><a href="#reifen">Reifen-Check</a></li>
       <li><a href="#ablauf">Ablauf</a></li>
       <li><a href="#kontakt">Kontakt</a></li>
@@ -292,22 +345,22 @@ footer a { text-decoration: none; } footer a:hover { color: var(--fg); }
   <section class="hero">
     <div class="wrap hero-grid">
       <div>
-        <span class="eyebrow">Freie Kfz-Werkstatt · Alle Marken</span>
+        <span class="eyebrow">Autohandel &amp; Werkstatt</span>
         <h1 style="margin-top:18px">
           <span class="line"><span>Ihr Auto.</span></span>
           <span class="line"><span>In besten</span></span>
           <span class="line"><span><em>Händen.</em></span></span>
         </h1>
-        <p class="lede">Inspektion, HU/AU, Reifen, Diagnose und Reparatur aus einer Hand. Wir sagen Ihnen vorher, was gemacht werden muss und was es kostet. Ohne Überraschungen bei der Abholung.</p>
+        <p class="lede">Geprüfte Gebrauchtwagen und eine Werkstatt, die alle Marken kennt. Bei uns finden Sie Ihr nächstes Auto und wir halten es danach in Schuss. Ehrlich beraten, mit fairen Preisen.</p>
         <div class="hero-cta">
-          <a href="#kontakt" class="btn btn-primary magnetic">Termin anfragen
+          <a href="#fahrzeuge" class="btn btn-primary magnetic">Fahrzeuge ansehen
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          <a href="#leistungen" class="btn btn-ghost magnetic">Leistungen ansehen</a>
+          <a href="#kontakt" class="btn btn-ghost magnetic">Werkstatt-Termin</a>
         </div>
         <ul class="hero-facts">
+          <li>Geprüfte Gebrauchtwagen</li>
           <li>Festpreis vor Auftrag</li>
-          <li>Service nach Herstellervorgaben</li>
-          <li>Ersatzteile in Erstausrüster-Qualität</li>
+          <li>Inzahlungnahme möglich</li>
         </ul>
       </div>
       <div class="stage" id="stage" aria-label="3D-Modell eines Rads mit Bremsscheibe und Bremssattel">
@@ -320,10 +373,58 @@ footer a { text-decoration: none; } footer a:hover { color: var(--fg); }
 
   <div class="marquee" aria-hidden="true">
     <div class="marquee-track">
-      <span>Inspektion</span><span>HU / AU</span><span>Reifenservice</span><span>Fehlerdiagnose</span><span>Klimaservice</span><span>Bremsen</span><span>Ölwechsel</span><span>Unfallreparatur</span>
-      <span>Inspektion</span><span>HU / AU</span><span>Reifenservice</span><span>Fehlerdiagnose</span><span>Klimaservice</span><span>Bremsen</span><span>Ölwechsel</span><span>Unfallreparatur</span>
+      <span>Gebrauchtwagen</span><span>Inspektion</span><span>Inzahlungnahme</span><span>HU / AU</span><span>Reifenservice</span><span>Fehlerdiagnose</span><span>Ankauf</span><span>Klimaservice</span>
+      <span>Gebrauchtwagen</span><span>Inspektion</span><span>Inzahlungnahme</span><span>HU / AU</span><span>Reifenservice</span><span>Fehlerdiagnose</span><span>Ankauf</span><span>Klimaservice</span>
     </div>
   </div>
+
+
+  <section class="vehicles" id="fahrzeuge">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <span class="eyebrow reveal">Fahrzeuge</span>
+          <h2 class="reveal">Ihr nächstes Auto steht schon hier.</h2>
+        </div>
+        <p class="lede reveal">Alle Fahrzeuge werden in unserer Werkstatt durchgesehen, bevor sie zum Verkauf stehen. Drehen Sie das Auto im Showroom mit der Maus oder dem Finger und wählen Sie unten ein Fahrzeug aus.</p>
+      </div>
+
+      <div class="showroom reveal">
+        <div class="showroom-canvas" id="showroom" aria-label="3D-Showroom: drehbares Fahrzeugmodell">
+          <div class="sr-info" aria-live="polite">
+            <div class="tag" id="srTag">Kombi</div>
+            <h3 id="srName">–</h3>
+            <div class="price" id="srPrice">–</div>
+            <div class="sr-specs" id="srSpecs"></div>
+          </div>
+        </div>
+        <div class="sr-bar">
+          <div class="swatches" id="swatches"><small>Lackfarbe</small></div>
+          <div class="sr-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 4 0 0 0 18 0M17 9l4 3-4 3M7 9l-4 3 4 3"/></svg>Ziehen zum Drehen</div>
+        </div>
+      </div>
+
+      <div class="v-toolbar">
+        <div class="filters" id="filters" role="group" aria-label="Nach Fahrzeugtyp filtern">
+          <button aria-pressed="true" data-f="alle">Alle</button>
+          <button aria-pressed="false" data-f="Kompakt">Kompakt</button>
+          <button aria-pressed="false" data-f="Limousine">Limousine</button>
+          <button aria-pressed="false" data-f="Kombi">Kombi</button>
+          <button aria-pressed="false" data-f="SUV">SUV</button>
+        </div>
+        <label class="v-sort" for="vSort">Sortieren
+          <select id="vSort">
+            <option value="new">Neueste zuerst</option>
+            <option value="pa">Preis aufsteigend</option>
+            <option value="pd">Preis absteigend</option>
+            <option value="km">Kilometer</option>
+          </select>
+        </label>
+      </div>
+      <div class="v-grid" id="vGrid"></div>
+      <p class="v-note">Beispielfahrzeuge zur Vorschau. Hier erscheint später Ihr echter Bestand, zum Beispiel direkt aus mobile.de oder AutoScout24.</p>
+    </div>
+  </section>
 
   <section class="services" id="leistungen">
     <div class="wrap">
@@ -490,6 +591,7 @@ footer a { text-decoration: none; } footer a:hover { color: var(--fg); }
               <input type="checkbox" id="s4" value="Diagnose"><label for="s4">Diagnose</label>
               <input type="checkbox" id="s5" value="Klima"><label for="s5">Klima</label>
               <input type="checkbox" id="s6" value="Bremsen"><label for="s6">Bremsen</label>
+              <input type="checkbox" id="s8" value="Fahrzeugkauf"><label for="s8">Fahrzeugkauf</label>
               <input type="checkbox" id="s7" value="Sonstiges"><label for="s7">Sonstiges</label>
             </div>
           </div>
@@ -515,7 +617,7 @@ footer a { text-decoration: none; } footer a:hover { color: var(--fg); }
 <footer>
   <div class="wrap">
     <a href="#top" class="logo" style="font-size:1.1rem"><span class="logo-mark" aria-hidden="true" style="width:26px;height:26px;border-width:2px"></span>AR<span>·</span>CAR</a>
-    <nav><a href="#leistungen">Leistungen</a><a href="#reifen">Reifen-Check</a><a href="#kontakt">Kontakt</a><a href="#top">Impressum</a><a href="#top">Datenschutz</a></nav>
+    <nav><a href="#fahrzeuge">Fahrzeuge</a><a href="#leistungen">Werkstatt</a><a href="#reifen">Reifen-Check</a><a href="#kontakt">Kontakt</a><a href="#top">Impressum</a><a href="#top">Datenschutz</a></nav>
     <span>© <span id="yr">2026</span> AR Car</span>
   </div>
 </footer>
@@ -786,3 +888,287 @@ footer a { text-decoration: none; } footer a:hover { color: var(--fg); }
   if (hasGsap && !reduce) ScrollTrigger.refresh();
 })();
 </script>
+<script>
+/* ---------- Fahrzeuge: data, cards, 3D showroom ---------- */
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hasGsap = typeof gsap !== 'undefined';
+  const fine = matchMedia('(pointer:fine)').matches;
+
+  // Beispielbestand – später durch echten Bestand (z. B. mobile.de-Export) ersetzen
+  const CARS = [
+    { id: 1, name: 'VW Golf 1.5 TSI Life', type: 'Kompakt', ez: '03/2021', km: 38400, ps: 150, fuel: 'Benzin', gear: 'Schaltgetriebe', price: 21490, color: '#2f5d8a', L: 4.28 },
+    { id: 2, name: 'Škoda Octavia Combi 2.0 TDI', type: 'Kombi', ez: '06/2020', km: 71200, ps: 150, fuel: 'Diesel', gear: 'DSG', price: 22990, color: '#b8bec4', L: 4.69 },
+    { id: 3, name: 'BMW 320d Limousine', type: 'Limousine', ez: '09/2019', km: 88500, ps: 190, fuel: 'Diesel', gear: 'Automatik', price: 24750, color: '#4a5056', L: 4.71 },
+    { id: 4, name: 'Toyota RAV4 2.5 Hybrid', type: 'SUV', ez: '04/2021', km: 45900, ps: 218, fuel: 'Hybrid', gear: 'Automatik', price: 31900, color: '#e8eaec', L: 4.6 },
+    { id: 5, name: 'Opel Corsa 1.2', type: 'Kompakt', ez: '11/2022', km: 18300, ps: 100, fuel: 'Benzin', gear: 'Schaltgetriebe', price: 15690, color: '#b3261e', L: 4.06 },
+    { id: 6, name: 'Mercedes C 220 d T-Modell', type: 'Kombi', ez: '02/2021', km: 62000, ps: 200, fuel: 'Diesel', gear: 'Automatik', price: 33480, color: '#22324a', L: 4.79 },
+    { id: 7, name: 'Hyundai Tucson 1.6 T-GDI', type: 'SUV', ez: '08/2022', km: 29700, ps: 150, fuel: 'Benzin', gear: 'Schaltgetriebe', price: 26990, color: '#5f6b3c', L: 4.5 },
+    { id: 8, name: 'Audi A4 40 TDI', type: 'Limousine', ez: '05/2020', km: 79300, ps: 204, fuel: 'Diesel', gear: 'S tronic', price: 27450, color: '#d9dcdf', L: 4.76 },
+  ];
+  const PAINTS = [['Polarweiß', '#e8eaec'], ['Silber', '#b8bec4'], ['Mineralgrau', '#4a5056'], ['Tiefschwarz', '#15181b'], ['Atlantikblau', '#2f5d8a'], ['Signalrot', '#b3261e'], ['Amber', '#ffb03b']];
+  const eur = n => n.toLocaleString('de-DE') + ' €';
+  const kmf = n => n.toLocaleString('de-DE') + ' km';
+
+  /* ----- one profile definition drives both the SVG cards and the 3D body ----- */
+  function profile(type, Lo) {
+    const P = {
+      Kompakt:   { L: 4.2, wb: 2.62, r: 0.33, floor: 0.24, belt: 0.92, roof: 1.42, hood: 1.0, rear: 'hatch' },
+      Limousine: { L: 4.7, wb: 2.85, r: 0.34, floor: 0.24, belt: 0.9,  roof: 1.4,  hood: 1.3, rear: 'trunk' },
+      Kombi:     { L: 4.7, wb: 2.8,  r: 0.34, floor: 0.24, belt: 0.92, roof: 1.44, hood: 1.25, rear: 'wagon' },
+      SUV:       { L: 4.55, wb: 2.7, r: 0.4,  floor: 0.36, belt: 1.12, roof: 1.68, hood: 1.15, rear: 'hatch' },
+    }[type];
+    const p = Object.assign({}, P); if (Lo) { const k = Lo / p.L; p.L = Lo; p.wb *= Math.min(1.04, Math.max(.96, k)); p.hood *= k; }
+    const { L, wb, r, floor, belt, roof, hood, rear } = p;
+    const xf = -L / 2, xr = L / 2, xa = -wb / 2, xb = wb / 2, ra = r + 0.07;
+    const body = [
+      ['M', xf + 0.14, floor],
+      ['L', xa - ra, floor], ['L', xa - ra, r], ['A', xa, r, ra, Math.PI, 0], ['L', xa + ra, floor],
+      ['L', xb - ra, floor], ['L', xb - ra, r], ['A', xb, r, ra, Math.PI, 0], ['L', xb + ra, floor],
+      ['L', xr - 0.14, floor], ['Q', xr + 0.02, floor, xr, floor + 0.22],
+      ['L', xr - 0.02, belt - 0.14], ['Q', xr - 0.04, belt, xr - 0.24, belt + 0.02],
+      ['L', xf + hood, belt],
+      ['Q', xf + 0.3, belt - 0.02, xf + 0.04, belt - 0.2],
+      ['L', xf - 0.02, floor + 0.26], ['Q', xf - 0.02, floor, xf + 0.14, floor],
+    ];
+    const xws = xf + hood, xrf = xws + (roof - belt) * 1.35, xg = rear === 'trunk' ? xr - 0.95 : rear === 'wagon' ? xr - 0.12 : xr - 0.2;
+    const xrr = rear === 'trunk' ? xg - 0.75 : rear === 'wagon' ? xr - 0.32 : xg - 0.5;
+    const glass = [
+      ['M', xws, belt],
+      ['Q', xrf - 0.25, roof - 0.02, xrf + 0.15, roof],
+      ['L', xrr, roof],
+      ['Q', rear === 'wagon' ? xrr + 0.2 : xrr + 0.45, roof, xg, belt],
+    ];
+    return { p, body, glass, xa, xb, xrf, xrr, xws, xg };
+  }
+
+  function sample(cmds) {
+    const pts = []; let cx = 0, cy = 0;
+    cmds.forEach(c => {
+      if (c[0] === 'M' || c[0] === 'L') { cx = c[1]; cy = c[2]; pts.push([cx, cy]); }
+      else if (c[0] === 'Q') { for (let i = 1; i <= 10; i++) { const t = i / 10, u = 1 - t; const x = u * u * cx + 2 * u * t * c[1] + t * t * c[3], y = u * u * cy + 2 * u * t * c[2] + t * t * c[4]; pts.push([x, y]); } cx = c[3]; cy = c[4]; }
+      else if (c[0] === 'A') { for (let i = 0; i <= 14; i++) { const a = c[4] + (c[5] - c[4]) * i / 14; pts.push([c[1] + Math.cos(a) * c[3], c[2] + Math.sin(a) * c[3]]); } const a = c[5]; cx = c[1] + Math.cos(a) * c[3]; cy = c[2] + Math.sin(a) * c[3]; }
+    });
+    return pts;
+  }
+
+  function carSVG(car) {
+    const g = profile(car.type, car.L), { p } = g;
+    const x0 = -p.L / 2 - 0.15, w = p.L + 0.3, top = p.roof + 0.12, h = top + 0.12;
+    const path = pts => 'M' + pts.map(([x, y]) => `${(x - x0).toFixed(3)},${(top - y).toFixed(3)}`).join('L') + 'Z';
+    const wheel = x => { const cx = (x - x0).toFixed(3), cy = (top - p.r).toFixed(3); return `<circle cx="${cx}" cy="${cy}" r="${p.r}" fill="#121518"/><circle cx="${cx}" cy="${cy}" r="${(p.r * .62).toFixed(3)}" fill="#aab3ba"/><circle cx="${cx}" cy="${cy}" r="${(p.r * .2).toFixed(3)}" fill="#3a4249"/>`; };
+    const hlX = (-p.L / 2 + 0.06 - x0).toFixed(3), tlX = (p.L / 2 - 0.12 - x0).toFixed(3);
+    return `<svg viewBox="0 0 ${w.toFixed(3)} ${h.toFixed(3)}" aria-hidden="true">
+      <ellipse cx="${(w / 2).toFixed(3)}" cy="${(top + 0.02).toFixed(3)}" rx="${(p.L / 2).toFixed(3)}" ry="0.07" fill="rgba(0,0,0,.35)"/>
+      <path d="${path(sample(g.glass))}" fill="#1b232a"/>
+      <path d="${path(sample(g.glass))}" fill="url(#gl${car.id})" opacity=".55"/>
+      <path d="${path(sample(g.body))}" fill="${car.color}"/>
+      <path d="${path(sample(g.body))}" fill="url(#sh${car.id})"/>
+      <rect x="${hlX}" y="${(top - p.belt + 0.1).toFixed(3)}" width="0.2" height="0.07" rx="0.03" fill="#f4f7ff"/>
+      <rect x="${tlX}" y="${(top - p.belt + 0.12).toFixed(3)}" width="0.12" height="0.08" rx="0.03" fill="#d0281c"/>
+      ${wheel(g.xa)}${wheel(g.xb)}
+      <defs>
+        <linearGradient id="sh${car.id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient>
+        <linearGradient id="gl${car.id}" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#9fc3dc"/><stop offset=".5" stop-color="#9fc3dc" stop-opacity="0"/></linearGradient>
+      </defs></svg>`;
+  }
+
+  /* ----- cards ----- */
+  const grid = document.getElementById('vGrid');
+  let filter = 'alle', sort = 'new', activeId = 2;
+  function bindTilt(c) {
+    if (reduce || !fine) return;
+    c.addEventListener('pointermove', e => {
+      const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+      c.style.setProperty('--ry', ((x - .5) * 10) + 'deg'); c.style.setProperty('--rx', ((.5 - y) * 8) + 'deg');
+      c.style.setProperty('--px', (x * 100) + '%'); c.style.setProperty('--py', (y * 100) + '%');
+    });
+    c.addEventListener('pointerleave', () => { c.style.setProperty('--rx', '0deg'); c.style.setProperty('--ry', '0deg'); });
+  }
+  function render(animate) {
+    let list = CARS.filter(c => filter === 'alle' || c.type === filter);
+    list.sort(sort === 'pa' ? (a, b) => a.price - b.price : sort === 'pd' ? (a, b) => b.price - a.price : sort === 'km' ? (a, b) => a.km - b.km : (a, b) => b.ez.split('/').reverse().join('') - a.ez.split('/').reverse().join(''));
+    grid.innerHTML = list.length ? '' : '<div class="v-empty">Gerade kein Fahrzeug in dieser Klasse. Fragen Sie uns trotzdem, wir suchen gern für Sie.</div>';
+    list.forEach(car => {
+      const el = document.createElement('article');
+      el.className = 'card vcard' + (car.id === activeId ? ' active' : '');
+      el.style.setProperty('--car', car.color);
+      el.tabIndex = 0; el.setAttribute('aria-label', `${car.name} im Showroom ansehen`);
+      el.innerHTML = `<div class="pic"><span class="badge">${car.type}</span>${carSVG(car)}</div>
+        <div class="body"><h3>${car.name}</h3><div class="sub">${car.fuel} · ${car.gear}</div>
+        <dl><div><dt>Erstzulassung</dt><dd>${car.ez}</dd></div><div><dt>Kilometer</dt><dd>${kmf(car.km)}</dd></div>
+        <div><dt>Leistung</dt><dd>${car.ps} PS (${Math.round(car.ps * 0.7355)} kW)</dd></div><div><dt>Kraftstoff</dt><dd>${car.fuel}</dd></div></dl>
+        <div class="foot"><span class="pr">${eur(car.price)}</span><button class="ask" type="button">Anfragen</button></div></div>`;
+      el.addEventListener('click', e => { if (e.target.closest('.ask')) return ask(car); select(car, true); });
+      el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(car, true); } });
+      bindTilt(el); grid.appendChild(el);
+    });
+    if (animate && hasGsap && !reduce) gsap.from(grid.children, { y: 30, opacity: 0, rotateX: -10, transformOrigin: '50% 100%', duration: .7, ease: 'expo.out', stagger: .05, clearProps: 'transform,opacity' });
+  }
+  document.getElementById('filters').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    filter = b.dataset.f; document.querySelectorAll('#filters button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    render(true);
+  });
+  document.getElementById('vSort').addEventListener('change', e => { sort = e.target.value; render(true); });
+
+  function ask(car) {
+    const chip = document.getElementById('s8'); if (chip) chip.checked = true;
+    const msg = document.getElementById('fMsg'); if (msg) msg.value = `Ich interessiere mich für: ${car.name}, EZ ${car.ez}, ${kmf(car.km)}, ${eur(car.price)}.`;
+    const car_ = document.getElementById('fCar'); if (car_ && !car_.value) car_.placeholder = 'Ihr aktuelles Auto (falls Inzahlungnahme)';
+    const link = document.querySelector('.nav-links a[href="#kontakt"]'); if (link) link.click();
+  }
+
+  /* ----- showroom info + swatches ----- */
+  const srTag = document.getElementById('srTag'), srName = document.getElementById('srName'), srPrice = document.getElementById('srPrice'), srSpecs = document.getElementById('srSpecs');
+  const sw = document.getElementById('swatches');
+  PAINTS.forEach(([n, c]) => { const b = document.createElement('button'); b.className = 'sw'; b.type = 'button'; b.style.setProperty('--c', c); b.title = n; b.setAttribute('aria-label', 'Lackfarbe ' + n); b.dataset.c = c; b.setAttribute('aria-pressed', 'false'); b.addEventListener('click', () => paint(c)); sw.appendChild(b); });
+  const markSwatch = c => sw.querySelectorAll('.sw').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c.toLowerCase() === c.toLowerCase())));
+
+  let api = null; // set by 3D block
+  function select(car, scroll) {
+    activeId = car.id;
+    grid.querySelectorAll('.vcard').forEach(el => el.classList.toggle('active', el.getAttribute('aria-label').startsWith(car.name)));
+    srTag.textContent = car.type; srName.textContent = car.name; srPrice.textContent = eur(car.price);
+    srSpecs.innerHTML = `<span>EZ ${car.ez}</span><span>${kmf(car.km)}</span><span>${car.ps} PS</span><span>${car.fuel}</span>`;
+    markSwatch(car.color);
+    if (hasGsap && !reduce) gsap.from('.sr-info > *', { y: 14, opacity: 0, duration: .6, ease: 'power3.out', stagger: .05 });
+    if (api) api.load(car);
+    if (scroll) { const sr = document.getElementById('showroom'); const r = sr.getBoundingClientRect(); if (r.top < 60 || r.bottom > innerHeight) sr.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' }); }
+  }
+  function paint(c) { markSwatch(c); if (api) api.paint(c); }
+
+  render(false);
+
+  /* ----- 3D ----- */
+  const host = document.getElementById('showroom');
+  const info = host.querySelector('.sr-info');
+  const placeInfo = () => { if (innerWidth <= 700) { if (info.parentElement === host) host.parentElement.insertBefore(info, host); } else if (info.parentElement !== host) host.appendChild(info); };
+  placeInfo(); addEventListener('resize', placeInfo);
+  const start = CARS.find(c => c.id === activeId);
+  if (typeof THREE === 'undefined') { select(start); return; }
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { select(start); return; }
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  host.prepend(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(28, 2, 0.1, 100);
+  const pm = new THREE.PMREMGenerator(renderer), env = new THREE.Scene();
+  env.add(new THREE.Mesh(new THREE.BoxGeometry(30, 30, 30), new THREE.MeshBasicMaterial({ color: 0x1c262e, side: THREE.BackSide })));
+  const panel = (w, h, color, x, y, z, ry = 0, rx = 0) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide })); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); env.add(m); };
+  panel(18, 5, 0xffffff, 0, 10, 0, 0, Math.PI / 2);   // softbox above
+  panel(3, 10, 0xdbeaff, -13, 2, 0, Math.PI / 2);
+  panel(3, 10, 0xffffff, 13, 2, 0, -Math.PI / 2);
+  panel(16, 1.4, 0xffb03b, 0, 0.6, -13);               // amber strip behind
+  panel(14, 3, 0xffffff, 0, 3, 13, Math.PI);
+  scene.environment = pm.fromScene(env, 0.03).texture;
+  const sun = new THREE.DirectionalLight(0xffffff, 2.4); sun.position.set(3, 8, 4); sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: 1, far: 20 }); sun.shadow.radius = 6;
+  scene.add(sun, new THREE.AmbientLight(0x9ab8cc, 0.3));
+  const back = new THREE.DirectionalLight(0xffb03b, 1.2); back.position.set(-4, 2, -5); scene.add(back);
+
+  // turntable
+  const table = new THREE.Group(); scene.add(table);
+  const plate = new THREE.Mesh(new THREE.CylinderGeometry(3.0, 3.05, 0.08, 96), new THREE.MeshStandardMaterial({ color: 0x1a2127, metalness: 0.7, roughness: 0.35 }));
+  plate.position.y = -0.04; plate.receiveShadow = true; table.add(plate);
+  const glow = new THREE.Mesh(new THREE.TorusGeometry(3.0, 0.018, 8, 160), new THREE.MeshBasicMaterial({ color: 0xffb03b })); glow.rotation.x = Math.PI / 2; glow.position.y = 0.0; table.add(glow);
+  for (let i = 0; i < 3; i++) { const ring = new THREE.Mesh(new THREE.RingGeometry(1.2 + i * 0.7, 1.21 + i * 0.7, 128), new THREE.MeshBasicMaterial({ color: 0x3a4a55, transparent: true, opacity: .5 })); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.002; table.add(ring); }
+
+  const paintMat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color(start.color), metalness: 0.55, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.06 });
+  const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x0d1216, metalness: 0.3, roughness: 0.04, clearcoat: 1 });
+  const tyreMat = new THREE.MeshStandardMaterial({ color: 0x131619, roughness: 0.9 });
+  const rimMat = new THREE.MeshStandardMaterial({ color: 0xc9d0d5, metalness: 1, roughness: 0.22 });
+  const darkMat = new THREE.MeshStandardMaterial({ color: 0x0f1316, metalness: 0.4, roughness: 0.5 });
+  const lightMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xeaf2ff, emissiveIntensity: 2.2 });
+  const tailMat = new THREE.MeshStandardMaterial({ color: 0x5a0a06, emissive: 0xff2a1a, emissiveIntensity: 1.6 });
+
+  const toShape = cmds => { const s = new THREE.Shape(); cmds.forEach(c => { if (c[0] === 'M') s.moveTo(c[1], c[2]); else if (c[0] === 'L') s.lineTo(c[1], c[2]); else if (c[0] === 'Q') s.quadraticCurveTo(c[1], c[2], c[3], c[4]); else if (c[0] === 'A') s.absarc(c[1], c[2], c[3], c[4], c[5], true); }); return s; };
+  const extrude = (cmds, depth, bevel, mat, thick) => {
+    const g = new THREE.ExtrudeGeometry(toShape(cmds), { depth, bevelEnabled: true, bevelThickness: thick || bevel, bevelSize: bevel, bevelSegments: 7, curveSegments: 18 });
+    g.translate(0, 0, -depth / 2); const m = new THREE.Mesh(g, mat); m.castShadow = true; return m;
+  };
+  function wheel(r) {
+    const w = new THREE.Group();
+    const tyre = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.26, 48), tyreMat); tyre.rotation.x = Math.PI / 2; tyre.castShadow = true; w.add(tyre);
+    const side = new THREE.Mesh(new THREE.TorusGeometry(r - 0.03, 0.03, 10, 48), tyreMat); side.position.z = 0.13; w.add(side);
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.66, r * 0.66, 0.02, 40), darkMat); rim.rotation.x = Math.PI / 2; rim.position.z = 0.132; w.add(rim);
+    const lip = new THREE.Mesh(new THREE.TorusGeometry(r * 0.66, 0.018, 8, 40), rimMat); lip.position.z = 0.14; w.add(lip);
+    for (let i = 0; i < 5; i++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(r * 1.2, 0.06, 0.03), rimMat); sp.rotation.z = i / 5 * Math.PI; sp.position.z = 0.145; w.add(sp); }
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.04, 20), rimMat); hub.rotation.x = Math.PI / 2; hub.position.z = 0.16; w.add(hub);
+    return w;
+  }
+
+  const carHolder = new THREE.Group(); table.add(carHolder);
+  let car = null, wheels = [];
+  function build(c) {
+    const g = profile(c.type, c.L), p = g.p, W = 1.42, T = 0.2;
+    const grp = new THREE.Group();
+    grp.add(extrude(g.body, W, 0.07, paintMat, T));
+    grp.add(extrude(g.glass, W - 0.2, 0.06, glassMat, 0.12));
+    // B-pillar
+    const bx = (g.xrf + g.xrr) / 2 - 0.1;
+    const bp = new THREE.Mesh(new THREE.BoxGeometry(0.1, p.roof - p.belt - 0.02, W + 0.02), paintMat); bp.position.set(bx, (p.roof + p.belt) / 2, 0); grp.add(bp);
+    // lights + grille
+    for (const z of [-0.52, 0.52]) {
+      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.07, 0.42), lightMat); hl.position.set(-p.L / 2 + 0.1, p.belt - 0.13, z); grp.add(hl);
+      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.46), tailMat); tl.position.set(p.L / 2 - 0.05, p.belt - 0.14, z); grp.add(tl);
+    }
+    const gr = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.16, 0.7), darkMat); gr.position.set(-p.L / 2 + 0.02, p.floor + 0.24, 0); grp.add(gr);
+    const tlBar = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.025, 1.3), tailMat); tlBar.position.set(p.L / 2 - 0.02, p.belt - 0.12, 0); grp.add(tlBar);
+    // mirrors
+    for (const s of [-1, 1]) { const mi = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.1, 0.16), paintMat); mi.position.set(g.xws + 0.15, p.belt + 0.08, s * (W / 2 + T + 0.06)); grp.add(mi); }
+    wheels = [];
+    for (const x of [g.xa, g.xb]) for (const s of [-1, 1]) { const w = wheel(p.r); w.position.set(x, p.r, s * (W / 2 + T - 0.12)); if (s < 0) w.rotation.y = Math.PI; grp.add(w); wheels.push(w); }
+    return grp;
+  }
+  function swap(c) {
+    const next = build(c);
+    const put = () => { if (car) carHolder.remove(car); car = next; carHolder.add(car); };
+    if (hasGsap && !reduce && car) {
+      gsap.timeline()
+        .to(carHolder.scale, { x: .6, y: .6, z: .6, duration: .35, ease: 'power2.in' })
+        .to(carHolder.position, { y: -1.2, duration: .35, ease: 'power2.in' }, 0)
+        .add(put)
+        .to(carHolder.position, { y: 0, duration: .9, ease: 'expo.out' })
+        .to(carHolder.scale, { x: 1, y: 1, z: 1, duration: .9, ease: 'expo.out' }, '<');
+      spinV += 0.12;
+    } else put();
+  }
+  function paintTo(hex) {
+    const to = new THREE.Color(hex);
+    if (hasGsap && !reduce) gsap.to(paintMat.color, { r: to.r, g: to.g, b: to.b, duration: .7, ease: 'power2.out' }); else paintMat.color.copy(to);
+  }
+  api = { load: c => { swap(c); paintTo(c.color); }, paint: paintTo };
+
+  const resize = () => {
+    const r = host.getBoundingClientRect(); renderer.setSize(Math.max(1, Math.round(r.width)), Math.max(1, Math.round(r.height)), false);
+    camera.aspect = r.width / Math.max(1, r.height);
+    const d = 9.2 * Math.max(1, Math.pow(1.9 / camera.aspect, 0.75));
+    camera.position.set(0, d * 0.2, d); camera.lookAt(0, 0.3, 0); camera.updateProjectionMatrix();
+  };
+  new ResizeObserver(resize).observe(host); resize();
+
+  let spinV = 0, drag = false, lastX = 0, rot = 0.65, visible = false;
+  host.addEventListener('pointerdown', e => { drag = true; lastX = e.clientX; });
+  addEventListener('pointermove', e => { if (!drag) return; spinV = (e.clientX - lastX) * 0.006; rot += spinV; lastX = e.clientX; }, { passive: true });
+  addEventListener('pointerup', () => drag = false);
+  new IntersectionObserver(([e]) => visible = e.isIntersecting).observe(host);
+
+  select(start);
+  let t0 = performance.now();
+  const tick = now => {
+    requestAnimationFrame(tick);
+    const dt = Math.min(0.05, (now - t0) / 1000); t0 = now;
+    if (!visible) return;
+    if (!drag) { spinV *= 0.95; rot += spinV + (reduce ? 0 : dt * 0.22); }
+    table.rotation.y = rot;
+    renderer.render(scene, camera);
+  };
+  requestAnimationFrame(tick);
+})();
+</script>
+
