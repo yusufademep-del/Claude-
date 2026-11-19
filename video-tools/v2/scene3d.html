@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}</style>
+</head><body>
+<script src="three.min.js"></script>
+<script src="font.js"></script>
+<script>
+/* Börsenlehre 3D-Hintergrund – deterministisch: renderAt(t) zeichnet exakt Zeitpunkt t */
+const P = new URLSearchParams(location.search);
+const W = +P.get("w") || 1080, H = +P.get("h") || 1920;
+const SEG = JSON.parse(decodeURIComponent(P.get("seg") || "{}"));
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 200);
+
+/* ---------- Umgebung für metallische Reflexe ---------- */
+(function makeEnv() {
+  const env = new THREE.Scene();
+  const g = new THREE.SphereGeometry(50, 32, 16);
+  const cols = [];
+  const pos = g.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i) / 50;
+    const c = new THREE.Color().setHSL(0.6, 0.5, 0.1 + Math.max(0, y) * 0.5);
+    cols.push(c.r, c.g, c.b);
+  }
+  g.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
+  env.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+  const lm = (c) => new THREE.MeshBasicMaterial({ color: c });
+  const b1 = new THREE.Mesh(new THREE.BoxGeometry(30, 4, 1), lm(0xffffff)); b1.position.set(0, 25, -30); env.add(b1);
+  const b2 = new THREE.Mesh(new THREE.BoxGeometry(4, 30, 1), lm(0xfff1c4)); b2.position.set(-30, 5, 0); b2.lookAt(0, 0, 0); env.add(b2);
+  const b3 = new THREE.Mesh(new THREE.BoxGeometry(4, 20, 1), lm(0x8fb3ff)); b3.position.set(30, 0, 10); b3.lookAt(0, 0, 0); env.add(b3);
+  const pm = new THREE.PMREMGenerator(renderer);
+  scene.environment = pm.fromScene(env, 0.02).texture;
+})();
+
+/* ---------- Hintergrund-Verlauf ---------- */
+const bgMat = new THREE.ShaderMaterial({
+  depthWrite: false, depthTest: false,
+  uniforms: { uT: { value: 0 } },
+  vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.999,1.0); }",
+  fragmentShader: `varying vec2 vUv; uniform float uT;
+    void main(){
+      vec3 top=vec3(0.13,0.25,0.52), bot=vec3(0.03,0.06,0.15);
+      vec3 c=mix(bot,top,smoothstep(0.0,1.0,vUv.y));
+      float glow=exp(-pow(distance(vUv,vec2(0.5+0.08*sin(uT*0.3),0.68)),2.0)*7.0);
+      c+=vec3(0.18,0.22,0.35)*glow;
+      float v=smoothstep(0.95,0.35,distance(vUv,vec2(0.5)));
+      c*=mix(0.7,1.0,v);
+      gl_FragColor=vec4(c,1.0);
+    }`
+});
+const bg = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMat);
+bg.frustumCulled = false; bg.renderOrder = -10;
+scene.add(bg);
+
+/* ---------- Licht ---------- */
+scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x0b1430, 0.6));
+const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(5, 12, 10); scene.add(key);
+const warm = new THREE.PointLight(0xffc94d, 2.2, 40); warm.position.set(-6, 9, 6); scene.add(warm);
+const cool = new THREE.PointLight(0x5b8cff, 2.0, 40); cool.position.set(7, 4, 5); scene.add(cool);
+
+/* ---------- Boden-Gitter ---------- */
+const grid = new THREE.GridHelper(80, 40, 0x3b6bd6, 0x1f3f8a);
+grid.material.transparent = true; grid.material.opacity = 0.35;
+grid.position.y = -1.5; scene.add(grid);
+
+/* ---------- Schwebende Partikel ---------- */
+const NP = 260, pGeo = new THREE.BufferGeometry(), pBase = [];
+const pArr = new Float32Array(NP * 3);
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+for (let i = 0; i < NP; i++) pBase.push([rnd() * 30 - 15, rnd() * 24 - 4, rnd() * -20 + 2, 0.3 + rnd() * 0.8]);
+pGeo.setAttribute("position", new THREE.BufferAttribute(pArr, 3));
+const parts = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xffe28a, size: 0.09, transparent: true, opacity: 0.75, depthWrite: false }));
+scene.add(parts);
+
+/* ---------- Materialien ---------- */
+const gold = new THREE.MeshStandardMaterial({ color: 0xffb300, metalness: 1, roughness: 0.2, envMapIntensity: 1.6, emissive: 0x2a1500, emissiveIntensity: 0.25 });
+const goldDark = new THREE.MeshStandardMaterial({ color: 0xd99a00, metalness: 1, roughness: 0.35 });
+const chrome = new THREE.MeshStandardMaterial({ color: 0xdfe8ff, metalness: 1, roughness: 0.15 });
+const blueMat = new THREE.MeshStandardMaterial({ color: 0x3d7bff, metalness: 0.3, roughness: 0.3, emissive: 0x0a1f5c, emissiveIntensity: 0.6 });
+const greyMat = new THREE.MeshStandardMaterial({ color: 0x8ea3c7, metalness: 0.2, roughness: 0.45, transparent: true, opacity: 0.85 });
+const greenMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, metalness: 0.2, roughness: 0.3, emissive: 0x07401c, emissiveIntensity: 0.6 });
+const redMat = new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.2, roughness: 0.3, emissive: 0x4a0b0b, emissiveIntensity: 0.6 });
+const yellowMat = new THREE.MeshStandardMaterial({ color: 0xffd60a, metalness: 0.3, roughness: 0.3, emissive: 0x4a3a00, emissiveIntensity: 0.5 });
+const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5 });
+
+/* ---------- Helfer ---------- */
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const easeOutBack = (x) => { const c1 = 1.7, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+const easeInOut = (x) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+let FONT = null;
+function text3d(str, size, mat, depth = 0.35) {
+  const g = new THREE.TextGeometry(str, { font: FONT, size, height: depth, curveSegments: 6, bevelEnabled: true, bevelThickness: size * 0.05, bevelSize: size * 0.035, bevelSegments: 3 });
+  g.computeBoundingBox(); const bb = g.boundingBox;
+  g.translate(-(bb.max.x + bb.min.x) / 2, -(bb.max.y + bb.min.y) / 2, -depth / 2);
+  return new THREE.Mesh(g, mat);
+}
+function coinGeo(r = 0.6, h = 0.12) {
+  const pts = []; // Münzprofil mit Rand
+  pts.push(new THREE.Vector2(0, -h / 2), new THREE.Vector2(r * 0.86, -h / 2), new THREE.Vector2(r, -h * 0.35), new THREE.Vector2(r, h * 0.35), new THREE.Vector2(r * 0.86, h / 2), new THREE.Vector2(0, h / 2));
+  return new THREE.LatheGeometry(pts, 40);
+}
+const COIN = coinGeo();
+const groups = {};
+function seg(name) { const g = new THREE.Group(); g.visible = false; scene.add(g); groups[name] = g; return g; }
+/* Ein-/Ausblenden: wächst mit Feder rein, fliegt nach oben raus */
+function life(g, t, a, b, opt = {}) {
+  if (t < a - 0.01 || t > b + 0.6) { g.visible = false; return -1; }
+  g.visible = true;
+  const e = clamp((t - a) / (opt.in || 0.6)), x = clamp((t - b) / 0.45);
+  const s = easeOutBack(e) * (1 - easeInOut(x) * 0.9);
+  g.scale.setScalar(Math.max(0.001, s * (opt.scale || 1)));
+  g.position.y = (opt.y || 0) + easeInOut(x) * 6 + (1 - easeOut(e)) * -1.5;
+  g.rotation.y = (opt.ry || 0) + (1 - easeOut(e)) * -1.6 + easeInOut(x) * 1.2;
+  return t - a;
+}
+
+function build() {
+  // Intro: "IPO" mit Münzring
+  const intro = seg("intro");
+  const ipo = text3d("IPO", 2.2, gold, 0.8); intro.add(ipo);
+  intro.userData.ring = [];
+  for (let i = 0; i < 10; i++) { const c = new THREE.Mesh(COIN, gold); c.scale.setScalar(0.9); intro.add(c); intro.userData.ring.push(c); }
+
+  // Preis: "$83"
+  const price = seg("price");
+  const p83 = text3d("$83", 3.0, gold, 1.0); price.add(p83);
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(3.7, 0.08, 12, 96), yellowMat); halo.rotation.x = 0.25; price.add(halo);
+  price.userData = { p83, halo };
+
+  // Preisspanne: Balken 70 / 78 / 83
+  const range = seg("range");
+  const vals = [70, 78, 83], mats = [greyMat, greyMat, gold], bars = [], labs = [];
+  vals.forEach((v, i) => {
+    const g = new THREE.BoxGeometry(1.5, 1, 1.5); g.translate(0, 0.5, 0);
+    const m = new THREE.Mesh(g, mats[i]); m.position.x = (i - 1) * 2.4; range.add(m); bars.push(m);
+    const l = text3d(String(v), 0.95, i === 2 ? yellowMat : chrome, 0.25); l.position.x = (i - 1) * 2.4; range.add(l); labs.push(l);
+  });
+  range.userData = { bars, labs, vals };
+
+  // Aktien: wachsender Würfel-Turm (980 Mio)
+  const shares = seg("shares");
+  const N = 7 * 7 * 9;
+  const cube = new THREE.InstancedMesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), blueMat, N);
+  cube.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  shares.add(cube); shares.userData = { cube, N };
+  const lbl980 = text3d("980 MIO", 1.0, chrome, 0.3); lbl980.position.y = 6.2; shares.add(lbl980); shares.userData.lbl = lbl980;
+
+  // Geld: Münzregen + "$80 MRD"
+  const money = seg("money");
+  const NC = 90;
+  const rain = new THREE.InstancedMesh(COIN, gold, NC); rain.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  rain.frustumCulled = false;
+  money.add(rain);
+  const seeds = []; for (let i = 0; i < NC; i++) seeds.push([rnd() * 9 - 4.5, rnd() * 1.6, rnd() * 6 - 4, rnd() * 6, rnd() * 6]);
+  const m80 = text3d("80 MRD $", 1.05, gold, 0.45); money.add(m80);
+  money.userData = { rain, seeds, NC, m80 };
+
+  // Rekord: Pokal "NR. 1"
+  const record = seg("record");
+  const cupPts = [];
+  for (let i = 0; i <= 20; i++) { const y = i / 20; cupPts.push(new THREE.Vector2(0.25 + 1.35 * Math.pow(y, 0.6), y * 2.4)); }
+  const cup = new THREE.Mesh(new THREE.LatheGeometry(cupPts, 48), gold); cup.position.y = 1.4; record.add(cup);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.35, 1.2, 24), gold); stem.position.y = 0.8; record.add(stem);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.3, 0.5, 32), goldDark); base.position.y = 0; record.add(base);
+  [-1, 1].forEach(s => { const h = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.11, 12, 32, Math.PI * 1.2), gold); h.position.set(s * 1.55, 2.6, 0); h.rotation.z = s > 0 ? -Math.PI * 0.6 : Math.PI * 1.6; record.add(h); });
+  record.userData = {};
+
+  // Nasdaq: "ANT" + Pfeil
+  const nasdaq = seg("nasdaq");
+  const ant = text3d("ANT", 2.2, chrome, 0.9); nasdaq.add(ant);
+  const nd = text3d("NASDAQ", 0.85, blueMat, 0.25); nd.position.y = -2.3; nasdaq.add(nd);
+  const arrow = new THREE.Group();
+  const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 2.2, 16), greenMat); sh.position.y = 1.1; arrow.add(sh);
+  const hd = new THREE.Mesh(new THREE.ConeGeometry(0.5, 0.9, 24), greenMat); hd.position.y = 2.6; arrow.add(hd);
+  arrow.position.set(2.9, 0.6, 0.6); arrow.rotation.z = -0.35; arrow.scale.setScalar(0.8); nasdaq.add(arrow);
+  nasdaq.userData = { arrow };
+
+  // Vorsicht: Zickzack-Kurs + Warndreieck
+  const caution = seg("caution");
+  const pts = []; let y = 0;
+  for (let i = 0; i <= 26; i++) { y += (rnd() - 0.48) * 1.6; y = Math.max(-2.2, Math.min(2.2, y)); pts.push(new THREE.Vector3(-3.9 + i * 0.3, y, 0)); }
+  const curve = new THREE.CatmullRomCurve3(pts);
+  const tubeG = new THREE.TubeGeometry(curve, 400, 0.12, 10, false);
+  const tube = new THREE.Mesh(tubeG, yellowMat); caution.add(tube);
+  const tri = new THREE.Shape(); tri.moveTo(0, 1.3); tri.lineTo(1.2, -0.8); tri.lineTo(-1.2, -0.8); tri.lineTo(0, 1.3);
+  const triM = new THREE.Mesh(new THREE.ExtrudeGeometry(tri, { depth: 0.35, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.08, bevelSegments: 3 }), yellowMat);
+  const warn = new THREE.Group(); warn.add(triM);
+  const ex = text3d("!", 1.3, blackMat, 0.2); ex.position.set(0, -0.05, 0.45); warn.add(ex);
+  warn.position.set(0, 3.0, 0); caution.add(warn);
+  caution.userData = { tube, idx: tubeG.index.count, warn };
+
+  // Outro: Münz-Explosion
+  const outro = seg("outro");
+  const NB = 70; const burst = new THREE.InstancedMesh(COIN, gold, NB); burst.frustumCulled = false; outro.add(burst);
+  const dirs = []; for (let i = 0; i < NB; i++) { const a = rnd() * Math.PI * 2, e = rnd() * 0.9 - 0.2; dirs.push([Math.cos(a) * Math.cos(e) * 0.6, Math.sin(e) + 0.5, Math.sin(a) * Math.cos(e), 3 + rnd() * 5, rnd() * 10]); }
+  outro.userData = { burst, dirs, NB };
+}
+
+const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), S = new THREE.Vector3(), E = new THREE.Euler();
+const CENTER_Y = 7.2;
+
+window.renderAt = function (t) {
+  bgMat.uniforms.uT.value = t;
+  // Kamera: langsame Fahrt + Kick bei Akzenten
+  let kick = 0;
+  (SEG.accents || []).forEach(a => { const d = t - a; if (d > 0 && d < 0.6) kick += Math.sin(d * 14) * Math.exp(-d * 6) * 0.35; });
+  camera.position.set(Math.sin(t * 0.35) * 1.6, 5.2 + Math.sin(t * 0.5) * 0.4 + kick * 0.3, 16 - kick * 2 + Math.sin(t * 0.21) * 0.6);
+  camera.lookAt(0, CENTER_Y - 3.0, 0);
+  grid.position.z = (t * 2.5) % 2;
+
+  for (let i = 0; i < NP; i++) {
+    const b = pBase[i]; const yy = ((b[1] + t * b[3] * 0.6) % 24 + 24) % 24 - 4;
+    pArr[i * 3] = b[0] + Math.sin(t * 0.5 + i) * 0.3; pArr[i * 3 + 1] = yy; pArr[i * 3 + 2] = b[2];
+  }
+  pGeo.attributes.position.needsUpdate = true;
+
+  const s = SEG;
+  let d;
+  // intro
+  d = life(groups.intro, t, s.intro[0], s.intro[1], { y: CENTER_Y });
+  if (d >= 0) {
+    groups.intro.children[0].rotation.y = Math.sin(t * 1.2) * 0.3;
+    groups.intro.userData.ring.forEach((c, i) => {
+      const a = i / 10 * Math.PI * 2 + t * 1.3; c.position.set(Math.cos(a) * 3.3, Math.sin(a * 2) * 0.6, Math.sin(a) * 3.3); c.rotation.set(Math.PI / 2, 0, t * 3 + i);
+    });
+  }
+  // price
+  d = life(groups.price, t, s.price[0], s.price[1], { y: CENTER_Y });
+  if (d >= 0) {
+    const u = groups.price.userData;
+    u.p83.rotation.y = Math.sin(d * 1.5) * 0.35 + (1 - easeOut(clamp(d / 1.0))) * Math.PI * 2;
+    u.halo.rotation.z = t * 0.8; u.halo.scale.setScalar(1 + Math.sin(t * 3) * 0.03);
+  }
+  // range
+  d = life(groups.range, t, s.range[0], s.range[1], { y: CENTER_Y - 3.2, ry: -0.25, in: 0.4 });
+  if (d >= 0) {
+    const u = groups.range.userData; const starts = s.rangeBars;
+    u.bars.forEach((b, i) => {
+      const p = easeOutBack(clamp((t - starts[i]) / 0.55));
+      const h = (u.vals[i] - 60) * 0.17 * Math.max(0.001, p);
+      b.scale.y = Math.max(0.001, h);
+      u.labs[i].position.y = h + 0.9; u.labs[i].scale.setScalar(clamp(p * 1.2));
+      if (i === 2) { b.material = gold; u.labs[i].rotation.y = Math.sin(t * 2) * 0.25; }
+    });
+  }
+  // shares
+  d = life(groups.shares, t, s.shares[0], s.shares[1], { y: CENTER_Y - 3.4, ry: 0.6, in: 0.4 });
+  if (d >= 0) {
+    const u = groups.shares.userData; groups.shares.rotation.y += d * 0.15;
+    for (let i = 0; i < u.N; i++) {
+      const layer = Math.floor(i / 49), k = i % 49, x = k % 7, z = Math.floor(k / 7);
+      const st = layer * 0.22 + (k % 7) * 0.012 + Math.floor(k / 7) * 0.008;
+      const p = clamp((d - 0.2 - st) / 0.35);
+      const yy = layer * 0.55 + (1 - easeOut(p)) * 5;
+      S.setScalar(p > 0 ? 1 : 0.0001);
+      M.compose(V.set((x - 3) * 0.55, yy, (z - 3) * 0.55), Q.identity(), S);
+      u.cube.setMatrixAt(i, M);
+    }
+    u.cube.instanceMatrix.needsUpdate = true;
+    u.lbl.position.y = 5.6; u.lbl.scale.setScalar(easeOutBack(clamp((t - s.sharesNum) / 0.5)) || 0.001);
+    u.lbl.rotation.y = -groups.shares.rotation.y + Math.sin(t * 2) * 0.2;
+  }
+  // money
+  d = life(groups.money, t, s.money[0], s.money[1], { y: CENTER_Y, in: 0.4 });
+  if (d >= 0) {
+    const u = groups.money.userData;
+    for (let i = 0; i < u.NC; i++) {
+      const sd = u.seeds[i]; const tt = (d * 1.0 + sd[3]) % 3.2;
+      const yy = 7 - tt * tt * 1.6;
+      E.set(t * (2 + sd[1]) + sd[4], t * 1.5 + sd[4], 0); Q.setFromEuler(E);
+      M.compose(V.set(sd[0], yy, sd[2]), Q, S.setScalar(0.8)); u.rain.setMatrixAt(i, M);
+    }
+    u.rain.instanceMatrix.needsUpdate = true;
+    const p = easeOutBack(clamp((t - s.moneyNum) / 0.5)); u.m80.scale.setScalar(Math.max(0.001, p));
+    u.m80.rotation.y = Math.sin(t * 1.6) * 0.25; u.m80.position.z = 2;
+  }
+  // record
+  d = life(groups.record, t, s.record[0], s.record[1], { y: CENTER_Y - 2.4 });
+  if (d >= 0) { groups.record.rotation.y = d * 1.4 + (1 - easeOut(clamp(d / 0.6))) * -1.6; }
+  // nasdaq
+  d = life(groups.nasdaq, t, s.nasdaq[0], s.nasdaq[1], { y: CENTER_Y });
+  if (d >= 0) {
+    const u = groups.nasdaq.userData; u.arrow.position.y = 0.6 + Math.sin(t * 3) * 0.25;
+    groups.nasdaq.children[0].rotation.x = Math.sin(t * 1.3) * 0.12;
+  }
+  // caution
+  d = life(groups.caution, t, s.caution[0], s.caution[1], { y: CENTER_Y - 1.6, in: 0.4 });
+  if (d >= 0) {
+    const u = groups.caution.userData; const p = clamp((d - 0.2) / 2.6);
+    u.tube.geometry.setDrawRange(0, Math.floor(u.idx * easeInOut(p) / 3) * 3);
+    u.warn.rotation.y = Math.sin(t * 2.5) * 0.5; u.warn.scale.setScalar(1 + Math.max(0, Math.sin(t * 6)) * 0.08);
+    u.tube.position.x = Math.sin(t * 7) * 0.05;
+  }
+  // outro
+  d = life(groups.outro, t, s.outro[0], s.outro[1], { y: CENTER_Y - 1, in: 0.01 });
+  if (d >= 0) {
+    groups.outro.scale.setScalar(1); groups.outro.rotation.y = 0;
+    const u = groups.outro.userData;
+    for (let i = 0; i < u.NB; i++) {
+      const r = u.dirs[i]; const k = d * r[3];
+      V.set(r[0] * k, r[1] * k - 2.2 * d * d, r[2] * k);
+      E.set(d * 6 + r[4], d * 4, 0); Q.setFromEuler(E);
+      M.compose(V, Q, S.setScalar(0.9)); u.burst.setMatrixAt(i, M);
+    }
+    u.burst.instanceMatrix.needsUpdate = true;
+  }
+  renderer.render(scene, camera);
+};
+
+FONT = new THREE.Font(window.FONTJSON); build(); window.READY = true;
+</script>
+</body></html>
