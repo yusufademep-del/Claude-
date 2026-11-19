@@ -4,6 +4,7 @@
 </head><body>
 <script src="three.min.js"></script>
 <script src="font.js"></script>
+<script src="bgimg.js"></script>
 <script>
 /* Börsenlehre 3D-Hintergrund – deterministisch: renderAt(t) zeichnet exakt Zeitpunkt t */
 const P = new URLSearchParams(location.search);
@@ -15,7 +16,7 @@ renderer.setPixelRatio(1);
 renderer.setSize(W, H);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
+renderer.toneMappingExposure = 0.95;
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -45,17 +46,12 @@ const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 200);
 /* ---------- Hintergrund-Verlauf ---------- */
 const bgMat = new THREE.ShaderMaterial({
   depthWrite: false, depthTest: false,
-  uniforms: { uT: { value: 0 } },
+  uniforms: { uT: { value: 0 }, uTex: { value: null }, uZ: { value: 1 } },
   vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.999,1.0); }",
-  fragmentShader: `varying vec2 vUv; uniform float uT;
+  fragmentShader: `varying vec2 vUv; uniform float uT; uniform sampler2D uTex; uniform float uZ;
     void main(){
-      vec3 top=vec3(0.13,0.25,0.52), bot=vec3(0.03,0.06,0.15);
-      vec3 c=mix(bot,top,smoothstep(0.0,1.0,vUv.y));
-      float glow=exp(-pow(distance(vUv,vec2(0.5+0.08*sin(uT*0.3),0.68)),2.0)*7.0);
-      c+=vec3(0.18,0.22,0.35)*glow;
-      float v=smoothstep(0.95,0.35,distance(vUv,vec2(0.5)));
-      c*=mix(0.7,1.0,v);
-      gl_FragColor=vec4(c,1.0);
+      vec2 uv=vec2(0.5)+(vUv-vec2(0.5))/uZ;
+      gl_FragColor=texture2D(uTex,uv);
     }`
 });
 const bg = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMat);
@@ -63,13 +59,13 @@ bg.frustumCulled = false; bg.renderOrder = -10;
 scene.add(bg);
 
 /* ---------- Licht ---------- */
-scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x0b1430, 0.6));
+scene.add(new THREE.HemisphereLight(0xffffff, 0x0b1430, 0.35));
 const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(5, 12, 10); scene.add(key);
 const warm = new THREE.PointLight(0xffc94d, 2.2, 40); warm.position.set(-6, 9, 6); scene.add(warm);
 const cool = new THREE.PointLight(0x5b8cff, 2.0, 40); cool.position.set(7, 4, 5); scene.add(cool);
 
 /* ---------- Boden-Gitter ---------- */
-const grid = new THREE.GridHelper(80, 40, 0x3b6bd6, 0x1f3f8a);
+const grid = new THREE.GridHelper(80, 40, 0x3b6bd6, 0x1f3f8a); grid.visible = false;
 grid.material.transparent = true; grid.material.opacity = 0.35;
 grid.position.y = -1.5; scene.add(grid);
 
@@ -79,19 +75,20 @@ const pArr = new Float32Array(NP * 3);
 let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 for (let i = 0; i < NP; i++) pBase.push([rnd() * 30 - 15, rnd() * 24 - 4, rnd() * -20 + 2, 0.3 + rnd() * 0.8]);
 pGeo.setAttribute("position", new THREE.BufferAttribute(pArr, 3));
-const parts = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xffe28a, size: 0.09, transparent: true, opacity: 0.75, depthWrite: false }));
+const parts = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0x8aa0c8, size: 0.07, transparent: true, opacity: 0.45, depthWrite: false }));
 scene.add(parts);
 
 /* ---------- Materialien ---------- */
-const gold = new THREE.MeshStandardMaterial({ color: 0xffb300, metalness: 1, roughness: 0.2, envMapIntensity: 1.6, emissive: 0x2a1500, emissiveIntensity: 0.25 });
+const gold = new THREE.MeshStandardMaterial({ color: 0xffb000, metalness: 0.9, roughness: 0.22, envMapIntensity: 1.3, emissive: 0x3a1c00, emissiveIntensity: 0.3 });
 const goldDark = new THREE.MeshStandardMaterial({ color: 0xd99a00, metalness: 1, roughness: 0.35 });
-const chrome = new THREE.MeshStandardMaterial({ color: 0xdfe8ff, metalness: 1, roughness: 0.15 });
-const blueMat = new THREE.MeshStandardMaterial({ color: 0x3d7bff, metalness: 0.3, roughness: 0.3, emissive: 0x0a1f5c, emissiveIntensity: 0.6 });
-const greyMat = new THREE.MeshStandardMaterial({ color: 0x8ea3c7, metalness: 0.2, roughness: 0.45, transparent: true, opacity: 0.85 });
-const greenMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, metalness: 0.2, roughness: 0.3, emissive: 0x07401c, emissiveIntensity: 0.6 });
-const redMat = new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.2, roughness: 0.3, emissive: 0x4a0b0b, emissiveIntensity: 0.6 });
+const chrome = new THREE.MeshStandardMaterial({ color: 0x12307a, metalness: 0.4, roughness: 0.3, emissive: 0x081840, emissiveIntensity: 0.5 });
+const blueMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, metalness: 0.25, roughness: 0.35, emissive: 0x0a1f5c, emissiveIntensity: 0.5 });
+const greyMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.2, roughness: 0.4 });
+const greenMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, metalness: 0.2, roughness: 0.3, emissive: 0x07401c, emissiveIntensity: 0.6 });
+const redMat = new THREE.MeshStandardMaterial({ color: 0xd61f1f, metalness: 0.1, roughness: 0.35, emissive: 0x6a0808, emissiveIntensity: 0.7 });
 const yellowMat = new THREE.MeshStandardMaterial({ color: 0xffd60a, metalness: 0.3, roughness: 0.3, emissive: 0x4a3a00, emissiveIntensity: 0.5 });
 const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5 });
+[chrome, blueMat, greyMat, greenMat, redMat, yellowMat, blackMat].forEach(m => { m.envMapIntensity = 0.35; m.color.convertSRGBToLinear(); m.emissive.convertSRGBToLinear(); });
 
 /* ---------- Helfer ---------- */
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
@@ -144,7 +141,7 @@ function build() {
   vals.forEach((v, i) => {
     const g = new THREE.BoxGeometry(1.5, 1, 1.5); g.translate(0, 0.5, 0);
     const m = new THREE.Mesh(g, mats[i]); m.position.x = (i - 1) * 2.4; range.add(m); bars.push(m);
-    const l = text3d(String(v), 0.95, i === 2 ? yellowMat : chrome, 0.25); l.position.x = (i - 1) * 2.4; range.add(l); labs.push(l);
+    const l = text3d(String(v), 0.95, i === 2 ? gold : chrome, 0.25); l.position.x = (i - 1) * 2.4; range.add(l); labs.push(l);
   });
   range.userData = { bars, labs, vals };
 
@@ -192,7 +189,7 @@ function build() {
   for (let i = 0; i <= 26; i++) { y += (rnd() - 0.48) * 1.6; y = Math.max(-2.2, Math.min(2.2, y)); pts.push(new THREE.Vector3(-3.9 + i * 0.3, y, 0)); }
   const curve = new THREE.CatmullRomCurve3(pts);
   const tubeG = new THREE.TubeGeometry(curve, 400, 0.12, 10, false);
-  const tube = new THREE.Mesh(tubeG, yellowMat); caution.add(tube);
+  const tube = new THREE.Mesh(tubeG, redMat); caution.add(tube);
   const tri = new THREE.Shape(); tri.moveTo(0, 1.3); tri.lineTo(1.2, -0.8); tri.lineTo(-1.2, -0.8); tri.lineTo(0, 1.3);
   const triM = new THREE.Mesh(new THREE.ExtrudeGeometry(tri, { depth: 0.35, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.08, bevelSegments: 3 }), yellowMat);
   const warn = new THREE.Group(); warn.add(triM);
@@ -211,7 +208,7 @@ const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3
 const CENTER_Y = 7.2;
 
 window.renderAt = function (t) {
-  bgMat.uniforms.uT.value = t;
+  bgMat.uniforms.uT.value = t; bgMat.uniforms.uZ.value = 1 + 0.04 * t / 33.2;
   // Kamera: langsame Fahrt + Kick bei Akzenten
   let kick = 0;
   (SEG.accents || []).forEach(a => { const d = t - a; if (d > 0 && d < 0.6) kick += Math.sin(d * 14) * Math.exp(-d * 6) * 0.35; });
@@ -318,6 +315,7 @@ window.renderAt = function (t) {
   renderer.render(scene, camera);
 };
 
-FONT = new THREE.Font(window.FONTJSON); build(); window.READY = true;
+FONT = new THREE.Font(window.FONTJSON); build();
+const _img = new Image(); _img.onload = () => { const tx = new THREE.Texture(_img); tx.encoding = THREE.sRGBEncoding; tx.needsUpdate = true; bgMat.uniforms.uTex.value = tx; window.READY = true; }; _img.src = window.BGIMG;
 </script>
 </body></html>
