@@ -138,7 +138,7 @@ last = None
 for fi in frames_to_do:
     t = fi / FPS
     if TEST:
-        near = min([1.5, 4.0, 8.0, 11.0, 14.6, 31.0], key=lambda x: abs(x - t))
+        near = min([3.0, 6.5, 9.6, 16.9, 21.0, 26.0, 35.0, 42.8], key=lambda x: abs(x - t))
         frame = Image.open(f"{D}/test_{near}.jpg").convert("RGBA")
     else:
         buf = bgp.stdout.read(W * H * 3)
@@ -168,6 +168,45 @@ for fi in frames_to_do:
                 if r.get("value"):
                     vi = text_img(r["value"], MONT, 50, COL[r.get("color", "red")])
                     paste_c(frame, vi, W - 90 - 40 - vi.width / 2 - xs, ry, 0.6 + 0.4 * clamp(re_), alpha * clamp(re_ * 2))
+
+    # line-chart cards (drawn progressively)
+    for c in CFG.get("charts", []):
+        if c["t0"] <= t < c["t1"] + 0.3:
+            e = spring(clamp((t - c["t0"]) / 0.6)); xo = clamp((t - c["t1"]) / 0.3)
+            dy = (1 - e) * 120 + ease_out(xo) * 80; alpha = clamp(min(e * 1.4, 1 - xo))
+            x0, y0 = 90, int(c.get("y", 440) + dy); x1, y1 = W - 90, y0 + 560
+            glass(frame, (x0, y0, x1, y1), alpha)
+            ti = text_img(c["title"], MONT, 38, COL["black"]); paste_c(frame, ti, x0 + 40 + ti.width / 2, y0 + 55, 1, alpha)
+            if c.get("sub"):
+                si = text_img(c["sub"], MONT8, 26, COL["grey"]); paste_c(frame, si, x0 + 40 + si.width / 2, y0 + 95, 1, alpha)
+            # badge
+            bt = c.get("badge", ""); bi = text_img(bt, MONT, 34, COL["white"])
+            bw, bh = bi.width + 30, bi.height + 6
+            bx0, by0 = x1 - 40 - bw, y0 + 32
+            ImageDraw.Draw(frame).rounded_rectangle((bx0, by0, bx0 + bw, by0 + bh), 10, fill=COL[c.get("badge_color", "red")] + (int(255 * alpha),))
+            paste_c(frame, bi, bx0 + bw / 2, by0 + bh / 2, 1, alpha)
+            # line
+            pts = c["points"]; n = len(pts)
+            px0, px1, py0, py1 = x0 + 50, x1 - 70, y0 + 150, y1 - 60
+            P = [(px0 + (px1 - px0) * i / (n - 1), py1 - (py1 - py0) * v) for i, v in enumerate(pts)]
+            f = ease_io(clamp((t - c["draw"][0]) / (c["draw"][1] - c["draw"][0]))) * (n - 1)
+            k = int(f); fr = f - k
+            seg = P[:k + 1] + ([(P[k][0] + (P[k + 1][0] - P[k][0]) * fr, P[k][1] + (P[k + 1][1] - P[k][1]) * fr)] if k + 1 < n else [])
+            if len(seg) >= 2:
+                lay = Image.new("RGBA", (W, H), (0, 0, 0, 0)); dl = ImageDraw.Draw(lay)
+                dl.polygon(seg + [(seg[-1][0], py1), (seg[0][0], py1)], fill=(220, 38, 38, int(38 * alpha)))
+                ri = c.get("record_idx", -1)
+                for j in range(len(seg) - 1):
+                    col = (22, 163, 74) if (ri >= 0 and j < ri) else (220, 38, 38)
+                    dl.line([seg[j], seg[j + 1]], fill=col + (int(255 * alpha),), width=7)
+                frame.alpha_composite(lay)
+                d0 = ImageDraw.Draw(frame)
+                if 0 <= ri < len(seg):
+                    rx, ry = P[ri]; d0.ellipse((rx - 11, ry - 11, rx + 11, ry + 11), fill=(22, 163, 74, 255), outline=(255, 255, 255, 255), width=3)
+                    rl = text_img("Rekord", MONT8, 26, COL["green"]); paste_c(frame, rl, rx, ry - 34, 1, alpha)
+                ex, ey = seg[-1]; d0.ellipse((ex - 10, ey - 10, ex + 10, ey + 10), fill=(220, 38, 38, 255), outline=(255, 255, 255, 255), width=3)
+                if f >= n - 1.01 and c.get("end_label"):
+                    el = text_img(c["end_label"], MONT, 34, COL["red"]); paste_c(frame, el, ex - el.width / 2 + 10, ey + 34, 1, alpha)
 
     # headline
     for h in HEAD:

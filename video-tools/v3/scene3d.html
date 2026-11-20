@@ -5,6 +5,7 @@
 <script src="three.min.js"></script>
 <script src="font.js"></script>
 <script src="bgimg.js"></script>
+<script src="germany.js"></script>
 <script>
 /* Börsenlehre – Tech-Crash: weiße "Ton"-3D-Objekte mit weichen Schatten. renderAt(t) ist deterministisch. */
 const P = new URLSearchParams(location.search);
@@ -155,6 +156,31 @@ up.position.set(-1.9, 0, 0); up.rotation.z = -0.25; ant.add(up);
 const t97 = text3d((SEG.txt && SEG.txt.ant) || "97 $", 1.2, dark, 0.5);
 if (SEG.antDown) { up.children.forEach(c => c.material = red); up.rotation.z = Math.PI + 0.25; up.position.set(-1.9, 4.2, 0); } t97.position.set(1.1, 1.2, 0); ant.add(t97);
 
+
+/* ---------- Rote Kerzen (Minustage) ---------- */
+const candles = seg("candles");
+const candleList = [];
+const NC7 = SEG.candlesN || 7;
+for (let i = 0; i < NC7; i++) {
+  const c = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.4, 0.62), red); c.add(body);
+  const wick = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.2, 8), dark); c.add(wick);
+  cast(c); c.userData.x = -3.3 + i * 1.1; c.userData.y = 4.2 - i * 0.55;
+  candles.add(c); candleList.push(c);
+}
+/* ---------- Deutschlandkarte ---------- */
+const mapG = seg("map");
+if (window.GERMANY) {
+  const sh = new THREE.Shape(); window.GERMANY.forEach(([x, y], i) => i ? sh.lineTo(x, y) : sh.moveTo(x, y));
+  const geo = new THREE.ExtrudeGeometry(sh, { depth: 0.45, bevelEnabled: true, bevelSize: 0.05, bevelThickness: 0.05, bevelSegments: 2 });
+  const mapMat = new THREE.MeshStandardMaterial({ color: lin(0xa9a2bb), roughness: 0.8 }); const m = new THREE.Mesh(geo, mapMat); m.castShadow = true; m.receiveShadow = true;
+  m.rotation.x = -0.35; mapG.add(m); mapG.userData.m = m;
+  const pin = new THREE.Group();
+  const ps = new THREE.Mesh(new THREE.SphereGeometry(0.32, 24, 16), red); ps.position.y = 1.1; pin.add(ps);
+  const pc = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.9, 16), red); pc.rotation.x = Math.PI; pc.position.y = 0.55; pin.add(pc); cast(pin);
+  pin.position.set(0.1, -0.6, 0.8); mapG.add(pin); mapG.userData.pin = pin;
+}
+
 /* ---------- Outro-Münzen ---------- */
 const outro = seg("outro");
 const coinG = new THREE.CylinderGeometry(0.5, 0.5, 0.1, 32);
@@ -214,6 +240,19 @@ window.renderAt = function (t) {
   // Anthropic
   d = life(groups.ant, t, s.ant[0], s.ant[1], { y: 1.4 });
   if (d >= 0) { up.scale.y = Math.max(0.001, easeOutBack(clamp((d - 0.2) / 0.7))); up.position.y = (SEG.antDown ? 4.2 : 0) + Math.sin(t * 3) * 0.12; t97.rotation.y = Math.sin(t * 1.5) * 0.3; }
+
+  if (s.candles) {
+    d = life(groups.candles, t, s.candles[0], s.candles[1], { y: 0.6, ry: -0.2, in: 0.3 });
+    if (d >= 0) candleList.forEach((c, i) => {
+      const k = easeOutBack(clamp((d - 0.15 - i * (s.candleStep || 0.22)) / 0.45));
+      c.scale.setScalar(Math.max(0.001, k)); c.position.set(c.userData.x, c.userData.y + (1 - clamp(k)) * 2.5, 0);
+      c.rotation.y = Math.sin(t * 1.5 + i) * 0.15;
+    });
+  }
+  if (s.map && groups.map.userData.m) {
+    d = life(groups.map, t, s.map[0], s.map[1], { y: 3.0, in: 0.6 });
+    if (d >= 0) { groups.map.rotation.y = Math.sin(t * 0.5) * 0.35; const pn = groups.map.userData.pin; pn.position.y = -0.6 + Math.abs(Math.sin(t * 3)) * 0.35; pn.scale.setScalar(Math.max(0.001, easeOutBack(clamp((t - (s.mapPin || s.map[0])) / 0.5)))); }
+  }
   // Outro
   d = life(groups.outro, t, s.outro[0], s.outro[1], { y: 2.5, in: 0.01 });
   if (d >= 0) {
