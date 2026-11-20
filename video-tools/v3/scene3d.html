@@ -9,7 +9,7 @@
 /* Börsenlehre – Tech-Crash: weiße "Ton"-3D-Objekte mit weichen Schatten. renderAt(t) ist deterministisch. */
 const P = new URLSearchParams(location.search);
 const W = +P.get("w") || 1080, H = +P.get("h") || 1920;
-const SEG = JSON.parse(decodeURIComponent(P.get("seg") || "{}"));
+const SEG = JSON.parse((() => { const r = P.get("seg") || "{}"; try { return decodeURIComponent(r); } catch (e) { return r; } })());
 const DUR = SEG.dur || 32;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -98,7 +98,7 @@ const bld = seg("building");
 
 /* ---------- 50.000 kippt ---------- */
 const dow = seg("dow");
-const d50 = text3d("50.000", 1.25, dark, 0.6); dow.add(d50);
+const d50 = text3d((SEG.txt && SEG.txt.dow) || "50.000", 1.25, dark, 0.6); dow.add(d50);
 const crack = new THREE.Mesh(new THREE.BoxGeometry(6, 0.12, 0.7), red); crack.position.y = -0.1; crack.castShadow = true; dow.add(crack);
 const dArrow = new THREE.Group();
 { const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 2.2, 20), red); sh.position.y = 1.1; dArrow.add(sh);
@@ -108,7 +108,8 @@ dow.add(dArrow);
 /* ---------- Treppe (6 Tage runter) ---------- */
 const stairs = seg("stairs");
 const steps = [];
-for (let i = 0; i < 6; i++) {
+const NST = SEG.stairsN || 6;
+for (let i = 0; i < NST; i++) {
   const h = 3.2 - i * 0.5;
   const s = new THREE.Mesh(new THREE.BoxGeometry(1.05, h, 1.6), i % 2 ? clay2 : clay); s.position.set(-2.9 + i * 1.15, h / 2, 0); s.castShadow = s.receiveShadow = true;
   stairs.add(s); steps.push(s);
@@ -143,7 +144,7 @@ for (let i = 0; i < NPT; i++) {
 }
 const cg = new THREE.BufferGeometry(); cg.setAttribute("position", new THREE.BufferAttribute(pos, 3));
 cloud.add(new THREE.Points(cg, new THREE.PointsMaterial({ color: 0x3e4a66, size: 0.07, transparent: true, opacity: 0.9 })));
-const cloudQ = text3d("?", 1.6, red, 0.4); cloudQ.position.set(0, 0.9, 0); cloud.add(cloudQ);
+const cloudQ = text3d((SEG.txt && SEG.txt.cloud) || "?", (SEG.txt && SEG.txt.cloudSize) || 1.6, red, 0.4); cloudQ.position.set(0, 0.9, 0); cloud.add(cloudQ);
 
 /* ---------- Anthropic: grüner Pfeil + 97 $ ---------- */
 const ant = seg("ant");
@@ -151,7 +152,8 @@ const up = new THREE.Group();
 { const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 3.0, 20), green); sh.position.y = 1.5; up.add(sh);
   const hd = new THREE.Mesh(new THREE.ConeGeometry(0.75, 1.2, 28), green); hd.position.y = 3.5; up.add(hd); cast(up); }
 up.position.set(-1.9, 0, 0); up.rotation.z = -0.25; ant.add(up);
-const t97 = text3d("97 $", 1.2, dark, 0.5); t97.position.set(1.1, 1.2, 0); ant.add(t97);
+const t97 = text3d((SEG.txt && SEG.txt.ant) || "97 $", 1.2, dark, 0.5);
+if (SEG.antDown) { up.children.forEach(c => c.material = red); up.rotation.z = Math.PI + 0.25; up.position.set(-1.9, 4.2, 0); } t97.position.set(1.1, 1.2, 0); ant.add(t97);
 
 /* ---------- Outro-Münzen ---------- */
 const outro = seg("outro");
@@ -173,7 +175,7 @@ window.renderAt = function (t) {
   d = life(groups.building, t, s.building[0], s.building[1], { y: 0.0, scale: 0.85, ry: -0.35 });
   if (d >= 0) groups.building.rotation.y = -0.35 + Math.sin(t * 0.5) * 0.25;
   // 50.000
-  d = life(groups.dow, t, s.dow[0], s.dow[1], { y: 1.0 });
+  d = life(groups.dow, t, s.dow[0], s.dow[1], { y: 2.2 });
   if (d >= 0) {
     const f = clamp((t - s.dowFall) / 0.9);
     d50.rotation.x = easeIn(f) * 0.9; d50.position.y = -easeIn(f) * 1.6; d50.position.z = easeIn(f) * 0.8;
@@ -183,12 +185,12 @@ window.renderAt = function (t) {
   // Treppe
   d = life(groups.stairs, t, s.stairs[0], s.stairs[1], { y: 0.3, ry: -0.25 });
   if (d >= 0) {
-    const p = clamp((t - s.stairs[0] - 0.4) / Math.max(1, s.stairsRoll)) * 5;
-    const i = Math.min(5, Math.floor(p)), fr = p - Math.floor(p);
+    const L = NST - 1; const p = clamp((t - s.stairs[0] - 0.4) / Math.max(1, s.stairsRoll)) * L;
+    const i = Math.min(L, Math.floor(p)), fr = p - Math.floor(p);
     const x0 = -2.9 + i * 1.15, h0 = 3.2 - i * 0.5;
-    const x1 = -2.9 + Math.min(5, i + 1) * 1.15, h1 = 3.2 - Math.min(5, i + 1) * 0.5;
-    const hop = i < 5 ? Math.sin(fr * Math.PI) * 0.45 : 0;
-    ball.position.set(i < 5 ? x0 + (x1 - x0) * fr : x0, (i < 5 ? h0 + (h1 - h0) * easeIn(fr) : h0) + 0.36 + hop, 0);
+    const x1 = -2.9 + Math.min(L, i + 1) * 1.15, h1 = 3.2 - Math.min(L, i + 1) * 0.5;
+    const hop = i < L ? Math.sin(fr * Math.PI) * 0.45 : 0;
+    ball.position.set(i < L ? x0 + (x1 - x0) * fr : x0, (i < L ? h0 + (h1 - h0) * easeIn(fr) : h0) + 0.36 + hop, 0);
     ball.rotation.z = -p * 2;
   }
   // Chips
@@ -210,8 +212,8 @@ window.renderAt = function (t) {
     cloudQ.rotation.y = -t * 0.35 + Math.sin(t * 2) * 0.3; cloudQ.scale.setScalar(Math.max(0.001, easeOutBack(clamp((t - s.cloudQ) / 0.5))));
   }
   // Anthropic
-  d = life(groups.ant, t, s.ant[0], s.ant[1], { y: 0.2 });
-  if (d >= 0) { up.scale.y = Math.max(0.001, easeOutBack(clamp((d - 0.2) / 0.7))); up.position.y = Math.sin(t * 3) * 0.12; t97.rotation.y = Math.sin(t * 1.5) * 0.3; }
+  d = life(groups.ant, t, s.ant[0], s.ant[1], { y: 1.4 });
+  if (d >= 0) { up.scale.y = Math.max(0.001, easeOutBack(clamp((d - 0.2) / 0.7))); up.position.y = (SEG.antDown ? 4.2 : 0) + Math.sin(t * 3) * 0.12; t97.rotation.y = Math.sin(t * 1.5) * 0.3; }
   // Outro
   d = life(groups.outro, t, s.outro[0], s.outro[1], { y: 2.5, in: 0.01 });
   if (d >= 0) {
