@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}</style>
+</head><body>
+<script src="three.min.js"></script>
+<script src="font.js"></script>
+<script src="bgimg.js"></script>
+<script>
+/* Börsenlehre – Tech-Crash: weiße "Ton"-3D-Objekte mit weichen Schatten. renderAt(t) ist deterministisch. */
+const P = new URLSearchParams(location.search);
+const W = +P.get("w") || 1080, H = +P.get("h") || 1920;
+const SEG = JSON.parse(decodeURIComponent(P.get("seg") || "{}"));
+const DUR = SEG.dur || 32;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(W, H);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 200);
+
+/* Hintergrund-Bild (wie immer) */
+const bgMat = new THREE.ShaderMaterial({
+  depthWrite: false, depthTest: false,
+  uniforms: { uTex: { value: null }, uZ: { value: 1 } },
+  vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.999,1.0); }",
+  fragmentShader: "varying vec2 vUv; uniform sampler2D uTex; uniform float uZ; void main(){ vec2 uv=vec2(0.5)+(vUv-vec2(0.5))/uZ; vec3 c=texture2D(uTex,uv).rgb; c=mix(c,vec3(0.97,0.95,0.96),0.35); gl_FragColor=vec4(c,1.0); }"
+});
+const bg = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMat); bg.frustumCulled = false; bg.renderOrder = -10; scene.add(bg);
+
+/* Licht + Schatten */
+scene.add(new THREE.HemisphereLight(0xffffff, 0xd9d4de, 0.85));
+const sun = new THREE.DirectionalLight(0xffffff, 1.25);
+sun.position.set(6, 14, 9); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 6;
+Object.assign(sun.shadow.camera, { left: -12, right: 12, top: 14, bottom: -6, near: 1, far: 50 });
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0xffeef4, 0.35); fill.position.set(-8, 4, 6); scene.add(fill);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.ShadowMaterial({ opacity: 0.16 }));
+ground.rotation.x = -Math.PI / 2; ground.position.y = 0; ground.receiveShadow = true; scene.add(ground);
+
+/* Materialien */
+const lin = (h) => new THREE.Color(h).convertSRGBToLinear();
+const clay = new THREE.MeshStandardMaterial({ color: lin(0xf4f2f6), roughness: 0.82, metalness: 0 });
+const clay2 = new THREE.MeshStandardMaterial({ color: lin(0xdcd8e2), roughness: 0.85, metalness: 0 });
+const red = new THREE.MeshStandardMaterial({ color: lin(0xe5302f), roughness: 0.45, metalness: 0.05, emissive: lin(0x3a0606) });
+const green = new THREE.MeshStandardMaterial({ color: lin(0x18a957), roughness: 0.45, metalness: 0.05, emissive: lin(0x032612) });
+const dark = new THREE.MeshStandardMaterial({ color: lin(0x2b2f3a), roughness: 0.6 });
+const gold = new THREE.MeshStandardMaterial({ color: lin(0xf2b705), roughness: 0.3, metalness: 0.6, emissive: lin(0x3a2600) });
+
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const easeOutBack = (x) => { const c1 = 1.6, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+const easeIn = (x) => x * x * x;
+const easeInOut = (x) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const FONT = new THREE.Font(window.FONTJSON);
+function text3d(str, size, mat, depth = 0.4) {
+  const g = new THREE.TextGeometry(str, { font: FONT, size, height: depth, curveSegments: 6, bevelEnabled: true, bevelThickness: size * 0.05, bevelSize: size * 0.035, bevelSegments: 3 });
+  g.computeBoundingBox(); const bb = g.boundingBox;
+  g.translate(-(bb.max.x + bb.min.x) / 2, -bb.min.y, -depth / 2);
+  const m = new THREE.Mesh(g, mat); m.castShadow = true; return m;
+}
+function cast(o) { o.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } }); return o; }
+const groups = {};
+function seg(name) { const g = new THREE.Group(); g.visible = false; scene.add(g); groups[name] = g; return g; }
+/* Ein/Aus: von unten hochfahren mit Feder, raus nach unten-seitlich */
+function life(g, t, a, b, o = {}) {
+  if (t < a - 0.01 || t > b + 0.5) { g.visible = false; return -1; }
+  g.visible = true;
+  const e = clamp((t - a) / (o.in || 0.55)), x = clamp((t - b) / 0.45);
+  const s = Math.max(0.001, easeOutBack(e) * (1 - easeIn(x)));
+  g.scale.setScalar(s * (o.scale || 1));
+  g.position.set(o.x || 0, (o.y || 0) - easeIn(x) * 2, o.z || 0);
+  g.rotation.y = (o.ry || 0) + (1 - easeOut(e)) * (o.spin || -0.9) + easeIn(x) * 0.8;
+  return t - a;
+}
+
+/* ---------- Börsengebäude ---------- */
+const bld = seg("building");
+(function () {
+  const base = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.35, 3.4), clay2); base.position.y = 0.175; bld.add(base);
+  const step2 = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.35, 3.0), clay); step2.position.y = 0.525; bld.add(step2);
+  const step3 = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.3, 2.7), clay2); step3.position.y = 0.85; bld.add(step3);
+  for (let i = 0; i < 6; i++) {
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 3.4, 24), clay); c.position.set(-2.75 + i * 1.1, 2.7, 0.9); bld.add(c);
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.18, 0.75), clay2); cap.position.set(-2.75 + i * 1.1, 4.45, 0.9); bld.add(cap);
+  }
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(6.2, 3.4, 1.4), clay2); wall.position.set(0, 2.7, -0.3); bld.add(wall);
+  const ent = new THREE.Mesh(new THREE.BoxGeometry(6.8, 0.6, 2.6), clay); ent.position.y = 4.85; bld.add(ent);
+  const tri = new THREE.Shape(); tri.moveTo(-3.5, 0); tri.lineTo(3.5, 0); tri.lineTo(0, 1.4); tri.lineTo(-3.5, 0);
+  const ped = new THREE.Mesh(new THREE.ExtrudeGeometry(tri, { depth: 2.4, bevelEnabled: false }), clay); ped.position.set(0, 5.15, -1.2); bld.add(ped);
+  cast(bld);
+})();
+
+/* ---------- 50.000 kippt ---------- */
+const dow = seg("dow");
+const d50 = text3d("50.000", 1.25, dark, 0.6); dow.add(d50);
+const crack = new THREE.Mesh(new THREE.BoxGeometry(6, 0.12, 0.7), red); crack.position.y = -0.1; crack.castShadow = true; dow.add(crack);
+const dArrow = new THREE.Group();
+{ const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 2.2, 20), red); sh.position.y = 1.1; dArrow.add(sh);
+  const hd = new THREE.Mesh(new THREE.ConeGeometry(0.6, 1.0, 28), red); hd.rotation.z = Math.PI; hd.position.y = -0.5; dArrow.add(hd); cast(dArrow); }
+dow.add(dArrow);
+
+/* ---------- Treppe (6 Tage runter) ---------- */
+const stairs = seg("stairs");
+const steps = [];
+for (let i = 0; i < 6; i++) {
+  const h = 3.2 - i * 0.5;
+  const s = new THREE.Mesh(new THREE.BoxGeometry(1.05, h, 1.6), i % 2 ? clay2 : clay); s.position.set(-2.9 + i * 1.15, h / 2, 0); s.castShadow = s.receiveShadow = true;
+  stairs.add(s); steps.push(s);
+  const n = text3d(String(i + 1), 0.45, dark, 0.12); n.position.set(-2.9 + i * 1.15, h + 0.02, 0.6); n.rotation.x = -Math.PI / 2 + 0.35; stairs.add(n);
+}
+const ball = new THREE.Mesh(new THREE.SphereGeometry(0.36, 32, 20), red); ball.castShadow = true; stairs.add(ball);
+
+/* ---------- Chips ---------- */
+const chips = seg("chips");
+const chipList = [];
+function makeChip() {
+  const c = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.22, 1.6), clay); c.add(body);
+  const die = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.8), clay2); die.position.y = 0.15; c.add(die);
+  for (let k = 0; k < 5; k++) for (const sgn of [-1, 1]) {
+    const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.35), dark); p1.position.set(-0.56 + k * 0.28, -0.05, sgn * 0.95); c.add(p1);
+    const p2 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.06, 0.12), dark); p2.position.set(sgn * 0.95, -0.05, -0.56 + k * 0.28); c.add(p2);
+  }
+  return cast(c);
+}
+for (let i = 0; i < 6; i++) { const c = makeChip(); c.userData = { x: (i % 3 - 1) * 2.3 + (rnd() - 0.5) * 0.4, z: Math.floor(i / 3) * -1.8 + 0.6, d: i * 0.18 + rnd() * 0.1, r: rnd() * 6 }; chips.add(c); chipList.push(c); }
+const cArrow = dArrow.clone(); cArrow.scale.setScalar(0.9); chips.add(cArrow);
+
+/* ---------- Punktwolke (KI-Boom) ---------- */
+const cloud = seg("cloud");
+const NPT = 5000, pos = new Float32Array(NPT * 3), base = [];
+for (let i = 0; i < NPT; i++) {
+  const u = rnd() * 2 - 1, th = rnd() * Math.PI * 2, rr = Math.pow(rnd(), 0.35);
+  const sx = Math.sqrt(1 - u * u) * Math.cos(th), sy = u, sz = Math.sqrt(1 - u * u) * Math.sin(th);
+  const lobe = 1 + 0.25 * Math.sin(th * 3) * Math.cos(u * 4);
+  base.push([sx * rr * 3.0 * lobe, sy * rr * 2.2 * lobe, sz * rr * 2.4 * lobe, rnd() * 6.28]);
+}
+const cg = new THREE.BufferGeometry(); cg.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+cloud.add(new THREE.Points(cg, new THREE.PointsMaterial({ color: 0x3e4a66, size: 0.07, transparent: true, opacity: 0.9 })));
+const cloudQ = text3d("?", 1.6, red, 0.4); cloudQ.position.set(0, 0.9, 0); cloud.add(cloudQ);
+
+/* ---------- Anthropic: grüner Pfeil + 97 $ ---------- */
+const ant = seg("ant");
+const up = new THREE.Group();
+{ const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 3.0, 20), green); sh.position.y = 1.5; up.add(sh);
+  const hd = new THREE.Mesh(new THREE.ConeGeometry(0.75, 1.2, 28), green); hd.position.y = 3.5; up.add(hd); cast(up); }
+up.position.set(-1.9, 0, 0); up.rotation.z = -0.25; ant.add(up);
+const t97 = text3d("97 $", 1.2, dark, 0.5); t97.position.set(1.1, 1.2, 0); ant.add(t97);
+
+/* ---------- Outro-Münzen ---------- */
+const outro = seg("outro");
+const coinG = new THREE.CylinderGeometry(0.5, 0.5, 0.1, 32);
+const NB = 50, burst = new THREE.InstancedMesh(coinG, gold, NB); burst.castShadow = true; burst.frustumCulled = false; outro.add(burst);
+const dirs = []; for (let i = 0; i < NB; i++) { const a = rnd() * 6.28; dirs.push([Math.cos(a) * 0.7, 0.8 + rnd() * 0.6, Math.sin(a) * 0.5, 4 + rnd() * 4, rnd() * 10]); }
+
+const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), S3 = new THREE.Vector3(), E = new THREE.Euler();
+const LOOK_Y = 2.3;
+
+window.renderAt = function (t) {
+  const s = SEG;
+  bgMat.uniforms.uZ.value = 1 + 0.04 * t / DUR;
+  let kick = 0; (s.accents || []).forEach(a => { const d = t - a; if (d > 0 && d < 0.6) kick += Math.sin(d * 14) * Math.exp(-d * 6) * 0.3; });
+  camera.position.set(Math.sin(t * 0.33) * 1.0, 6.2 + Math.sin(t * 0.45) * 0.35 + kick * 0.3, 17.5 - kick * 1.6 + Math.sin(t * 0.2) * 0.6);
+  camera.lookAt(0, LOOK_Y, 0);
+  let d;
+  // Gebäude (Intro)
+  d = life(groups.building, t, s.building[0], s.building[1], { y: 0.0, scale: 0.85, ry: -0.35 });
+  if (d >= 0) groups.building.rotation.y = -0.35 + Math.sin(t * 0.5) * 0.25;
+  // 50.000
+  d = life(groups.dow, t, s.dow[0], s.dow[1], { y: 1.0 });
+  if (d >= 0) {
+    const f = clamp((t - s.dowFall) / 0.9);
+    d50.rotation.x = easeIn(f) * 0.9; d50.position.y = -easeIn(f) * 1.6; d50.position.z = easeIn(f) * 0.8;
+    crack.scale.x = Math.max(0.001, easeOut(clamp((t - s.dowFall) / 0.4)));
+    dArrow.position.set(2.9, 2.6 - easeOut(clamp((t - s.dow[0]) / 1.2)) * 0.6 + Math.sin(t * 4) * 0.12, 0.4);
+  }
+  // Treppe
+  d = life(groups.stairs, t, s.stairs[0], s.stairs[1], { y: 0.3, ry: -0.25 });
+  if (d >= 0) {
+    const p = clamp((t - s.stairs[0] - 0.4) / Math.max(1, s.stairsRoll)) * 5;
+    const i = Math.min(5, Math.floor(p)), fr = p - Math.floor(p);
+    const x0 = -2.9 + i * 1.15, h0 = 3.2 - i * 0.5;
+    const x1 = -2.9 + Math.min(5, i + 1) * 1.15, h1 = 3.2 - Math.min(5, i + 1) * 0.5;
+    const hop = i < 5 ? Math.sin(fr * Math.PI) * 0.45 : 0;
+    ball.position.set(i < 5 ? x0 + (x1 - x0) * fr : x0, (i < 5 ? h0 + (h1 - h0) * easeIn(fr) : h0) + 0.36 + hop, 0);
+    ball.rotation.z = -p * 2;
+  }
+  // Chips
+  d = life(groups.chips, t, s.chips[0], s.chips[1], { y: 1.0, in: 0.3 });
+  if (d >= 0) {
+    chipList.forEach((c, i) => {
+      const u = c.userData; const k = clamp((d - u.d) / 0.9);
+      c.position.set(u.x, 6 - easeOutBack(k) * 5.2 + 0.2, u.z);
+      c.rotation.set(Math.sin(t * 1.3 + u.r) * 0.25 + (1 - k) * 2, t * 0.4 + u.r, Math.cos(t * 1.1 + u.r) * 0.2);
+    });
+    cArrow.position.set(0, 5.6 + Math.sin(t * 4) * 0.15, 0.6);
+  }
+  // Punktwolke
+  d = life(groups.cloud, t, s.cloud[0], s.cloud[1], { y: 4.4 });
+  if (d >= 0) {
+    for (let i = 0; i < NPT; i++) { const b = base[i]; const w = 1 + 0.04 * Math.sin(t * 2 + b[3]); pos[i * 3] = b[0] * w; pos[i * 3 + 1] = b[1] * w; pos[i * 3 + 2] = b[2] * w; }
+    cg.attributes.position.needsUpdate = true;
+    groups.cloud.rotation.y = t * 0.35;
+    cloudQ.rotation.y = -t * 0.35 + Math.sin(t * 2) * 0.3; cloudQ.scale.setScalar(Math.max(0.001, easeOutBack(clamp((t - s.cloudQ) / 0.5))));
+  }
+  // Anthropic
+  d = life(groups.ant, t, s.ant[0], s.ant[1], { y: 0.2 });
+  if (d >= 0) { up.scale.y = Math.max(0.001, easeOutBack(clamp((d - 0.2) / 0.7))); up.position.y = Math.sin(t * 3) * 0.12; t97.rotation.y = Math.sin(t * 1.5) * 0.3; }
+  // Outro
+  d = life(groups.outro, t, s.outro[0], s.outro[1], { y: 2.5, in: 0.01 });
+  if (d >= 0) {
+    groups.outro.scale.setScalar(1); groups.outro.rotation.y = 0;
+    for (let i = 0; i < NB; i++) {
+      const r = dirs[i], k = d * r[3];
+      V.set(r[0] * k, Math.max(-2.4, r[1] * k - 3 * d * d), r[2] * k);
+      E.set(d * 6 + r[4], d * 4, 0); Q.setFromEuler(E);
+      M.compose(V, Q, S3.setScalar(1)); burst.setMatrixAt(i, M);
+    }
+    burst.instanceMatrix.needsUpdate = true;
+  }
+  renderer.render(scene, camera);
+};
+
+const _img = new Image(); _img.onload = () => { const tx = new THREE.Texture(_img); tx.encoding = THREE.sRGBEncoding; tx.needsUpdate = true; bgMat.uniforms.uTex.value = tx; window.READY = true; }; _img.src = window.BGIMG;
+</script>
+</body></html>
