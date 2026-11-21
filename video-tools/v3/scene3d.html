@@ -181,6 +181,26 @@ if (window.GERMANY) {
   pin.position.set(0.1, -0.6, 0.8); mapG.add(pin); mapG.userData.pin = pin;
 }
 
+
+/* ---------- 3D-Kalender (Tage umblättern) ---------- */
+const cal = seg("calendar");
+const calTiles = [];
+const white = new THREE.MeshStandardMaterial({ color: lin(0xffffff), roughness: 0.6 });
+(SEG.calDays || []).forEach((dd, i) => {
+  const piv = new THREE.Group(); piv.position.y = 3.6;           // Scharnier oben
+  const tile = new THREE.Group(); tile.position.y = -1.8;
+  const body = new THREE.Mesh(new THREE.BoxGeometry(3.4, 3.6, 0.35), clay); tile.add(body);
+  const band = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.95, 0.4), red); band.position.y = 1.35; tile.add(band);
+  const wd = text3d(dd[0], 0.5, white, 0.1); wd.position.set(0, 1.12, 0.22); tile.add(wd);
+  const num = text3d(dd[1], dd[2] ? 1.25 : 1.5, dark, 0.25); num.position.set(0, dd[2] ? -0.75 : -1.15, 0.2); tile.add(num);
+  if (dd[2]) { const note = text3d(dd[2], 0.32, red, 0.08); note.position.set(0, -1.45, 0.22); tile.add(note); }
+  piv.add(tile); cast(piv);
+  piv.userData = { i }; cal.add(piv); calTiles.push(piv);
+});
+[-0.9, 0.9].forEach(x => { const r = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.07, 10, 24), dark); r.position.set(x, 3.6, 0); cal.add(r); });
+/* zweites Gebäude für spätere Szene */
+const bld2 = seg("building2"); bld.children.forEach(c => bld2.add(c.clone()));
+
 /* ---------- Outro-Münzen ---------- */
 const outro = seg("outro");
 const coinG = new THREE.CylinderGeometry(0.5, 0.5, 0.1, 32);
@@ -253,6 +273,25 @@ window.renderAt = function (t) {
     d = life(groups.map, t, s.map[0], s.map[1], { y: 3.0, in: 0.6 });
     if (d >= 0) { groups.map.rotation.y = Math.sin(t * 0.5) * 0.35; const pn = groups.map.userData.pin; pn.position.y = -0.6 + Math.abs(Math.sin(t * 3)) * 0.35; pn.scale.setScalar(Math.max(0.001, easeOutBack(clamp((t - (s.mapPin || s.map[0])) / 0.5)))); }
   }
+
+  if (s.calendar) {
+    d = life(groups.calendar, t, s.calendar[0], s.calendar[1], { y: 1.2, ry: -0.15 });
+    if (d >= 0) {
+      const T = s.calTimes;
+      calTiles.forEach((p, i) => {
+        const a = T[i], b = i + 1 < T.length ? T[i + 1] : 1e9;
+        if (t < a - 0.01) { p.visible = false; return; }
+        p.visible = true;
+        const fin = i === 0 ? 1 : easeOutBack(clamp((t - a) / 0.45));
+        const fout = clamp((t - b) / 0.35);
+        p.rotation.x = (1 - fin) * -1.6 + easeIn(fout) * 1.9;
+        p.position.z = i * 0.02;
+        if (fout >= 1) p.visible = false;
+      });
+      groups.calendar.rotation.y = -0.15 + Math.sin(t * 0.6) * 0.18;
+    }
+  }
+  if (s.building2) { d = life(groups.building2, t, s.building2[0], s.building2[1], { y: 0.0, scale: 0.85, ry: 0.35 }); if (d >= 0) groups.building2.rotation.y = 0.35 + Math.sin(t * 0.5) * 0.2; }
   // Outro
   d = life(groups.outro, t, s.outro[0], s.outro[1], { y: 2.5, in: 0.01 });
   if (d >= 0) {
