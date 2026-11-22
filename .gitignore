@@ -12,3 +12,11 @@ video-tools/v3/render.log
 video-tools/v3/*_preview.jpg
 video-tools/v3/bg_preview.jpg
 video-tools/v3/render2.log
+video-tools/v4/m_*.png
+video-tools/v4/test_*.jpg
+video-tools/v4/ct_*.jpg
+video-tools/v4/bg3d.mp4
+video-tools/v4/comp.mp4
+video-tools/v4/voice*.wav
+video-tools/v4/render.log
+video-tools/v4/*_preview.jpg

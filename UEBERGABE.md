@@ -18,6 +18,10 @@ in kurzen Hochformat-Videos (~30–45 s), Stil angelehnt an die Eule von „fina
 - Immer Caption-Vorschlag + Hashtags + „Keine Anlageberatung.“ + Quellen; Zwischenstände kennzeichnen.
 - Bei Anthropic-Themen neutral bleiben.
 
+## Stil v4 (ab 22.11.2026)
+- Neuer Stil nach finanzlehre-Vorlage: `video-tools/v4/` (compose4.py, mix4.py, make_cover.py, compose4.json).
+  Details in CLAUDE.md. v3 bleibt als alter Stil erhalten.
+
 ## Technik
 - Pipeline: `video-tools/v3/` → `scene3d.html` (Three.js, 3D-Szenen) → `render3d.js` (Playwright rendert 3D-Video)
   → `compose3.py` (Pinguin, Headlines, Karten, Zahlen, Untertitel) → `mix3.py` (Stimme + Musik + SFX).
