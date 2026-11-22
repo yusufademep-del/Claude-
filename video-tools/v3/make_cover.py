@@ -33,7 +33,7 @@ for code, x, yy, s, rot in [("1f4b0", 70, 920, 190, 12), ("1f4b8", 830, 900, 190
     fr.alpha_composite(e, (x, yy))
 # Pinguin Close-up
 sys.path.insert(0, D)
-sp = Image.open(f"{D}/m_base_open.png").convert("RGB")
+sp = Image.open(f"{D}/m_q_open.png").convert("RGB")
 import numpy as np
 a = np.asarray(sp).astype(np.int16); r, g, b = a[..., 0], a[..., 1], a[..., 2]
 dom = g - np.maximum(r, b); al = np.clip(255 - (dom - 30) * 4, 0, 255).astype(np.uint8)

@@ -10,7 +10,7 @@ for f in expo-google-fonts-montserrat-0.2.3 expo-google-fonts-anton-0.2.3 three-
 cp three-0.128.0/package/build/three.min.js "$V3/"
 (printf 'window.FONTJSON='; cat three-0.128.0/package/examples/fonts/helvetiker_bold.typeface.json; printf ';') > "$V3/font.js"
 pip install -q scipy numpy pillow 2>/dev/null || true
-python3 "$V3/make_sprites.py"      # Pinguin-Sprites aus website/assets/pinguin-hero.png
+python3 "$V3/make_sprites.py"      # Pinguin-Sprites aus video-tools/v3/pinguin/ (4 Posen × 3 Münder)
 python3 "$V3/make_bg.py"           # bgimg.js (heller Hintergrund)
 # Musik (ElevenLabs, im Repo als mp3) auf Länge bringen
 [ -f "$V3/music.mp3" ] && ffmpeg -v error -y -stream_loop 2 -i "$V3/music.mp3" -t 120 -ar 48000 "$VT/nv/music_long.wav"
