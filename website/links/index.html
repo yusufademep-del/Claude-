@@ -8,7 +8,7 @@
 <meta name="description" content="Alle Kanäle von Börsenlehre: YouTube, Instagram und TikTok. Börse jeden Tag kurz und verständlich erklärt.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
 /* Layout: eine schmale Spalte wie ein Börsenlehre-Cover – Rubrik, große Anton-Headline, Pastellfeld mit Pinguin, darunter die Kanäle als Zeilen. */
 :root {
@@ -23,19 +23,22 @@
   --green: #2e7d32;
   --grey: #5f5f64;
   --focus: #3b5bdb;
+  --btn-shadow: #c9c8cf;
+  --yt: #e5332a; --ig: #d6406a; --tt: #141416;
+  --label: "Oswald", "Arial Narrow", "Roboto Condensed", sans-serif;
   --display: "Anton", "Impact", "Arial Narrow", sans-serif;
   --text: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #121116; --ink: #f4f2f8; --muted: #a8a5b4; --line: #2a2832; --panel: #3a2530;
-    --row: #1a1920; --row-hover: #23212b; --red: #ff5a52; --green: #5ccf6a; --grey: #a3a3ab; --focus: #8ea6ff;
+    --row: #1a1920; --row-hover: #23212b; --red: #ff5a52; --green: #5ccf6a; --grey: #a3a3ab; --focus: #8ea6ff; --btn-shadow: #000000; --yt: #ff4d44; --ig: #ff6f96; --tt: #f4f2f8;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #121116; --ink: #f4f2f8; --muted: #a8a5b4; --line: #2a2832; --panel: #3a2530;
-  --row: #1a1920; --row-hover: #23212b; --red: #ff5a52; --green: #5ccf6a; --grey: #a3a3ab; --focus: #8ea6ff;
+  --row: #1a1920; --row-hover: #23212b; --red: #ff5a52; --green: #5ccf6a; --grey: #a3a3ab; --focus: #8ea6ff; --btn-shadow: #000000; --yt: #ff4d44; --ig: #ff6f96; --tt: #f4f2f8;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -53,29 +56,23 @@ h1 span { color: var(--red); display: block; }
 .panel img { width: min(320px, 82%); height: auto; display: block; }
 .bio { margin: 0; color: var(--muted); font-size: 1rem; max-width: 40ch; }
 .bio strong { color: var(--ink); font-weight: 600; }
-.links { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.links { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
 .links a {
-  display: grid; grid-template-columns: 6px 44px 1fr auto; align-items: center; gap: 14px;
-  background: var(--row); color: inherit; text-decoration: none; border: 1px solid var(--line);
-  padding: 14px 16px 14px 0; transition: background-color .15s ease, transform .15s ease;
+  position: relative; display: flex; align-items: center; justify-content: center; min-height: 76px;
+  padding: 14px 64px; background: var(--row); color: var(--ink); text-decoration: none;
+  border: 3px solid var(--ink); border-radius: 22px; box-shadow: 6px 8px 0 var(--btn-shadow);
+  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
 }
 .links a:hover { background: var(--row-hover); }
-.links a:active { transform: translateY(1px); }
-.links a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-.bar { align-self: stretch; margin-block: -14px; }
-.yt .bar { background: var(--red); } .ig .bar { background: var(--grey); } .tt .bar { background: var(--green); }
-.ico { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--line); }
-.ico svg { width: 22px; height: 22px; }
-.txt { min-width: 0; }
-.name { font-family: var(--display); font-size: 1.45rem; line-height: 1.1; letter-spacing: 0.01em; }
-.handle { font-weight: 600; font-size: 0.92rem; }
-.what { color: var(--muted); font-size: 0.86rem; }
-.handle, .what { display: block; overflow-wrap: anywhere; }
-.go { font-weight: 700; font-size: 1.3rem; color: var(--muted); }
-.links a:hover .go { color: var(--ink); }
+.links a:active { transform: translate(4px, 5px); box-shadow: 2px 3px 0 var(--btn-shadow); }
+.links a:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+.ico { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; display: grid; place-items: center; }
+.ico svg { width: 34px; height: 34px; display: block; }
+.yt .ico { color: var(--yt); } .ig .ico { color: var(--ig); } .tt .ico { color: var(--tt); }
+.name { font-family: var(--label); font-weight: 600; font-size: 1.6rem; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1; }
+@media (prefers-reduced-motion: reduce) { .links a { transition: none; } }
 footer { border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 4px; color: var(--muted); font-size: 0.82rem; }
 footer b { color: var(--ink); font-weight: 600; }
-@media (prefers-reduced-motion: reduce) { .links a { transition: none; } }
 </style>
 </head>
 <body>
@@ -92,21 +89,15 @@ footer b { color: var(--ink); font-weight: 600; }
   <p class="bio">Ich bin <strong>Börsenlehre</strong>, dein Pinguin für die Börse: Aktien, ETFs und die wichtigsten News, verständlich und ohne Fachchinesisch.</p>
 
   <ul class="links">
-    <li><a class="yt" href="https://youtube.com/@borsenlehre" target="_blank" rel="noopener">
-      <span class="bar"></span>
-      <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 9l5 3-5 3z" fill="currentColor"/></svg></span>
-      <span class="txt"><span class="name">YouTube</span><span class="handle">@borsenlehre</span><span class="what">Shorts und längere Erklärvideos</span></span>
-      <span class="go" aria-hidden="true">→</span></a></li>
-    <li><a class="ig" href="https://www.instagram.com/boersen.lehre" target="_blank" rel="noopener">
-      <span class="bar"></span>
-      <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg></span>
-      <span class="txt"><span class="name">Instagram</span><span class="handle">@boersen.lehre</span><span class="what">Reels und Börsen-News in unter 60 Sekunden</span></span>
-      <span class="go" aria-hidden="true">→</span></a></li>
-    <li><a class="tt" href="https://www.tiktok.com/@brsenlehre" target="_blank" rel="noopener">
-      <span class="bar"></span>
-      <span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 3c.6 2.7 2.4 4.3 5 4.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-      <span class="txt"><span class="name">TikTok</span><span class="handle">@brsenlehre</span><span class="what">Jeden Tag die Börse, kurz und verständlich</span></span>
-      <span class="go" aria-hidden="true">→</span></a></li>
+    <li><a class="yt" href="https://youtube.com/@borsenlehre" target="_blank" rel="noopener" aria-label="YouTube @borsenlehre">
+      <span class="ico"><svg viewBox="0 0 34 34" aria-hidden="true"><rect x="2" y="7" width="30" height="20" rx="6" fill="currentColor"/><path d="M14 12.5l7.5 4.5-7.5 4.5z" fill="#fff"/></svg></span>
+      <span class="name">YouTube</span></a></li>
+    <li><a class="tt" href="https://www.tiktok.com/@brsenlehre" target="_blank" rel="noopener" aria-label="TikTok @brsenlehre">
+      <span class="ico"><svg viewBox="0 0 34 34" aria-hidden="true"><path d="M19 4v16.5a5.5 5.5 0 1 1-5.5-5.5" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M19 4.5c.8 3.8 3.4 6.2 7.2 6.6" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></span>
+      <span class="name">TikTok</span></a></li>
+    <li><a class="ig" href="https://www.instagram.com/boersen.lehre" target="_blank" rel="noopener" aria-label="Instagram @boersen.lehre">
+      <span class="ico"><svg viewBox="0 0 34 34" aria-hidden="true"><rect x="4" y="4" width="26" height="26" rx="8" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="17" cy="17" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24.6" cy="9.4" r="1.9" fill="currentColor"/></svg></span>
+      <span class="name">Instagram</span></a></li>
   </ul>
 
   <footer>
