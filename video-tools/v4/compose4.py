@@ -203,6 +203,92 @@ def draw_card(frame, c, t):
         d.text(((x0 + x1) / 2 - fw / 2, Y + h - 56), c["footer"], font=ff_, fill=(165, 165, 175))
     paste_c(frame, lay, W / 2, y0 - M + lay.height / 2, sc, alpha)
 
+
+# ---------------- Elemente aus Vorlage 2 (Rechenzentren im All) ----------------
+def make_particles():
+    rng = np.random.RandomState(7); P = []
+    for i in range(CFG.get("particles", {}).get("n", 14)):
+        P.append(dict(x=rng.uniform(0, W), y=rng.uniform(250, H - 300), r=rng.uniform(18, 46), vx=rng.uniform(-22, 22), vy=rng.uniform(-14, 10),
+                      a=rng.uniform(0.25, 0.55), ph=rng.uniform(0, 6.28), star=(i % 4 == 0)))
+    return P
+PARTS = make_particles() if CFG.get("particles") else []
+_blob = {}
+def blob(r):
+    r = int(r)
+    if r not in _blob:
+        im = Image.new("RGBA", (r * 4, r * 4), (0, 0, 0, 0)); ImageDraw.Draw(im).ellipse((r, r, r * 3, r * 3), fill=(110, 100, 200, 255))
+        _blob[r] = im.filter(ImageFilter.GaussianBlur(r * 0.55))
+    return _blob[r]
+def draw_particles(frame, t):
+    PC = CFG.get("particles") or {}
+    if not (PC.get("t0", 0) <= t < PC.get("t1", 1e9)): return
+    for q in PARTS:
+        x = (q["x"] + q["vx"] * t) % (W + 200) - 100; y = q["y"] + q["vy"] * t + math.sin(t * 0.7 + q["ph"]) * 20
+        if q["star"]:
+            a = 0.5 + 0.5 * math.sin(t * 3 + q["ph"]); d = ImageDraw.Draw(frame); L = 9 + 5 * a
+            d.line([(x - L, y), (x + L, y)], fill=(250, 200, 90, int(200 * a)), width=3); d.line([(x, y - L), (x, y + L)], fill=(250, 200, 90, int(200 * a)), width=3)
+        else:
+            b = blob(q["r"]); b2 = b.copy(); b2.putalpha(b.split()[3].point(lambda v, aa=q["a"]: int(v * aa)))
+            frame.alpha_composite(b2, (int(x - b.width / 2), int(y - b.height / 2)))
+
+def draw_banner(frame, t):
+    B = CFG.get("banner")
+    if not B or not (B["t0"] <= t < B["t1"] + 0.35): return
+    e = back(clamp((t - B["t0"]) / 0.5), 1.3); xo = clamp((t - B["t1"]) / 0.35)
+    lines = B["lines"]; size = B.get("size", 92); lh = int(size * 1.12)
+    bw = W - 40; bh = 50 + lh * len(lines)
+    lay = Image.new("RGBA", (bw + 60, bh + 70), (0, 0, 0, 0)); d = ImageDraw.Draw(lay)
+    sh = Image.new("RGBA", lay.size, (0, 0, 0, 0)); ImageDraw.Draw(sh).rectangle((30, 40, 30 + bw, 30 + bh + 12), fill=(60, 40, 90, 50))
+    lay.alpha_composite(sh.filter(ImageFilter.GaussianBlur(16)))
+    d.rectangle((30, 30, 30 + bw, 30 + bh), fill=(253, 250, 244, 238), outline=(255, 255, 255, 255), width=3)
+    f = font(ANTON, size)
+    for li, segs in enumerate(lines):
+        tw = sum(f.getlength(tx) for tx, _ in segs) + f.getlength(" ") * (len(segs) - 1)
+        x = 30 + bw / 2 - tw / 2; y = 30 + 25 + li * lh
+        for tx, col in segs:
+            c = COL.get(col, (233, 160, 20)) if col != "gold" else (238, 162, 18)
+            d.text((x, y - f.getbbox("ÄAg")[1]), tx, font=f, fill=c); x += f.getlength(tx + " ")
+    paste_c(frame, lay, W / 2, B.get("y", 250) + bh / 2 - (1 - clamp(e)) * 40 - ease_out(xo) * 160, max(0.01, 0.9 + 0.1 * e), clamp(min(e * 2, 1 - xo)))
+
+def draw_pills_top(frame, t):
+    for pl in CFG.get("toppills", []):
+        if not (pl["t0"] <= t < pl["t1"] + 0.3): continue
+        e = back(clamp((t - pl["t0"]) / 0.45)); xo = clamp((t - pl["t1"]) / 0.3)
+        f = font(INTER["600SemiBold"], 38); tw = f.getlength(pl["text"])
+        im = Image.new("RGBA", (int(tw) + 120, 130), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+        sh = Image.new("RGBA", im.size, (0, 0, 0, 0)); ImageDraw.Draw(sh).rounded_rectangle((30, 34, im.width - 30, 104), 18, fill=(60, 40, 100, 60))
+        im.alpha_composite(sh.filter(ImageFilter.GaussianBlur(12)))
+        d.rounded_rectangle((30, 26, im.width - 30, 96), 16, fill=(252, 251, 255, 245), outline=(225, 222, 235, 255), width=2)
+        d.text((60, 61 - f.size * 0.6), pl["text"], font=f, fill=(40, 40, 48))
+        paste_c(frame, im, W / 2, pl.get("y", 300), max(0.01, 0.85 + 0.15 * e), clamp(min(e * 2, 1 - xo)))
+
+def draw_dimlines(frame, t):
+    for dl in CFG.get("dimlines", []):
+        if not (dl["t0"] <= t < dl["t1"] + 0.3): continue
+        g = ease_io(clamp((t - dl["t0"]) / 0.7)); xo = clamp((t - dl["t1"]) / 0.3); a = int(255 * (1 - xo))
+        x0, x1, y = dl["x0"], dl["x1"], dl["y"]; cx = (x0 + x1) / 2; hw = (x1 - x0) / 2 * g
+        d = ImageDraw.Draw(frame); col = (50, 50, 60, a)
+        d.line([(cx - hw, y), (cx + hw, y)], fill=col, width=4)
+        for xx in (cx - hw, cx + hw): d.line([(xx, y - 18), (xx, y + 18)], fill=col, width=4)
+        if g > 0.6:
+            f = font(INTER["600SemiBold"], dl.get("size", 44)); tw = f.getlength(dl["text"]); ta = int(a * clamp((g - 0.6) / 0.4))
+            d.text((cx - tw / 2, y + 18), dl["text"], font=f, fill=(40, 40, 48, ta))
+
+def draw_labels(frame, t):
+    for lb in CFG.get("labels", []):
+        if not (lb["t0"] <= t < lb["t1"] + 0.3): continue
+        e = back(clamp((t - lb["t0"]) / 0.5), 1.2); xo = clamp((t - lb["t1"]) / 0.3); al = clamp(min(e * 2, 1 - xo))
+        x, y, w, h = lb["x"], lb["y"], lb.get("w", 520), lb.get("h", 230)
+        if lb.get("anchor"):
+            ax, ay = lb["anchor"]; ln = ease_out(clamp((t - lb["t0"]) / 0.4))
+            d = ImageDraw.Draw(frame); d.line([(ax, ay), (ax, ay + (y - ay) * ln)], fill=(40, 40, 50, int(230 * al)), width=4); d.ellipse((ax - 8, ay - 8, ax + 8, ay + 8), fill=(40, 40, 50, int(230 * al)))
+        region = frame.crop((int(x), int(y), int(x + w), int(y + h))).filter(ImageFilter.GaussianBlur(18))
+        card = Image.new("RGBA", (w, h), (0, 0, 0, 0)); card.alpha_composite(region.convert("RGBA")); card.alpha_composite(Image.new("RGBA", (w, h), (250, 249, 255, 150)))
+        dd = ImageDraw.Draw(card); dd.rectangle((0, 0, w - 1, h - 1), outline=(255, 255, 255, 240), width=3)
+        dd.text((28, 24), lb["title"], font=font(INTER["600SemiBold"], lb.get("size", 42)), fill=(30, 30, 38))
+        if lb.get("sub"): dd.text((28, 24 + lb.get("size", 42) * 1.35), lb["sub"], font=font(INTER["400Regular"], 30), fill=(110, 110, 125))
+        paste_c(frame, card, x + w / 2, y + h / 2 + (1 - clamp(e)) * 40, max(0.01, 0.9 + 0.1 * e), al)
+
 # ---------------- Rendern ----------------
 TEST = sys.argv[1] == "test"
 if TEST:
@@ -236,8 +322,13 @@ for fi in frames_to_do:
     if blur > 0.4: frame = frame.filter(ImageFilter.GaussianBlur(blur))
     if fk > 0.01: frame.alpha_composite(TINT if fk > 0.99 else Image.blend(Image.new("RGBA", (W, H), (0, 0, 0, 0)), TINT, fk))
 
+    draw_particles(frame, t)
+    draw_dimlines(frame, t)
+    draw_labels(frame, t)
     for c in CARDS:
         if c["t0"] <= t < c["t1"] + 0.35: draw_card(frame, c, t)
+    draw_banner(frame, t)
+    draw_pills_top(frame, t)
 
     # Headlines (1–2 Zeilen, Pop-in mit Überschwingen, raus nach oben)
     for h in HEAD:
@@ -284,7 +375,7 @@ for fi in frames_to_do:
     head_y = foot - ph * br - 30 + yoff
 
     # Einzelwort über dem Kopf (+ Betonungsstriche)
-    cy = max(head_y, 760)
+    cy = min(max(head_y, 760), 1700)
     for i, w in enumerate(words):
         nxt = words[i + 1]["start"] if i + 1 < len(words) else DUR
         if w["start"] <= t < min(nxt, w["end"] + 0.45):

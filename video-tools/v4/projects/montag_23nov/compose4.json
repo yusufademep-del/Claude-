@@ -1,0 +1,404 @@
+{
+ "fps": 60,
+ "channel": "börsenlehre",
+ "shot_dur": 0.6,
+ "music_lufs": -33,
+ "sfx_gain": 0.45,
+ "dof_blur": 6,
+ "dur": 46.6,
+ "topic": "MONTAGS-CHECK",
+ "date_long": "23.11.2026",
+ "filter": {
+  "t1": 3.6,
+  "fade": 0.9,
+  "blur": 3,
+  "strength": 0.5,
+  "tint": [
+   246,
+   206,
+   222
+  ]
+ },
+ "particles": {
+  "n": 14,
+  "t0": 0,
+  "t1": 46.6
+ },
+ "banner": {
+  "t0": 0.15,
+  "t1": 10.3,
+  "y": 250,
+  "size": 96,
+  "lines": [
+   [
+    [
+     "WAS PASSIERT",
+     "black"
+    ]
+   ],
+   [
+    [
+     "AM",
+     "black"
+    ],
+    [
+     "MONTAG?",
+     "gold"
+    ]
+   ]
+  ]
+ },
+ "poses": [
+  [
+   0,
+   "q"
+  ],
+  [
+   2.1,
+   "explain"
+  ],
+  [
+   5.2,
+   "shock"
+  ],
+  [
+   10.4,
+   "explain"
+  ],
+  [
+   16.0,
+   "base"
+  ],
+  [
+   18.5,
+   "explain"
+  ],
+  [
+   23.4,
+   "q"
+  ],
+  [
+   30.4,
+   "shock"
+  ],
+  [
+   32.7,
+   "explain"
+  ],
+  [
+   37.9,
+   "q"
+  ],
+  [
+   41.3,
+   "base"
+  ],
+  [
+   44.0,
+   "explain"
+  ]
+ ],
+ "shots": [
+  [
+   0,
+   "full"
+  ],
+  [
+   8.3,
+   "close"
+  ],
+  [
+   10.4,
+   "full"
+  ],
+  [
+   16.0,
+   "mid"
+  ],
+  [
+   18.5,
+   "full"
+  ],
+  [
+   24.7,
+   560,
+   2700
+  ],
+  [
+   30.4,
+   "close"
+  ],
+  [
+   32.7,
+   "full"
+  ],
+  [
+   38.5,
+   "mid"
+  ],
+  [
+   41.3,
+   "full"
+  ]
+ ],
+ "headlines": [
+  {
+   "t0": 32.75,
+   "t1": 41.2,
+   "text": "REST DER WOCHE",
+   "y": 380,
+   "size": 120
+  },
+  {
+   "t0": 41.35,
+   "t1": 46.6,
+   "text": "FOLG\nBÖRSENLEHRE",
+   "y": 360
+  },
+  {
+   "t0": 44.1,
+   "t1": 46.6,
+   "text": "KEINE ANLAGEBERATUNG",
+   "y": 640,
+   "size": 56,
+   "color": "lgrey"
+  }
+ ],
+ "counts": [
+  {
+   "t0": 6.5,
+   "t1": 10.3,
+   "from": 0,
+   "to": -7,
+   "dec": 0,
+   "suffix": " %",
+   "color": "red",
+   "y": 650,
+   "size": 170,
+   "sub": "DAX · LETZTE WOCHE",
+   "sub_t": 7.3,
+   "dur": 1.0
+  }
+ ],
+ "cards": [
+  {
+   "t0": 10.6,
+   "t1": 18.4,
+   "y": 330,
+   "title": "Einkaufsmanager-Indizes",
+   "tag": "FLASH · NOV",
+   "sub": "Stimmung in Industrie und Dienstleistung",
+   "emoji": "1f3ed",
+   "emoji_t1": 13.4,
+   "rows": [
+    {
+     "t": 13.5,
+     "label": "Deutschland",
+     "value": "ca. 09:30",
+     "size": 54
+    },
+    {
+     "t": 14.2,
+     "label": "Eurozone",
+     "value": "ca. 10:00",
+     "size": 54
+    },
+    {
+     "t": 15.1,
+     "label": "USA",
+     "value": "ca. 15:45",
+     "size": 54
+    }
+   ],
+   "footer": "Über 50 = Wachstum · übliche Zeiten (MEZ) · Zwischenstand"
+  },
+  {
+   "t0": 18.7,
+   "t1": 23.3,
+   "y": 330,
+   "title": "Am Morgen",
+   "tag": "MONTAG",
+   "sub": "Termine laut dpa-AFX-Tagesvorschau",
+   "emoji": "1f305",
+   "emoji_t1": 19.6,
+   "rows": [
+    {
+     "t": 19.7,
+     "label": "Julius Bär",
+     "value": "Q3-Umsatz",
+     "size": 52
+    },
+    {
+     "t": 21.1,
+     "label": "BASF",
+     "value": "Kapitalmarkttag",
+     "size": 46
+    },
+    {
+     "t": 22.2,
+     "label": "BVB",
+     "value": "Hauptversammlung",
+     "size": 42
+    }
+   ],
+   "footer": "Julius Bär 07:00 · BVB 11:00 Uhr"
+  }
+ ],
+ "toppills": [
+  {
+   "t0": 23.5,
+   "t1": 32.6,
+   "text": "Am Abend · nach US-Börsenschluss",
+   "y": 300
+  }
+ ],
+ "dimlines": [
+  {
+   "t0": 25.2,
+   "t1": 28.7,
+   "x0": 190,
+   "x1": 890,
+   "y": 1560,
+   "text": "HPE: ca. 22:00 Uhr (MEZ)"
+  }
+ ],
+ "labels": [
+  {
+   "t0": 29.3,
+   "t1": 32.6,
+   "x": 500,
+   "y": 960,
+   "w": 540,
+   "h": 190,
+   "title": "Stimmungstest für KI",
+   "sub": "nach dem Tech-Ausverkauf",
+   "anchor": [
+    700,
+    760
+   ]
+  }
+ ],
+ "emojis": [
+  {
+   "code": "1f50d",
+   "t0": 0.5,
+   "t1": 3.8,
+   "x": 880,
+   "y": 1000,
+   "size": 140
+  },
+  {
+   "code": "1f4c9",
+   "t0": 5.4,
+   "t1": 10.2,
+   "x": 890,
+   "y": 1000,
+   "size": 140
+  },
+  {
+   "code": "1f1e9-1f1ea",
+   "t0": 13.5,
+   "t1": 18.3,
+   "x": 180,
+   "y": 1040,
+   "size": 120
+  },
+  {
+   "code": "1f1ea-1f1fa",
+   "t0": 14.2,
+   "t1": 18.3,
+   "x": 900,
+   "y": 1040,
+   "size": 120
+  },
+  {
+   "code": "1f1fa-1f1f8",
+   "t0": 15.1,
+   "t1": 18.3,
+   "x": 180,
+   "y": 1190,
+   "size": 120
+  },
+  {
+   "code": "1f319",
+   "t0": 23.6,
+   "t1": 28.6,
+   "x": 880,
+   "y": 620,
+   "size": 130
+  },
+  {
+   "code": "1f983",
+   "t0": 38.8,
+   "t1": 41.2,
+   "x": 880,
+   "y": 1060,
+   "size": 150
+  },
+  {
+   "code": "2b50",
+   "t0": 41.5,
+   "t1": 46.6,
+   "x": 190,
+   "y": 760,
+   "size": 130
+  },
+  {
+   "code": "1f447",
+   "t0": 42.0,
+   "t1": 46.6,
+   "x": 890,
+   "y": 760,
+   "size": 130
+  }
+ ],
+ "marks": [
+  8.83,
+  24.34,
+  31.17,
+  38.76
+ ],
+ "accents": [
+  8.83,
+  31.17
+ ],
+ "segments": [
+  3.9,
+  10.4,
+  18.5,
+  23.4,
+  32.7,
+  41.3
+ ],
+ "cash": [
+  19.7,
+  21.1
+ ],
+ "boom": [
+  8.83
+ ],
+ "bell": [],
+ "capmap": {
+  "Einkaufsmanager-Indizes": "EINKAUFSMANAGER",
+  "US-Börsenschluss": "US-SCHLUSS",
+  "PCE-Inflation": "PCE"
+ },
+ "cover": {
+  "rubrik": "BÖRSENNEWS",
+  "lines": [
+   [
+    "Was passiert",
+    "black"
+   ],
+   [
+    "am Montag?",
+    "accent"
+   ]
+  ],
+  "pose": "q",
+  "mouth": "closed",
+  "file": "cover_montag_23nov",
+  "pen_w": 1150,
+  "pen_dx": 20
+ }
+}

@@ -147,7 +147,8 @@ for (let x = -30; x < 170; x += 11) tower(x + rnd() * 4, -30 - rnd() * 8, 6 + rn
 
 /* ---------- Stations-Objekte ---------- */
 const OBJ = {};
-function grp(name, x, z) { const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g); OBJ[name] = g; return g; }
+const USE = S.use || null;
+function grp(name, x, z) { const g = new THREE.Group(); g.position.set(x, 0, z); g.userData.off = USE ? !USE.includes(name) : false; scene.add(g); OBJ[name] = g; return g; }
 function plinth(w, h, d) { const g = new THREE.Group();
   const a = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), clay); a.position.y = h / 2; g.add(a);
   const b = new THREE.Mesh(new THREE.BoxGeometry(w + 0.3, 0.18, d + 0.3), clay2); b.position.y = h + 0.09; g.add(b);
@@ -232,6 +233,66 @@ const NB = 46, burst = new THREE.InstancedMesh(coinG, gold, NB); burst.castShado
 const dirs = []; for (let i = 0; i < NB; i++) { const a = rnd() * 6.28; dirs.push([Math.cos(a) * 0.8, 0.9 + rnd() * 0.6, Math.sin(a) * 0.4, 4 + rnd() * 4, rnd() * 10]); }
 const Mx = new THREE.Matrix4(), Qn = new THREE.Quaternion(), Vv = new THREE.Vector3(), S3 = new THREE.Vector3(), Eu = new THREE.Euler();
 
+
+/* ---------- Kalender-Held (z. B. MO 23) ---------- */
+const calH = grp("cal", ST.cal != null ? ST.cal : -200, -3.6);
+const calHT = new THREE.Group(); calH.add(calHT);
+{ const CH = S.calHero || ["MO", "23", "NOV"];
+  const body = new THREE.Mesh(new THREE.BoxGeometry(4.6, 4.8, 0.7), clay); body.position.y = 2.4; calHT.add(body);
+  const band = new THREE.Mesh(new THREE.BoxGeometry(4.6, 1.3, 0.78), red); band.position.y = 4.15; calHT.add(band);
+  const wd = text3d(CH[0], 0.75, M(0xffffff, 0.6), 0.15); wd.position.set(0, 3.8, 0.42); calHT.add(wd);
+  const num = text3d(CH[1], 2.1, dark, 0.4); num.position.set(0, 0.95, 0.3); calHT.add(num);
+  if (CH[2]) { const mo = text3d(CH[2], 0.42, red, 0.08); mo.position.set(0, 0.35, 0.4); calHT.add(mo); }
+  [-1.2, 1.2].forEach(x => { const r = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.09, 10, 24), dark); r.position.set(x, 4.85, 0); calHT.add(r); });
+  cast(calHT); }
+/* ---------- Rote Kerzen (Kursrutsch) ---------- */
+const cnd = grp("candles", ST.candles != null ? ST.candles : -200, -3.4);
+const cndL = [];
+for (let i = 0; i < 6; i++) { const c = new THREE.Group();
+  const h = 1.0 + (i % 2) * 0.5; const b = new THREE.Mesh(new THREE.BoxGeometry(0.62, h, 0.62), red); c.add(b);
+  const w = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, h + 1.0, 8), dark); c.add(w); cast(c);
+  c.userData = { x: -3.0 + i * 1.2, y: 4.6 - i * 0.62 }; cnd.add(c); cndL.push(c); }
+/* ---------- Fabrik (Einkaufsmanager) ---------- */
+const fac = grp("factory", ST.factory != null ? ST.factory : -200, -3.8);
+const puffs = [];
+{ const hall = new THREE.Mesh(new THREE.BoxGeometry(5.4, 2.2, 2.6), clay); hall.position.y = 1.1; fac.add(hall);
+  for (let i = 0; i < 3; i++) { const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(1.8, 0); sh.lineTo(1.8, 0.9); sh.lineTo(0, 0);
+    const r = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 2.6, bevelEnabled: false }), clay2); r.position.set(-2.7 + i * 1.8, 2.2, -1.3); fac.add(r); }
+  [[-1.6, 3.2], [1.4, 3.8]].forEach(([x, h]) => { const ch = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.36, h, 20), clay3); ch.position.set(x, 2.2 + h / 2 - 0.4, -0.6); fac.add(ch);
+    for (let k = 0; k < 4; k++) { const p = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 12), M(0xffffff, 0.95)); p.userData = { x, y: 2.2 + h - 0.2, k }; fac.add(p); puffs.push(p); } });
+  for (let i = 0; i < 4; i++) { const w = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.05), clay3); w.position.set(-1.9 + i * 1.25, 1.2, 1.32); fac.add(w); }
+  cast(fac); }
+const flags = [];
+[[0x111111, 0xdd0000, 0xffce00], [0x1f3fa8, 0x1f3fa8, 0xf2c200], [0xb22234, 0xffffff, 0x3c3b6e]].forEach((cols, i) => { const f = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.2, 10), clay3); pole.position.y = 1.6; f.add(pole);
+  cols.forEach((c, j) => { const st = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.22, 0.04), M(c, 0.7)); st.position.set(0.58, 2.95 - j * 0.22, 0); f.add(st); });
+  f.position.set(-3.6 + i * 3.6, 0, 2.0); cast(f); fac.add(f); flags.push(f); });
+/* ---------- Sonne über der Börse (Am Morgen) ---------- */
+const mor = grp("morning", ST.morning != null ? ST.morning : -200, -9); mor.userData.range = 12;
+const sunBall = new THREE.Mesh(new THREE.SphereGeometry(1.6, 40, 30), M(0xffc83d, 0.4, { emissive: lin(0x6b4300) })); mor.add(sunBall);
+const rays = []; for (let i = 0; i < 12; i++) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.8, 0.18), gold); r.userData.a = i / 12 * Math.PI * 2; mor.add(r); rays.push(r); }
+/* ---------- Server-Rack (KI) ---------- */
+const rk = grp("rack", ST.rack != null ? ST.rack : -200, -3.6);
+const rackG = new THREE.Group(); rk.add(rackG);
+const leds = [];
+{ const shell = new THREE.Mesh(new THREE.BoxGeometry(2.6, 5.4, 2.2), M(0x22252e, 0.55)); shell.position.y = 2.7; rackG.add(shell);
+  for (let i = 0; i < 10; i++) { const u = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.36, 0.08), M(0x343845, 0.5)); u.position.set(0, 0.6 + i * 0.47, 1.12); rackG.add(u);
+    for (let k = 0; k < 3; k++) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.06), new THREE.MeshStandardMaterial({ color: 0x2bff88, emissive: 0x1bd96a, emissiveIntensity: 1 })); l.position.set(0.7 + k * 0.2, 0.6 + i * 0.47, 1.17); rackG.add(l); leds.push(l); } }
+  cast(rackG); }
+const rkTxt = ((S.rackTxt) || ["ZOOM", "HPE"]).map((w, i) => { const m = text3d(w, 0.85, i ? M(0x01a982, 0.5) : M(0x2d8cff, 0.5), 0.3); m.position.set(i ? 1.7 : -1.7, 6.1, 0.4); m.scale.setScalar(0.8); rk.add(m); return m; });
+/* ---------- Wochen-Kalender (Kacheln MO–FR) ---------- */
+const wk = grp("week", ST.week != null ? ST.week : -200, -3.8); wk.position.y = 1.6;
+const wkT = [];
+(S.weekDays || [["MO", "23", ""], ["DI", "24", "IFO"], ["MI", "25", "PCE"], ["DO", "26", "ZU"], ["FR", "27", "KURZ"]]).forEach((d, i) => {
+  const piv = new THREE.Group(); piv.position.set(-4.6 + i * 2.3, 0, 0);
+  const t = new THREE.Group(); const b = new THREE.Mesh(new THREE.BoxGeometry(2.0, 2.5, 0.35), clay); b.position.y = 1.25; t.add(b);
+  const hot = d[2] === "ZU";
+  const band = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.6, 0.4), hot ? red : M(0x3c4258, 0.6)); band.position.y = 2.22; t.add(band);
+  const a = text3d(d[0], 0.36, M(0xffffff, 0.6), 0.08); a.position.set(0, 2.06, 0.2); t.add(a);
+  const n = text3d(d[1], 0.85, dark, 0.2); n.position.set(0, 0.95, 0.12); t.add(n);
+  if (d[2]) { const no = text3d(d[2], 0.3, hot ? red : M(0x2a49b8, 0.5), 0.06); no.position.set(0, 0.42, 0.2); t.add(no); }
+  cast(t); piv.add(t); wk.add(piv); wkT.push(piv); });
+
 /* ---------- Kamera ---------- */
 // S.cams: [[t, station|x, opts]] – Fahrt startet `lead` s vor t und dauert `move` s; dazwischen langsamer Dolly.
 const CAMS = (S.cams || [[0, "intro"]]).map(c => ({ t: c[0], x: typeof c[1] === "string" ? ST[c[1]] : c[1], o: c[2] || {} }));
@@ -239,15 +300,17 @@ const MOVE = S.move || 1.25, LEAD = S.lead || 0.45;
 function camState(t) {
   let i = 0; for (let k = 0; k < CAMS.length; k++) if (t >= CAMS[k].t - LEAD) i = k;
   const c = CAMS[i], pv = CAMS[Math.max(0, i - 1)];
-  const base = (cc) => ({ x: cc.x + (cc.o.dx || 0), y: cc.o.y || 6.4, z: cc.o.z || 19.5, ly: cc.o.ly || 2.4, fov: cc.o.fov || 42 });
+  const base = (cc) => { const p = { x: cc.x + (cc.o.dx || 0), y: cc.o.y || 6.4, z: cc.o.z || 19.5, ly: cc.o.ly || 2.4, fov: cc.o.fov || 42, lx: cc.x + (cc.o.dx || 0) };
+    if (cc.o.orbit) { const R = (cc.o.z || 19.5) + 4, a = (cc.o.a0 || 0) + (t - cc.t) * cc.o.orbit; p.x = p.lx + Math.sin(a) * R; p.z = -4 + Math.cos(a) * R; }
+    return p; };
   const A = base(pv), B = base(c);
   const u = i === 0 ? 1 : easeInOut((t - (c.t - LEAD)) / MOVE);
-  const arc = Math.sin(Math.PI * clamp(u)) * clamp(Math.abs(B.x - A.x) / 15);
-  const s = { x: A.x + (B.x - A.x) * u, y: A.y + (B.y - A.y) * u + arc * 1.4, z: A.z + (B.z - A.z) * u + arc * 3.0, ly: A.ly + (B.ly - A.ly) * u, fov: A.fov + (B.fov - A.fov) * u };
+  const arc = Math.sin(Math.PI * clamp(u)) * clamp(Math.abs(B.lx - A.lx) / 15);
+  const s = { lx: A.lx + (B.lx - A.lx) * u, x: A.x + (B.x - A.x) * u, y: A.y + (B.y - A.y) * u + arc * 1.4, z: A.z + (B.z - A.z) * u + arc * 3.0, ly: A.ly + (B.ly - A.ly) * u, fov: A.fov + (B.fov - A.fov) * u };
   const since = Math.max(0, t - (c.t - LEAD + MOVE));
-  s.z -= Math.min(since, 8) * (c.o.dolly != null ? c.o.dolly : 0.22);  // langsamer Dolly
+  if (!c.o.orbit) s.z -= Math.min(since, 8) * (c.o.dolly != null ? c.o.dolly : 0.22);  // langsamer Dolly
   s.x += Math.sin(t * 0.37) * 0.25; s.y += Math.sin(t * 0.51) * 0.12;
-  s.yaw = (B.x - A.x) === 0 ? 0 : arc * Math.sign(B.x - A.x) * 1.2;     // leichter Schwenk in Fahrtrichtung
+  s.yaw = (B.lx - A.lx) === 0 ? 0 : arc * Math.sign(B.lx - A.lx) * 1.2;     // leichter Schwenk in Fahrtrichtung
   return s;
 }
 const appear = (t, t0, d = 0.6) => easeOutBack((t - t0) / d);
@@ -257,9 +320,9 @@ window.renderAt = function (t) {
   let kick = 0; (S.accents || []).forEach(a => { const d = t - a; if (d > 0 && d < 0.6) kick += Math.sin(d * 16) * Math.exp(-d * 7) * 0.18; });
   camera.fov = c.fov; camera.updateProjectionMatrix();
   camera.position.set(c.x + kick * 0.3, c.y + kick, c.z);
-  camera.lookAt(c.x + c.yaw, c.ly, -6);
-  sun.position.set(c.x + 7, 16, 10); sun.target.position.set(c.x, 0, -4); sun.target.updateMatrixWorld();
-  const near = (g) => { g.visible = Math.abs(g.position.x - c.x) < 26; return g.visible; };
+  camera.lookAt(c.lx + c.yaw, c.ly, -4);
+  sun.position.set(c.lx + 7, 16, 10); sun.target.position.set(c.lx, 0, -4); sun.target.updateMatrixWorld();
+  const near = (g) => { g.visible = !g.userData.off && Math.abs(g.position.x - c.lx) < (g.userData.range || 26); return g.visible; };
 
   // Intro
   const I = S.intro || [0];
@@ -310,6 +373,23 @@ window.renderAt = function (t) {
   if (near(outro)) { const d = Math.max(0, t - O); burst.visible = t >= O;
     for (let i = 0; i < NB; i++) { const r = dirs[i], k = d * r[3]; Vv.set(r[0] * k, Math.max(0.05, 2.5 + r[1] * k - 3 * d * d), r[2] * k); Eu.set(d * 6 + r[4], d * 4, 0); Qn.setFromEuler(Eu); Mx.compose(Vv, Qn, S3.setScalar(1)); burst.setMatrixAt(i, Mx); }
     burst.instanceMatrix.needsUpdate = true; }
+
+  const CH = S.calHeroT || [1e9];
+  if (near(calH)) { const k = appear(t, CH[0], 0.8); calHT.scale.setScalar(Math.max(0.001, k)); calHT.rotation.y = (1 - clamp(k)) * 3 + Math.sin(t * 0.8) * 0.15; calHT.position.y = Math.sin(t * 1.6) * 0.12 + 0.2; }
+  const CD = S.candlesT || [1e9, 0.2];
+  if (near(cnd)) cndL.forEach((c, i) => { const k = easeOutBack((t - CD[0] - i * CD[1]) / 0.45); c.scale.setScalar(Math.max(0.001, clamp(k * 1.2))); c.position.set(c.userData.x, c.userData.y + (1 - clamp(k)) * 3, 0); c.rotation.y = Math.sin(t * 1.4 + i) * 0.2; });
+  const FC = S.factoryT || [1e9];
+  if (near(fac)) { const k = appear(t, FC[0], 0.7); fac.children.forEach(ch => { if (!flags.includes(ch) && !puffs.includes(ch)) ch.scale.y = Math.max(0.001, k); });
+    puffs.forEach(p => { const ph = ((t * 0.5 + p.userData.k * 0.25) % 1); p.position.set(p.userData.x + ph * 0.8, p.userData.y + ph * 2.4, -0.6); p.scale.setScalar(Math.max(0.001, (0.4 + ph) * (1 - ph) * 1.6 * clamp(k))); });
+    (S.flagsT || [1e9, 1e9, 1e9]).forEach((ft, i) => { const kk = appear(t, ft, 0.5); flags[i].scale.setScalar(Math.max(0.001, kk)); flags[i].rotation.y = Math.sin(t * 2 + i) * 0.25; }); }
+  const MO = S.morningT || [1e9];
+  if (near(mor) && Math.abs(mor.position.x - c.lx) < 12) { const k = easeOut((t - MO[0]) / 1.6); sunBall.position.set(0, -1 + k * 9.5, 0); rays.forEach(r => { const a = r.userData.a + t * 0.4; r.position.set(Math.cos(a) * 2.4, sunBall.position.y + Math.sin(a) * 2.4, 0); r.rotation.z = a - Math.PI / 2; r.visible = k > 0.5; }); }
+  const RK = S.rackT || [1e9, 1e9, 1e9];
+  if (near(rk)) { const k = appear(t, RK[0], 0.7); rackG.scale.set(Math.max(0.001, k), Math.max(0.001, k), Math.max(0.001, k)); rackG.rotation.y = Math.sin(t * 0.5) * 0.3;
+    leds.forEach((l, i) => { l.material.emissiveIntensity = 0.4 + 0.6 * (Math.sin(t * 9 + i * 1.7) > 0 ? 1 : 0); });
+    rkTxt.forEach((m, i) => { const kk = appear(t, RK[1 + i], 0.55); m.scale.setScalar(Math.max(0.001, kk * 0.8)); m.rotation.y = (1 - clamp(kk)) * 3 + Math.sin(t * 1.3 + i) * 0.2; m.position.y = 6.1 + Math.sin(t * 2 + i) * 0.12; }); }
+  const WK = S.weekT || [];
+  if (near(wk)) wkT.forEach((p, i) => { const k = easeOutBack((t - (WK[i] != null ? WK[i] : 1e9)) / 0.5); p.visible = t >= (WK[i] != null ? WK[i] : 1e9) - 0.01; p.rotation.x = (1 - clamp(k)) * -1.7; p.position.y = (i === 3 && t > (WK[i] || 1e9) + 0.5) ? Math.abs(Math.sin(t * 5)) * 0.25 : 0; });
   renderer.render(scene, camera);
 };
 window.READY = true;
