@@ -4,330 +4,314 @@
 </head><body>
 <script src="three.min.js"></script>
 <script src="font.js"></script>
-<script src="bgimg.js"></script>
-<script src="germany.js"></script>
 <script>
-/* Börsenlehre – Tech-Crash: weiße "Ton"-3D-Objekte mit weichen Schatten. renderAt(t) ist deterministisch. */
+/* Börsenlehre v4 – durchgehende 3D-„Ton“-Stadt. Die Kamera fährt fließend von Station zu Station
+   (wie in der finanzlehre-Vorlage); Objekte stehen fest in der Welt und wachsen beim Ankommen heraus.
+   renderAt(t) ist deterministisch. Konfiguration über ?seg=<json> (siehe seg.json). */
 const P = new URLSearchParams(location.search);
 const W = +P.get("w") || 1080, H = +P.get("h") || 1920;
-const SEG = JSON.parse((() => { const r = P.get("seg") || "{}"; try { return decodeURIComponent(r); } catch (e) { return r; } })());
-const DUR = SEG.dur || 32;
+const S = JSON.parse((() => { const r = P.get("seg") || "{}"; try { return decodeURIComponent(r); } catch (e) { return r; } })());
+const DUR = S.dur || 30;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(1); renderer.setSize(W, H);
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.12;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
-
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 200);
+const SKY = 0xf3f0f8;
+scene.background = new THREE.Color(SKY);
+scene.fog = new THREE.Fog(SKY, 26, 75);
+const camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 300);
 
-/* Hintergrund-Bild (wie immer) */
-const bgMat = new THREE.ShaderMaterial({
-  depthWrite: false, depthTest: false,
-  uniforms: { uTex: { value: null }, uZ: { value: 1 } },
-  vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.999,1.0); }",
-  fragmentShader: "varying vec2 vUv; uniform sampler2D uTex; uniform float uZ; void main(){ vec2 uv=vec2(0.5)+(vUv-vec2(0.5))/uZ; vec3 c=texture2D(uTex,uv).rgb; c=mix(c,vec3(0.965,0.958,0.985),0.45); gl_FragColor=vec4(c,1.0); }"
-});
-const bg = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMat); bg.frustumCulled = false; bg.renderOrder = -10; scene.add(bg);
+scene.add(new THREE.HemisphereLight(0xffffff, 0xdcd6e6, 0.95));
+const sun = new THREE.DirectionalLight(0xffffff, 1.05);
+sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 5; sun.shadow.bias = -0.0005;
+Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 18, bottom: -8, near: 1, far: 70 });
+scene.add(sun); scene.add(sun.target);
+const fillL = new THREE.DirectionalLight(0xf3ecff, 0.35); fillL.position.set(-10, 6, 12); scene.add(fillL);
 
-/* Licht + Schatten */
-scene.add(new THREE.HemisphereLight(0xffffff, 0xd9d4de, 0.85));
-const sun = new THREE.DirectionalLight(0xffffff, 1.25);
-sun.position.set(6, 14, 9); sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 6;
-Object.assign(sun.shadow.camera, { left: -12, right: 12, top: 14, bottom: -6, near: 1, far: 50 });
-scene.add(sun);
-const fill = new THREE.DirectionalLight(0xffeef4, 0.35); fill.position.set(-8, 4, 6); scene.add(fill);
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.ShadowMaterial({ opacity: 0.16 }));
-ground.rotation.x = -Math.PI / 2; ground.position.y = 0; ground.receiveShadow = true; scene.add(ground);
-
-/* Materialien */
 const lin = (h) => new THREE.Color(h).convertSRGBToLinear();
-const clay = new THREE.MeshStandardMaterial({ color: lin(0xf4f2f6), roughness: 0.82, metalness: 0 });
-const clay2 = new THREE.MeshStandardMaterial({ color: lin(0xdcd8e2), roughness: 0.85, metalness: 0 });
-const red = new THREE.MeshStandardMaterial({ color: lin(0xe5302f), roughness: 0.45, metalness: 0.05, emissive: lin(0x3a0606) });
-const green = new THREE.MeshStandardMaterial({ color: lin(0x18a957), roughness: 0.45, metalness: 0.05, emissive: lin(0x032612) });
-const dark = new THREE.MeshStandardMaterial({ color: lin(0x2b2f3a), roughness: 0.6 });
-const gold = new THREE.MeshStandardMaterial({ color: lin(0xf2b705), roughness: 0.3, metalness: 0.6, emissive: lin(0x3a2600) });
+const M = (c, r = 0.85, extra = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: lin(c), roughness: r, metalness: 0 }, extra));
+const clay = M(0xf6f4f9), clay2 = M(0xe6e2ee), clay3 = M(0xd9d4e4), dark = M(0x2a2d38, 0.6);
+const red = M(0xe0302e, 0.45, { emissive: lin(0x3a0606) }), green = M(0x1aa457, 0.45, { emissive: lin(0x03260f) });
+const gold = M(0xf2b705, 0.3, { metalness: 0.6, emissive: lin(0x3a2600) });
+const glassRed = new THREE.MeshStandardMaterial({ color: lin(0xff4d4d), roughness: 0.2, transparent: true, opacity: 0.38, emissive: lin(0x400000) });
 
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
-const easeOutBack = (x) => { const c1 = 1.6, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
-const easeOut = (x) => 1 - Math.pow(1 - x, 3);
-const easeIn = (x) => x * x * x;
-const easeInOut = (x) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const easeOutBack = (x) => { x = clamp(x); const c1 = 1.5, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const easeOut = (x) => 1 - Math.pow(1 - clamp(x), 3);
+const easeIn = (x) => Math.pow(clamp(x), 3);
+const easeInOut = (x) => { x = clamp(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const bounceOut = (x) => { x = clamp(x); const n = 7.5625, d = 2.75;
+  if (x < 1 / d) return n * x * x; if (x < 2 / d) return n * (x -= 1.5 / d) * x + 0.75; if (x < 2.5 / d) return n * (x -= 2.25 / d) * x + 0.9375; return n * (x -= 2.625 / d) * x + 0.984375; };
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+function cast(o) { o.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } }); return o; }
 const FONT = new THREE.Font(window.FONTJSON);
 function text3d(str, size, mat, depth = 0.4) {
-  const g = new THREE.TextGeometry(str, { font: FONT, size, height: depth, curveSegments: 6, bevelEnabled: true, bevelThickness: size * 0.05, bevelSize: size * 0.035, bevelSegments: 3 });
-  g.computeBoundingBox(); const bb = g.boundingBox;
-  g.translate(-(bb.max.x + bb.min.x) / 2, -bb.min.y, -depth / 2);
-  const m = new THREE.Mesh(g, mat); m.castShadow = true; return m;
-}
-function cast(o) { o.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } }); return o; }
-const groups = {};
-function seg(name) { const g = new THREE.Group(); g.visible = false; scene.add(g); groups[name] = g; return g; }
-/* Ein/Aus: von unten hochfahren mit Feder, raus nach unten-seitlich */
-function life(g, t, a, b, o = {}) {
-  if (t < a - 0.01 || t > b + 0.5) { g.visible = false; return -1; }
-  g.visible = true;
-  const e = clamp((t - a) / (o.in || 0.55)), x = clamp((t - b) / 0.45);
-  const s = Math.max(0.001, easeOutBack(e) * (1 - easeIn(x)));
-  g.scale.setScalar(s * (o.scale || 1));
-  g.position.set(o.x || 0, (o.y || 0) - easeIn(x) * 2, o.z || 0);
-  g.rotation.y = (o.ry || 0) + (1 - easeOut(e)) * (o.spin || -0.9) + easeIn(x) * 0.8;
-  return t - a;
+  const g = new THREE.TextGeometry(str, { font: FONT, size, height: depth, curveSegments: 6, bevelEnabled: true, bevelThickness: size * 0.05, bevelSize: size * 0.03, bevelSegments: 3 });
+  g.computeBoundingBox(); const bb = g.boundingBox; g.translate(-(bb.max.x + bb.min.x) / 2, -bb.min.y, -depth / 2);
+  const m = new THREE.Mesh(g, mat); m.castShadow = true; m.receiveShadow = true; return m;
 }
 
-/* ---------- Börsengebäude ---------- */
-const bld = seg("building");
-(function () {
-  const base = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.35, 3.4), clay2); base.position.y = 0.175; bld.add(base);
-  const step2 = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.35, 3.0), clay); step2.position.y = 0.525; bld.add(step2);
-  const step3 = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.3, 2.7), clay2); step3.position.y = 0.85; bld.add(step3);
+/* ---------- Fenster-Textur ---------- */
+function windowTex(cols, rows, round) {
+  const c = document.createElement("canvas"); c.width = 256; c.height = 512; const x = c.getContext("2d");
+  x.fillStyle = "#f5f3f9"; x.fillRect(0, 0, 256, 512);
+  const cw = 256 / cols, rh = 512 / rows;
+  for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+    x.fillStyle = "#dcd7e6"; x.fillRect(i * cw + cw * 0.16, j * rh + rh * 0.18, cw * 0.68, rh * 0.62);
+    x.fillStyle = "#ebe7f2"; x.fillRect(i * cw + cw * 0.16, j * rh + rh * 0.18, cw * 0.68, rh * 0.12);
+  }
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t;
+}
+const texA = windowTex(4, 10), texB = windowTex(6, 14), texC = windowTex(3, 7);
+const winMat = (tex) => new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9 });
+const matsA = winMat(texA), matsB = winMat(texB), matsC = winMat(texC);
+
+/* ---------- Boden, Straße, Gehweg ---------- */
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 200), M(0xf1eef6, 0.95));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+const walk = new THREE.Mesh(new THREE.BoxGeometry(400, 0.18, 7), M(0xeae6f1, 0.9)); walk.position.set(100, 0.09, -5.5); walk.receiveShadow = true; scene.add(walk);
+const curb = new THREE.Mesh(new THREE.BoxGeometry(400, 0.25, 0.35), clay2); curb.position.set(100, 0.12, -1.9); curb.receiveShadow = true; scene.add(curb);
+for (let x = -40; x < 240; x += 4) { const d = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.02, 0.18), M(0xffffff, 0.9)); d.position.set(x, 0.01, 3.2); scene.add(d); }
+
+/* ---------- Gebäude-Bausteine ---------- */
+function tower(x, z, w, h, d, mat) {
+  const g = new THREE.Group();
+  const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [clay2, clay2, clay, clay, mat, clay2]); b.position.y = h / 2; g.add(b);
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(w + 0.3, 0.35, d + 0.3), clay); roof.position.y = h + 0.17; g.add(roof);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(w + 0.2, 1.1, d + 0.2), clay3); base.position.y = 0.55; g.add(base);
+  g.position.set(x, 0, z); scene.add(cast(g)); return g;
+}
+function rotunda(x, z, r, h) {
+  const g = new THREE.Group();
+  const cyl = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 48, 1, false), new THREE.MeshStandardMaterial({ map: windowTex(14, 8), roughness: 0.9 }));
+  cyl.material.map.wrapS = THREE.RepeatWrapping; cyl.position.y = h / 2; g.add(cyl);
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(r + 0.15, r + 0.15, 1.6, 48), clay); band.position.y = h + 0.8; g.add(band);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.8, 0.3), clay3); door.position.set(0, 1.4, r - 0.05); g.add(door);
+  g.position.set(x, 0, z); scene.add(cast(g)); return g;
+}
+function exchange(x, z, s = 1) {
+  const g = new THREE.Group();
+  [[8.4, 0.4, 4.4, 0.2], [8.0, 0.4, 4.0, 0.6], [7.6, 0.35, 3.7, 0.97]].forEach(([w, h, d, y], i) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), i % 2 ? clay2 : clay); m.position.y = y; g.add(m); });
   for (let i = 0; i < 6; i++) {
-    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 3.4, 24), clay); c.position.set(-2.75 + i * 1.1, 2.7, 0.9); bld.add(c);
-    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.18, 0.75), clay2); cap.position.set(-2.75 + i * 1.1, 4.45, 0.9); bld.add(cap);
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.36, 4.0, 28), clay); c.position.set(-3.1 + i * 1.24, 3.15, 1.25); g.add(c);
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.2, 0.85), clay2); cap.position.set(-3.1 + i * 1.24, 5.2, 1.25); g.add(cap);
   }
-  const wall = new THREE.Mesh(new THREE.BoxGeometry(6.2, 3.4, 1.4), clay2); wall.position.set(0, 2.7, -0.3); bld.add(wall);
-  const ent = new THREE.Mesh(new THREE.BoxGeometry(6.8, 0.6, 2.6), clay); ent.position.y = 4.85; bld.add(ent);
-  const tri = new THREE.Shape(); tri.moveTo(-3.5, 0); tri.lineTo(3.5, 0); tri.lineTo(0, 1.4); tri.lineTo(-3.5, 0);
-  const ped = new THREE.Mesh(new THREE.ExtrudeGeometry(tri, { depth: 2.4, bevelEnabled: false }), clay); ped.position.set(0, 5.15, -1.2); bld.add(ped);
-  cast(bld);
-})();
-
-/* ---------- 50.000 kippt ---------- */
-const dow = seg("dow");
-const d50 = text3d((SEG.txt && SEG.txt.dow) || "50.000", 1.25, dark, 0.6); dow.add(d50);
-const crack = new THREE.Mesh(new THREE.BoxGeometry(6, 0.12, 0.7), red); crack.position.y = -0.1; crack.castShadow = true; dow.add(crack);
-const dArrow = new THREE.Group();
-{ const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 2.2, 20), red); sh.position.y = 1.1; dArrow.add(sh);
-  const hd = new THREE.Mesh(new THREE.ConeGeometry(0.6, 1.0, 28), red); hd.rotation.z = Math.PI; hd.position.y = -0.5; dArrow.add(hd); cast(dArrow); }
-dow.add(dArrow);
-
-/* ---------- Treppe (6 Tage runter) ---------- */
-const stairs = seg("stairs");
-const steps = [];
-const NST = SEG.stairsN || 6;
-for (let i = 0; i < NST; i++) {
-  const h = 3.2 - i * 0.5;
-  const s = new THREE.Mesh(new THREE.BoxGeometry(1.05, h, 1.6), i % 2 ? clay2 : clay); s.position.set(-2.9 + i * 1.15, h / 2, 0); s.castShadow = s.receiveShadow = true;
-  stairs.add(s); steps.push(s);
-  const n = text3d(String(i + 1), 0.45, dark, 0.12); n.position.set(-2.9 + i * 1.15, h + 0.02, 0.6); n.rotation.x = -Math.PI / 2 + 0.35; stairs.add(n);
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(7.0, 4.0, 2.0), clay2); wall.position.set(0, 3.15, -0.4); g.add(wall);
+  const ent = new THREE.Mesh(new THREE.BoxGeometry(7.8, 0.7, 3.4), clay); ent.position.y = 5.65; g.add(ent);
+  const tri = new THREE.Shape(); tri.moveTo(-3.9, 0); tri.lineTo(3.9, 0); tri.lineTo(0, 1.6); tri.lineTo(-3.9, 0);
+  const ped = new THREE.Mesh(new THREE.ExtrudeGeometry(tri, { depth: 3.0, bevelEnabled: false }), clay); ped.position.set(0, 6.0, -1.5); g.add(ped);
+  g.scale.setScalar(s); g.position.set(x, 0, z); scene.add(cast(g)); return g;
 }
-const ball = new THREE.Mesh(new THREE.SphereGeometry(0.36, 32, 20), red); ball.castShadow = true; stairs.add(ball);
-
-/* ---------- Chips ---------- */
-const chips = seg("chips");
-const chipList = [];
-function makeChip() {
-  const c = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.22, 1.6), clay); c.add(body);
-  const die = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.8), clay2); die.position.y = 0.15; c.add(die);
-  for (let k = 0; k < 5; k++) for (const sgn of [-1, 1]) {
-    const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.35), dark); p1.position.set(-0.56 + k * 0.28, -0.05, sgn * 0.95); c.add(p1);
-    const p2 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.06, 0.12), dark); p2.position.set(sgn * 0.95, -0.05, -0.56 + k * 0.28); c.add(p2);
-  }
-  return cast(c);
+function lamp(x, z) {
+  const g = new THREE.Group();
+  const p = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 5.2, 12), clay3); p.position.y = 2.6; g.add(p);
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.08, 0.1), clay3); arm.position.set(0.5, 5.15, 0); g.add(arm);
+  const hd = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.14, 0.32), clay); hd.position.set(1.0, 5.05, 0); g.add(hd);
+  g.position.set(x, 0, z); scene.add(cast(g));
 }
-for (let i = 0; i < 6; i++) { const c = makeChip(); c.userData = { x: (i % 3 - 1) * 2.3 + (rnd() - 0.5) * 0.4, z: Math.floor(i / 3) * -1.8 + 0.6, d: i * 0.18 + rnd() * 0.1, r: rnd() * 6 }; chips.add(c); chipList.push(c); }
-const cArrow = dArrow.clone(); cArrow.scale.setScalar(0.9); chips.add(cArrow);
-
-/* ---------- Punktwolke (KI-Boom) ---------- */
-const cloud = seg("cloud");
-const NPT = 5000, pos = new Float32Array(NPT * 3), base = [];
-for (let i = 0; i < NPT; i++) {
-  const u = rnd() * 2 - 1, th = rnd() * Math.PI * 2, rr = Math.pow(rnd(), 0.35);
-  const sx = Math.sqrt(1 - u * u) * Math.cos(th), sy = u, sz = Math.sqrt(1 - u * u) * Math.sin(th);
-  const lobe = 1 + 0.25 * Math.sin(th * 3) * Math.cos(u * 4);
-  base.push([sx * rr * 3.0 * lobe, sy * rr * 2.2 * lobe, sz * rr * 2.4 * lobe, rnd() * 6.28]);
+function trafficLight(x, z) {
+  const g = new THREE.Group();
+  const p = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 3.6, 12), clay3); p.position.y = 1.8; g.add(p);
+  const box = new THREE.Mesh(new THREE.BoxGeometry(0.42, 1.2, 0.36), M(0xcfcadb)); box.position.y = 3.8; g.add(box);
+  for (let i = 0; i < 3; i++) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.06, 16), dark); l.rotation.x = Math.PI / 2; l.position.set(0, 4.18 - i * 0.37, 0.2); g.add(l); }
+  g.position.set(x, 0, z); scene.add(cast(g));
 }
-const cg = new THREE.BufferGeometry(); cg.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-cloud.add(new THREE.Points(cg, new THREE.PointsMaterial({ color: 0x3e4a66, size: 0.07, transparent: true, opacity: 0.9 })));
-const cloudQ = text3d((SEG.txt && SEG.txt.cloud) || "?", (SEG.txt && SEG.txt.cloudSize) || 1.6, red, 0.4); cloudQ.position.set(0, 0.9, 0); cloud.add(cloudQ);
-
-/* ---------- Anthropic: grüner Pfeil + 97 $ ---------- */
-const ant = seg("ant");
-const up = new THREE.Group();
-{ const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 3.0, 20), green); sh.position.y = 1.5; up.add(sh);
-  const hd = new THREE.Mesh(new THREE.ConeGeometry(0.75, 1.2, 28), green); hd.position.y = 3.5; up.add(hd); cast(up); }
-up.position.set(-1.9, 0, 0); up.rotation.z = -0.25; ant.add(up);
-const t97 = text3d((SEG.txt && SEG.txt.ant) || "97 $", 1.2, dark, 0.5);
-if (SEG.antDown) { up.children.forEach(c => c.material = red); up.rotation.z = Math.PI + 0.25; up.position.set(-1.9, 4.2, 0); } t97.position.set(1.1, 1.2, 0); ant.add(t97);
-
-
-/* ---------- Rote Kerzen (Minustage) ---------- */
-const candles = seg("candles");
-const candleList = [];
-const NC7 = SEG.candlesN || 7;
-for (let i = 0; i < NC7; i++) {
-  const c = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.4, 0.62), red); c.add(body);
-  const wick = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.2, 8), dark); c.add(wick);
-  cast(c); c.userData.x = -3.3 + i * 1.1; c.userData.y = 4.2 - i * 0.55;
-  candles.add(c); candleList.push(c);
-}
-/* ---------- Deutschlandkarte ---------- */
-const mapG = seg("map");
-if (window.GERMANY) {
-  const sh = new THREE.Shape(); window.GERMANY.forEach(([x, y], i) => i ? sh.lineTo(x, y) : sh.moveTo(x, y));
-  const geo = new THREE.ExtrudeGeometry(sh, { depth: 0.45, bevelEnabled: true, bevelSize: 0.05, bevelThickness: 0.05, bevelSegments: 2 });
-  const mapMat = new THREE.MeshStandardMaterial({ color: lin(0xa9a2bb), roughness: 0.8 }); const m = new THREE.Mesh(geo, mapMat); m.castShadow = true; m.receiveShadow = true;
-  m.rotation.x = -0.35; mapG.add(m); mapG.userData.m = m;
-  const pin = new THREE.Group();
-  const ps = new THREE.Mesh(new THREE.SphereGeometry(0.32, 24, 16), red); ps.position.y = 1.1; pin.add(ps);
-  const pc = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.9, 16), red); pc.rotation.x = Math.PI; pc.position.y = 0.55; pin.add(pc); cast(pin);
-  pin.position.set(0.1, -0.6, 0.8); mapG.add(pin); mapG.userData.pin = pin;
+function tree(x, z) {
+  const g = new THREE.Group();
+  const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, 1.6, 10), clay3); tr.position.y = 0.8; g.add(tr);
+  const cr = new THREE.Mesh(new THREE.SphereGeometry(0.85, 20, 14), clay); cr.position.y = 2.1; cr.scale.y = 1.15; g.add(cr);
+  g.position.set(x, 0, z); scene.add(cast(g));
 }
 
+/* ---------- Die Stadt (Fassadenreihe bei z≈-11, Stationen entlang x) ---------- */
+const ST = S.stations || { intro: 0, hook: 18, etf: 36, how: 56, gain: 74, cmp: 92, cup: 110, outro: 128 };
+exchange(ST.intro, -10.5, 1.0);
+tower(ST.intro - 9, -13, 6, 15, 5, matsA); tower(ST.intro + 9.5, -13.5, 6.5, 12, 5, matsB);
+tower(ST.hook - 1, -14, 7, 19, 6, matsB); tower(ST.hook + 7.5, -12.5, 5, 10, 5, matsC);
+rotunda(ST.etf, -13, 4.6, 9); tower(ST.etf - 9, -14, 6, 16, 5, matsA); tower(ST.etf + 9, -14, 6, 13, 5, matsC);
+tower(ST.etf + 4.5, -21, 7, 24, 6, matsB);
+exchange(ST.how, -11.5, 0.9); tower(ST.how + 9, -14, 6, 17, 5, matsA);
+tower(ST.gain, -15, 8, 22, 6, matsB); tower(ST.gain - 8.5, -13, 5.5, 11, 5, matsC); tower(ST.gain + 8.5, -13.5, 6, 14, 5, matsA);
+rotunda(ST.cmp, -14, 4.0, 11); tower(ST.cmp - 9, -13, 6, 12, 5, matsB); tower(ST.cmp + 9, -13, 6, 18, 5, matsA);
+tower(ST.cup, -15, 7, 20, 6, matsA); tower(ST.cup - 8.5, -13, 6, 13, 5, matsC); tower(ST.cup + 8.5, -13, 6, 10, 5, matsB);
+exchange(ST.outro, -10.5, 1.0); tower(ST.outro - 9, -13, 6, 14, 5, matsB); tower(ST.outro + 9.5, -13.5, 6.5, 16, 5, matsA);
+for (let x = -24; x < 160; x += 9) lamp(x, -2.6);
+for (let x = -20; x < 160; x += 18) trafficLight(x + 5.5, -2.4);
+for (let x = -16; x < 160; x += 13) tree(x + 2, -7.8);
+// zweite Reihe (Tiefe)
+for (let x = -30; x < 170; x += 11) tower(x + rnd() * 4, -30 - rnd() * 8, 6 + rnd() * 4, 14 + rnd() * 16, 6, [matsA, matsB, matsC][Math.floor(rnd() * 3)]);
 
-/* ---------- 3D-Kalender (Tage umblättern) ---------- */
-const cal = seg("calendar");
-const calTiles = [];
-const white = new THREE.MeshStandardMaterial({ color: lin(0xffffff), roughness: 0.6 });
-(SEG.calDays || []).forEach((dd, i) => {
-  const piv = new THREE.Group(); piv.position.y = 3.6;           // Scharnier oben
-  const tile = new THREE.Group(); tile.position.y = -1.8;
-  const body = new THREE.Mesh(new THREE.BoxGeometry(3.4, 3.6, 0.35), clay); tile.add(body);
-  const band = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.95, 0.4), red); band.position.y = 1.35; tile.add(band);
-  const wd = text3d(dd[0], 0.5, white, 0.1); wd.position.set(0, 1.12, 0.22); tile.add(wd);
-  const num = text3d(dd[1], dd[2] ? 1.25 : 1.5, dark, 0.25); num.position.set(0, dd[2] ? -0.75 : -1.15, 0.2); tile.add(num);
-  { const nb = new THREE.Box3().setFromObject(num); const nw = nb.max.x - nb.min.x; if (nw > 3.0) num.scale.set(3.0 / nw, 3.0 / nw, 1); }
-  if (dd[2]) { const note = text3d(dd[2], 0.32, red, 0.08); { const b2 = new THREE.Box3().setFromObject(note); const w2 = b2.max.x - b2.min.x; if (w2 > 3.0) note.scale.set(3.0 / w2, 3.0 / w2, 1); } note.position.set(0, -1.45, 0.22); tile.add(note); }
-  piv.add(tile); cast(piv);
-  piv.userData = { i }; cal.add(piv); calTiles.push(piv);
-});
-[-0.9, 0.9].forEach(x => { const r = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.07, 10, 24), dark); r.position.set(x, 3.6, 0); cal.add(r); });
-/* zweites Gebäude für spätere Szene */
-const bld2 = seg("building2"); bld.children.forEach(c => bld2.add(c.clone()));
+/* ---------- Stations-Objekte ---------- */
+const OBJ = {};
+function grp(name, x, z) { const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g); OBJ[name] = g; return g; }
+function plinth(w, h, d) { const g = new THREE.Group();
+  const a = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), clay); a.position.y = h / 2; g.add(a);
+  const b = new THREE.Mesh(new THREE.BoxGeometry(w + 0.3, 0.18, d + 0.3), clay2); b.position.y = h + 0.09; g.add(b);
+  const c = new THREE.Mesh(new THREE.BoxGeometry(w + 0.3, 0.18, d + 0.3), clay2); c.position.y = 0.09; g.add(c); return cast(g); }
 
+// Intro: Münzstapel + großes grünes %
+const intro = grp("intro", ST.intro, -4.2);
+const pct = text3d("%", 2.0, green, 0.7); pct.position.set(2.4, 0, 0); intro.add(pct);
+const stacks = [];
+[[-2.9, 6], [-1.9, 9], [-2.4, 4]].forEach(([x, n], k) => { const st = new THREE.Group();
+  for (let i = 0; i < n; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.16, 32), gold); c.position.y = 0.08 + i * 0.17; c.rotation.y = i; st.add(c); }
+  st.position.set(x, 0, k === 2 ? 0.9 : 0); cast(st); intro.add(st); stacks.push(st); });
 
-/* ---------- Pokal + Pfeil runter ---------- */
-const trophy = seg("trophy");
-{
-  const cupPts = []; for (let i = 0; i <= 20; i++) { const y = i / 20; cupPts.push(new THREE.Vector2(0.22 + 1.2 * Math.pow(y, 0.6), y * 2.1)); }
-  const cup = new THREE.Mesh(new THREE.LatheGeometry(cupPts, 48), gold); cup.position.y = 1.5; trophy.add(cup);
-  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.32, 1.1, 24), gold); stem.position.y = 0.95; trophy.add(stem);
-  const base = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.45, 1.2), dark); base.position.y = 0.22; trophy.add(base);
-  [-1, 1].forEach(sg => { const h = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.1, 12, 32, Math.PI * 1.2), gold); h.position.set(sg * 1.4, 2.55, 0); h.rotation.z = sg > 0 ? -Math.PI * 0.6 : Math.PI * 1.6; trophy.add(h); });
-  const ar = new THREE.Group();
-  const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 2.4, 20), red); sh.position.y = 1.2; ar.add(sh);
-  const hd = new THREE.Mesh(new THREE.ConeGeometry(0.6, 1.0, 28), red); hd.rotation.z = Math.PI; hd.position.y = -0.5; ar.add(hd);
-  ar.position.set(2.7, 1.3, 0.5); trophy.add(ar); trophy.userData.ar = ar; cast(trophy);
+// Haken: großer roter Angelhaken an Seil + Fragezeichen
+const hook = grp("hook", ST.hook, -4.0);
+const hookPiv = new THREE.Group(); hookPiv.position.y = 13; hook.add(hookPiv);
+const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 8, 8), dark); rope.position.y = -4; hookPiv.add(rope);
+const hk = new THREE.Group(); hk.position.y = -8; hookPiv.add(hk);
+{ const shank = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 2.2, 20), red); shank.position.y = -1.1; hk.add(shank);
+  const eye = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.1, 12, 24), red); eye.position.y = 0.25; hk.add(eye);
+  const bend = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.16, 16, 40, Math.PI * 1.25), red); bend.position.set(0.8, -2.2, 0); bend.rotation.z = Math.PI * 0.95; hk.add(bend);
+  const barb = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.7, 20), red); barb.position.set(1.55, -1.55, 0); barb.rotation.z = -0.35; hk.add(barb); cast(hk); }
+const q = text3d("?", 1.6, dark, 0.45); q.position.set(-2.6, 0, 0.5); hook.add(q);
+
+// ETF-Station: drei Säulen mit Flaggenfarben (unter den Karten sichtbar)
+const etf = grp("etf", ST.etf, -3.6);
+const etfP = [];
+[[-3.1, 0x3c5ccf], [0, 0x2a49b8], [3.1, 0x3c5ccf]].forEach(([x, c], i) => { const p = plinth(1.6, 1.0, 1.6); p.position.x = x; etf.add(p);
+  const n = text3d("#" + (i + 1), 0.6, M(c, 0.5), 0.2); n.position.set(0, 1.25, 0); p.add(n); etfP.push(p); });
+
+// Wie geht das: Zahnräder (Mechanik)
+const how = grp("how", ST.how, -3.4);
+const gears = [];
+function gear(r, teeth, mat) { const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.45, 40), mat); body.rotation.x = Math.PI / 2; g.add(body);
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.3, r * 0.3, 0.6, 24), clay3); hub.rotation.x = Math.PI / 2; g.add(hub);
+  for (let i = 0; i < teeth; i++) { const a = i / teeth * Math.PI * 2; const tth = new THREE.Mesh(new THREE.BoxGeometry(r * 0.28, r * 0.3, 0.45), mat); tth.position.set(Math.cos(a) * r * 1.08, Math.sin(a) * r * 1.08, 0); tth.rotation.z = a; g.add(tth); }
+  return cast(g); }
+[[-2.6, 1.5, 1.1, 12, clay, 1], [2.5, 1.9, 0.8, 9, gold, -1.44], [3.0, 0.5, 0.6, 8, green, -1.73]].forEach(([x, y, r, n, m, sp]) => { const g = gear(r, n, m); g.position.set(x, y, 0); g.userData.sp = sp; how.add(g); gears.push(g); });
+
+// GEWINN-Szene: Sockel, 3D-Wort, Chartlinie stößt an roten Deckel
+const gain = grp("gain", ST.gain, -4.4); gain.scale.setScalar(0.82);
+const gp = plinth(7.4, 0.9, 1.8); gain.add(gp);
+const letters = []; { const word = (S.txt && S.txt.gain) || "GEWINN"; let x0 = 0;
+  for (const ch of word) { const l = text3d(ch, 1.25, dark, 0.55); l.geometry.computeBoundingBox(); const w = l.geometry.boundingBox.max.x - l.geometry.boundingBox.min.x;
+    const piv = new THREE.Group(); piv.position.set(x0 + w / 2, 1.0, -0.15); l.position.z = 0.28; piv.add(l); gain.add(piv); letters.push(piv); x0 += w + 0.12; }
+  const half = (x0 - 0.12) / 2; letters.forEach(p => p.position.x -= half); }
+const ceil = new THREE.Mesh(new THREE.BoxGeometry(8.6, 0.16, 2.4), glassRed); ceil.position.set(0, 5.0, -1.2); gain.add(ceil);
+const ceilEdge = new THREE.Mesh(new THREE.BoxGeometry(8.6, 0.06, 0.06), red); ceilEdge.position.set(0, 5.0, 0); gain.add(ceilEdge);
+const ceilTxt = text3d("DECKEL", 0.42, red, 0.08); ceilTxt.position.set(2.9, 5.18, -0.2); gain.add(ceilTxt);
+const chartPts = []; { const raw = [[-4.2, 1.4], [-3.2, 2.3], [-2.4, 1.9], [-1.5, 3.3], [-0.6, 2.8], [0.3, 4.1], [1.1, 3.7], [1.9, 4.85], [2.6, 4.85], [3.3, 4.85], [4.2, 4.85]];
+  raw.forEach(([x, y]) => chartPts.push(new THREE.Vector3(x, y, -1.2))); }
+const chartCurve = new THREE.CatmullRomCurve3(chartPts, false, "catmullrom", 0.15);
+const NCH = 160; const chartGeo = new THREE.TubeGeometry(chartCurve, NCH, 0.13, 10, false);
+const chart = new THREE.Mesh(chartGeo, green); chart.castShadow = true; gain.add(chart);
+const chartHead = new THREE.Mesh(new THREE.SphereGeometry(0.26, 20, 14), green); gain.add(chartHead);
+const sparks = []; for (let i = 0; i < 10; i++) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.08), red); s.userData.a = (i / 10) * Math.PI - Math.PI; gain.add(s); sparks.push(s); }
+
+// Vergleich: zwei wachsende Säulen
+const cmp = grp("cmp", ST.cmp, -3.0);
+function bar(mat, x) { const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.BoxGeometry(1.7, 1, 1.7), mat); b.position.y = 0.5; g.add(b); g.position.x = x; g.userData.b = b; cast(g); cmp.add(g); return g; }
+const barG = bar(green, -2.7), barR = bar(red, 2.7);
+const lblG = text3d("+100 %", 0.5, green, 0.12), lblR = text3d("+50 %", 0.5, red, 0.12); cmp.add(lblG); cmp.add(lblR);
+
+// Pokal + Pfeil
+const cup = grp("cup", ST.cup, -4.0);
+const cupPl = plinth(2.6, 1.0, 2.0); cup.add(cupPl);
+const trophy = new THREE.Group(); trophy.position.y = 1.18; cup.add(trophy);
+{ const pts = []; for (let i = 0; i <= 20; i++) { const y = i / 20; pts.push(new THREE.Vector2(0.2 + 1.1 * Math.pow(y, 0.6), y * 1.9)); }
+  const c = new THREE.Mesh(new THREE.LatheGeometry(pts, 48), gold); c.position.y = 1.3; trophy.add(c);
+  const st = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.3, 1.0, 24), gold); st.position.y = 0.8; trophy.add(st);
+  const bs = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.3, 1.0), dark); bs.position.y = 0.15; trophy.add(bs);
+  [-1, 1].forEach(sg => { const h = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.09, 12, 32, Math.PI * 1.2), gold); h.position.set(sg * 1.25, 2.3, 0); h.rotation.z = sg > 0 ? -Math.PI * 0.6 : Math.PI * 1.6; trophy.add(h); }); cast(trophy); }
+const arrow = new THREE.Group(); { const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 2.2, 20), red); sh.position.y = 1.1; arrow.add(sh);
+  const hd = new THREE.Mesh(new THREE.ConeGeometry(0.6, 1.0, 28), red); hd.rotation.z = Math.PI; hd.position.y = -0.5; arrow.add(hd); cast(arrow); }
+cup.add(arrow);
+
+// Outro: Münzregen
+const outro = grp("outro", ST.outro, -3.0);
+const coinG = new THREE.CylinderGeometry(0.42, 0.42, 0.09, 32);
+const NB = 46, burst = new THREE.InstancedMesh(coinG, gold, NB); burst.castShadow = true; burst.frustumCulled = false; outro.add(burst);
+const dirs = []; for (let i = 0; i < NB; i++) { const a = rnd() * 6.28; dirs.push([Math.cos(a) * 0.8, 0.9 + rnd() * 0.6, Math.sin(a) * 0.4, 4 + rnd() * 4, rnd() * 10]); }
+const Mx = new THREE.Matrix4(), Qn = new THREE.Quaternion(), Vv = new THREE.Vector3(), S3 = new THREE.Vector3(), Eu = new THREE.Euler();
+
+/* ---------- Kamera ---------- */
+// S.cams: [[t, station|x, opts]] – Fahrt startet `lead` s vor t und dauert `move` s; dazwischen langsamer Dolly.
+const CAMS = (S.cams || [[0, "intro"]]).map(c => ({ t: c[0], x: typeof c[1] === "string" ? ST[c[1]] : c[1], o: c[2] || {} }));
+const MOVE = S.move || 1.25, LEAD = S.lead || 0.45;
+function camState(t) {
+  let i = 0; for (let k = 0; k < CAMS.length; k++) if (t >= CAMS[k].t - LEAD) i = k;
+  const c = CAMS[i], pv = CAMS[Math.max(0, i - 1)];
+  const base = (cc) => ({ x: cc.x + (cc.o.dx || 0), y: cc.o.y || 6.4, z: cc.o.z || 19.5, ly: cc.o.ly || 2.4, fov: cc.o.fov || 42 });
+  const A = base(pv), B = base(c);
+  const u = i === 0 ? 1 : easeInOut((t - (c.t - LEAD)) / MOVE);
+  const arc = Math.sin(Math.PI * clamp(u)) * clamp(Math.abs(B.x - A.x) / 15);
+  const s = { x: A.x + (B.x - A.x) * u, y: A.y + (B.y - A.y) * u + arc * 1.4, z: A.z + (B.z - A.z) * u + arc * 3.0, ly: A.ly + (B.ly - A.ly) * u, fov: A.fov + (B.fov - A.fov) * u };
+  const since = Math.max(0, t - (c.t - LEAD + MOVE));
+  s.z -= Math.min(since, 8) * (c.o.dolly != null ? c.o.dolly : 0.22);  // langsamer Dolly
+  s.x += Math.sin(t * 0.37) * 0.25; s.y += Math.sin(t * 0.51) * 0.12;
+  s.yaw = (B.x - A.x) === 0 ? 0 : arc * Math.sign(B.x - A.x) * 1.2;     // leichter Schwenk in Fahrtrichtung
+  return s;
 }
-
-/* ---------- Outro-Münzen ---------- */
-const outro = seg("outro");
-const coinG = new THREE.CylinderGeometry(0.5, 0.5, 0.1, 32);
-const NB = 50, burst = new THREE.InstancedMesh(coinG, gold, NB); burst.castShadow = true; burst.frustumCulled = false; outro.add(burst);
-const dirs = []; for (let i = 0; i < NB; i++) { const a = rnd() * 6.28; dirs.push([Math.cos(a) * 0.7, 0.8 + rnd() * 0.6, Math.sin(a) * 0.5, 4 + rnd() * 4, rnd() * 10]); }
-
-const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), S3 = new THREE.Vector3(), E = new THREE.Euler();
-const LOOK_Y = 2.3;
+const appear = (t, t0, d = 0.6) => easeOutBack((t - t0) / d);
 
 window.renderAt = function (t) {
-  const s = SEG;
-  bgMat.uniforms.uZ.value = 1 + 0.04 * t / DUR;
-  let kick = 0; (s.accents || []).forEach(a => { const d = t - a; if (d > 0 && d < 0.6) kick += Math.sin(d * 14) * Math.exp(-d * 6) * 0.3; });
-  camera.position.set(Math.sin(t * 0.33) * 1.0, 6.2 + Math.sin(t * 0.45) * 0.35 + kick * 0.3, 17.5 - kick * 1.6 + Math.sin(t * 0.2) * 0.6);
-  camera.lookAt(0, LOOK_Y, 0);
-  let d;
-  // Gebäude (Intro)
-  d = life(groups.building, t, s.building[0], s.building[1], { y: 0.0, scale: 0.85, ry: -0.35 });
-  if (d >= 0) groups.building.rotation.y = -0.35 + Math.sin(t * 0.5) * 0.25;
-  // 50.000
-  d = life(groups.dow, t, s.dow[0], s.dow[1], { y: 2.2 });
-  if (d >= 0) {
-    const f = clamp((t - s.dowFall) / 0.9);
-    d50.rotation.x = easeIn(f) * 0.9; d50.position.y = -easeIn(f) * 1.6; d50.position.z = easeIn(f) * 0.8;
-    crack.scale.x = Math.max(0.001, easeOut(clamp((t - s.dowFall) / 0.4)));
-    dArrow.position.set(2.9, 2.6 - easeOut(clamp((t - s.dow[0]) / 1.2)) * 0.6 + Math.sin(t * 4) * 0.12, 0.4);
-  }
-  // Treppe
-  d = life(groups.stairs, t, s.stairs[0], s.stairs[1], { y: 0.3, ry: -0.25 });
-  if (d >= 0) {
-    const L = NST - 1; const p = clamp((t - s.stairs[0] - 0.4) / Math.max(1, s.stairsRoll)) * L;
-    const i = Math.min(L, Math.floor(p)), fr = p - Math.floor(p);
-    const x0 = -2.9 + i * 1.15, h0 = 3.2 - i * 0.5;
-    const x1 = -2.9 + Math.min(L, i + 1) * 1.15, h1 = 3.2 - Math.min(L, i + 1) * 0.5;
-    const hop = i < L ? Math.sin(fr * Math.PI) * 0.45 : 0;
-    ball.position.set(i < L ? x0 + (x1 - x0) * fr : x0, (i < L ? h0 + (h1 - h0) * easeIn(fr) : h0) + 0.36 + hop, 0);
-    ball.rotation.z = -p * 2;
-  }
-  // Chips
-  d = life(groups.chips, t, s.chips[0], s.chips[1], { y: 1.0, in: 0.3 });
-  if (d >= 0) {
-    chipList.forEach((c, i) => {
-      const u = c.userData; const k = clamp((d - u.d) / 0.9);
-      c.position.set(u.x, 6 - easeOutBack(k) * 5.2 + 0.2, u.z);
-      c.rotation.set(Math.sin(t * 1.3 + u.r) * 0.25 + (1 - k) * 2, t * 0.4 + u.r, Math.cos(t * 1.1 + u.r) * 0.2);
+  const c = camState(t);
+  let kick = 0; (S.accents || []).forEach(a => { const d = t - a; if (d > 0 && d < 0.6) kick += Math.sin(d * 16) * Math.exp(-d * 7) * 0.18; });
+  camera.fov = c.fov; camera.updateProjectionMatrix();
+  camera.position.set(c.x + kick * 0.3, c.y + kick, c.z);
+  camera.lookAt(c.x + c.yaw, c.ly, -6);
+  sun.position.set(c.x + 7, 16, 10); sun.target.position.set(c.x, 0, -4); sun.target.updateMatrixWorld();
+  const near = (g) => { g.visible = Math.abs(g.position.x - c.x) < 26; return g.visible; };
+
+  // Intro
+  const I = S.intro || [0];
+  if (near(intro)) { const k = appear(t, I[0] + 0.15, 0.7); pct.scale.setScalar(Math.max(0.001, k)); pct.rotation.y = (1 - clamp(k)) * 2.5 + Math.sin(t * 1.2) * 0.25; pct.position.y = Math.sin(t * 2) * 0.12 + 0.3;
+    stacks.forEach((s, i) => { const kk = appear(t, I[0] + 0.3 + i * 0.15, 0.6); s.scale.set(1, Math.max(0.001, kk), 1); }); }
+  // Haken
+  const HK = S.hook || [1e9];
+  if (near(hook)) { const d = easeOut((t - HK[0]) / 1.1); hookPiv.position.y = 13 + (1 - d) * 9; hookPiv.rotation.z = Math.sin((t - HK[0]) * 2.4) * 0.22 * Math.exp(-Math.max(0, t - HK[0]) * 0.35);
+    const qk = appear(t, (S.hookQ || HK[0] + 1), 0.5); q.scale.setScalar(Math.max(0.001, qk)); q.rotation.y = Math.sin(t * 2) * 0.3; }
+  // ETF-Sockel
+  const E = S.etfs || [];
+  etf.visible = false; if (false) etfP.forEach((p, i) => { const k = appear(t, E[i] != null ? E[i] : 1e9, 0.55); p.scale.set(1, Math.max(0.001, k), 1); p.position.y = 0; });
+  // Zahnräder
+  const HW = S.how || [1e9];
+  if (near(how)) gears.forEach((g, i) => { const k = appear(t, HW[0] + i * 0.25, 0.6); g.scale.setScalar(Math.max(0.001, k)); g.rotation.z = (t - HW[0]) * 0.9 * g.userData.sp; });
+  // GEWINN
+  const G = S.gain || {};
+  if (near(gain)) {
+    const k0 = appear(t, G.t0 || 1e9, 0.6); gp.scale.set(Math.max(0.001, k0), 1, 1);
+    letters.forEach((p, i) => {
+      const k = appear(t, (G.t0 || 1e9) + 0.15 + i * 0.06, 0.5); p.scale.setScalar(Math.max(0.001, k));
+      const f = clamp((t - (G.fall || 1e9) - i * 0.09) / 0.85);
+      p.rotation.x = -bounceOut(f) * 1.52; p.position.z = -0.15 - easeOut(f) * 0.25;
     });
-    cArrow.position.set(0, 5.6 + Math.sin(t * 4) * 0.15, 0.6);
+    const L0 = G.line || [1e9, 1e9]; const lp = clamp((t - L0[0]) / (L0[1] - L0[0]));
+    const ce = appear(t, G.ceil || 1e9, 0.5); ceil.scale.set(Math.max(0.001, ce), 1, 1); ceilEdge.scale.set(Math.max(0.001, ce), 1, 1); ceilTxt.scale.setScalar(Math.max(0.001, ce));
+    const n = Math.floor(easeInOut(lp) * NCH) * 10 * 6; chartGeo.setDrawRange(0, n); chart.visible = n > 0;
+    const hp = chartCurve.getPointAt(Math.max(0.001, easeInOut(lp))); chartHead.position.copy(hp); chartHead.visible = lp > 0; chartHead.scale.setScalar(lp > 0 ? 1 + Math.sin(t * 8) * 0.08 : 0.001);
+    const hit = (G.hit || 1e9); const sp = clamp((t - hit) / 0.5);
+    sparks.forEach((s, i) => { s.visible = sp > 0 && sp < 1; const a = s.userData.a; const r = 0.3 + easeOut(sp) * 1.1; s.position.set(1.9 + Math.cos(a) * r, 4.85 + Math.sin(a) * r * 0.6 - 0.05, -1.2); s.rotation.z = a + Math.PI / 2; s.scale.setScalar(1 - sp); });
+    ceil.material.opacity = 0.38 + (sp > 0 && sp < 1 ? (1 - sp) * 0.4 : 0);
   }
-  // Punktwolke
-  d = life(groups.cloud, t, s.cloud[0], s.cloud[1], { y: 4.4 });
-  if (d >= 0) {
-    for (let i = 0; i < NPT; i++) { const b = base[i]; const w = 1 + 0.04 * Math.sin(t * 2 + b[3]); pos[i * 3] = b[0] * w; pos[i * 3 + 1] = b[1] * w; pos[i * 3 + 2] = b[2] * w; }
-    cg.attributes.position.needsUpdate = true;
-    groups.cloud.rotation.y = t * 0.35;
-    cloudQ.rotation.y = -t * 0.35 + Math.sin(t * 2) * 0.3; cloudQ.scale.setScalar(Math.max(0.001, easeOutBack(clamp((t - s.cloudQ) / 0.5))));
+  // Vergleich
+  const C = S.cmp || {};
+  if (near(cmp)) {
+    const g = easeOutBack(((t - (C.g || 1e9)) / 1.1)) * (C.hg || 5.2), r = easeOutBack(((t - (C.r || 1e9)) / 1.0)) * (C.hr || 2.6);
+    barG.scale.y = Math.max(0.001, g); barR.scale.y = Math.max(0.001, r);
+    lblG.position.set(-2.7, Math.max(0, g) + 0.25, 0.2); lblR.position.set(2.7, Math.max(0, r) + 0.25, 0.2);
+    lblG.scale.setScalar(clamp((t - (C.g || 1e9) - 0.6) / 0.3) + 0.001); lblR.scale.setScalar(clamp((t - (C.r || 1e9) - 0.5) / 0.3) + 0.001);
   }
-  // Anthropic
-  d = life(groups.ant, t, s.ant[0], s.ant[1], { y: 1.4 });
-  if (d >= 0) { up.scale.y = Math.max(0.001, easeOutBack(clamp((d - 0.2) / 0.7))); up.position.y = (SEG.antDown ? 4.2 : 0) + Math.sin(t * 3) * 0.12; t97.rotation.y = Math.sin(t * 1.5) * 0.3; }
-
-  if (s.candles) {
-    d = life(groups.candles, t, s.candles[0], s.candles[1], { y: 0.6, ry: -0.2, in: 0.3 });
-    if (d >= 0) candleList.forEach((c, i) => {
-      const k = easeOutBack(clamp((d - 0.15 - i * (s.candleStep || 0.22)) / 0.45));
-      c.scale.setScalar(Math.max(0.001, k)); c.position.set(c.userData.x, c.userData.y + (1 - clamp(k)) * 2.5, 0);
-      c.rotation.y = Math.sin(t * 1.5 + i) * 0.15;
-    });
-  }
-  if (s.map && groups.map.userData.m) {
-    d = life(groups.map, t, s.map[0], s.map[1], { y: 3.0, in: 0.6 });
-    if (d >= 0) { groups.map.rotation.y = Math.sin(t * 0.5) * 0.35; const pn = groups.map.userData.pin; pn.position.y = -0.6 + Math.abs(Math.sin(t * 3)) * 0.35; pn.scale.setScalar(Math.max(0.001, easeOutBack(clamp((t - (s.mapPin || s.map[0])) / 0.5)))); }
-  }
-
-  if (s.calendar) {
-    d = life(groups.calendar, t, s.calendar[0], s.calendar[1], { y: 1.2, ry: -0.15 });
-    if (d >= 0) {
-      const T = s.calTimes;
-      calTiles.forEach((p, i) => {
-        const a = T[i], b = i + 1 < T.length ? T[i + 1] : 1e9;
-        if (t < a - 0.01) { p.visible = false; return; }
-        p.visible = true;
-        const fin = i === 0 ? 1 : easeOutBack(clamp((t - a) / 0.45));
-        const fout = clamp((t - b) / 0.35);
-        p.rotation.x = (1 - fin) * -1.6 + easeIn(fout) * 1.9;
-        p.position.z = i * 0.02;
-        if (fout >= 1) p.visible = false;
-      });
-      groups.calendar.rotation.y = -0.15 + Math.sin(t * 0.6) * 0.18;
-    }
-  }
-  if (s.building2) { d = life(groups.building2, t, s.building2[0], s.building2[1], { y: 0.0, scale: 0.85, ry: 0.35 }); if (d >= 0) groups.building2.rotation.y = 0.35 + Math.sin(t * 0.5) * 0.2; }
-
-  if (s.trophy) {
-    d = life(groups.trophy, t, s.trophy[0], s.trophy[1], { y: 1.4, scale: 1.1 });
-    if (d >= 0) { groups.trophy.rotation.y = Math.sin(t * 0.8) * 0.4; const ar = groups.trophy.userData.ar; const k = easeOutBack(clamp((t - (s.trophyDrop || s.trophy[0])) / 0.5)); ar.scale.setScalar(Math.max(0.001, k)); ar.position.y = 1.3 + (1 - clamp(k)) * 3 + Math.sin(t * 4) * 0.12; }
-  }
+  // Pokal
+  const CU = S.cup || {};
+  if (near(cup)) { const k = appear(t, CU.t0 || 1e9, 0.7); trophy.scale.setScalar(Math.max(0.001, k)); trophy.rotation.y = Math.sin(t * 0.9) * 0.35;
+    cupPl.scale.set(Math.max(0.001, appear(t, (CU.t0 || 1e9) - 0.1, 0.5)), 1, 1);
+    const a = easeOutBack((t - (CU.drop || 1e9)) / 0.6); arrow.scale.setScalar(Math.max(0.001, clamp(a * 2))); arrow.position.set(2.6, 1.5 + (1 - clamp(a)) * 5 + Math.sin(t * 4) * 0.1, 0.6); }
   // Outro
-  d = life(groups.outro, t, s.outro[0], s.outro[1], { y: 2.5, in: 0.01 });
-  if (d >= 0) {
-    groups.outro.scale.setScalar(1); groups.outro.rotation.y = 0;
-    for (let i = 0; i < NB; i++) {
-      const r = dirs[i], k = d * r[3];
-      V.set(r[0] * k, Math.max(-2.4, r[1] * k - 3 * d * d), r[2] * k);
-      E.set(d * 6 + r[4], d * 4, 0); Q.setFromEuler(E);
-      M.compose(V, Q, S3.setScalar(1)); burst.setMatrixAt(i, M);
-    }
-    burst.instanceMatrix.needsUpdate = true;
-  }
+  const O = S.outro || 1e9;
+  if (near(outro)) { const d = Math.max(0, t - O); burst.visible = t >= O;
+    for (let i = 0; i < NB; i++) { const r = dirs[i], k = d * r[3]; Vv.set(r[0] * k, Math.max(0.05, 2.5 + r[1] * k - 3 * d * d), r[2] * k); Eu.set(d * 6 + r[4], d * 4, 0); Qn.setFromEuler(Eu); Mx.compose(Vv, Qn, S3.setScalar(1)); burst.setMatrixAt(i, Mx); }
+    burst.instanceMatrix.needsUpdate = true; }
   renderer.render(scene, camera);
 };
-
-const _img = new Image(); _img.onload = () => { const tx = new THREE.Texture(_img); tx.encoding = THREE.sRGBEncoding; tx.needsUpdate = true; bgMat.uniforms.uTex.value = tx; window.READY = true; }; _img.src = window.BGIMG;
+window.READY = true;
 </script>
 </body></html>

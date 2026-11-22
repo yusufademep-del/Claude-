@@ -15,7 +15,12 @@ Diese Regeln gelten für jedes Video, das für den Kanal „Börsenlehre“ erst
 
 ## Video-Stil v4 (`video-tools/v4/`: scene3d.html → render3d.js → compose4.py → mix4.py)
 - Cremefarbene **Kopfleiste** oben: Pinguin-Avatar · „börsenlehre“ · THEMA (fett) + Datum (grau). Keine Fortschrittsleiste, kein gelbes Badge.
-- Sehr heller, lavendel-weißer Hintergrund (Börsengebäude/Straße), weiße 3D-„Ton“-Objekte mit Schatten.
+- **Durchgehende 3D-Stadt** (lavendel-weiße „Ton“-Optik, Nebel, weiche Schatten): Straße mit Börsen- und Bürogebäuden,
+  Rotunden, Laternen, Ampeln, Bäumen. Jede Szene ist eine **Station** entlang der Straße (`stations`); die Kamera fährt
+  fließend dorthin (Bogen + leichter Schwenk, `cams` in seg.json), dazwischen langsamer Dolly. Objekte stehen fest in der
+  Welt und wachsen beim Ankommen heraus (kein Auf-/Zuploppen). Szenen-Bausteine: Münzstapel + %, Angelhaken + ?,
+  Zahnräder, GEWINN-Sockel mit Chartlinie gegen roten DECKEL (Buchstaben kippen nacheinander), wachsende
+  Vergleichssäulen, Pokal + Pfeil, Münzregen.
 - **Headlines**: große dunkle Anton-Schrift, 1–2 Zeilen (2. Zeile optional rot), Pop-in mit Überschwingen, raus nach oben.
 - **Großer Pinguin** mit weichen Kamerafahrten: `full` ↔ `mid` ↔ `close` (Close-up bei Pointen), 4 Posen
   (base/q/shock/explain) mit Mundbewegung, kleiner Hüpfer beim Posenwechsel.
