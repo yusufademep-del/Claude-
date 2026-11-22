@@ -138,8 +138,10 @@ last = None
 for fi in frames_to_do:
     t = fi / FPS
     if TEST:
-        near = min([3.0, 6.5, 9.6, 16.9, 21.0, 26.0, 35.0, 42.8], key=lambda x: abs(x - t))
-        frame = Image.open(f"{D}/test_{near}.jpg").convert("RGBA")
+        import glob
+        cands = {float(os.path.basename(f)[5:-4]): f for f in glob.glob(f"{D}/test_*.jpg")}
+        near = min(cands, key=lambda x: abs(x - t))
+        frame = Image.open(cands[near]).convert("RGBA")
     else:
         buf = bgp.stdout.read(W * H * 3)
         if len(buf) == W * H * 3: last = buf
@@ -185,6 +187,26 @@ for fi in frames_to_do:
             bx0, by0 = x1 - 40 - bw, y0 + 32
             ImageDraw.Draw(frame).rounded_rectangle((bx0, by0, bx0 + bw, by0 + bh), 10, fill=COL[c.get("badge_color", "red")] + (int(255 * alpha),))
             paste_c(frame, bi, bx0 + bw / 2, by0 + bh / 2, 1, alpha)
+            # several lines (optional): [{"points":[..], "color":"green", "label":"..."}]
+            if c.get("lines"):
+                px0, px1, py0, py1 = x0 + 50, x1 - 200, y0 + 150, y1 - 60
+                for ln in c["lines"]:
+                    pts = ln["points"]; n = len(pts); col = COL[ln.get("color", "red")]
+                    P = [(px0 + (px1 - px0) * i / (n - 1), py1 - (py1 - py0) * v) for i, v in enumerate(pts)]
+                    f = ease_io(clamp((t - ln["draw"][0]) / (ln["draw"][1] - ln["draw"][0]))) * (n - 1)
+                    k = int(f); fr = f - k
+                    seg = P[:k + 1] + ([(P[k][0] + (P[k + 1][0] - P[k][0]) * fr, P[k][1] + (P[k + 1][1] - P[k][1]) * fr)] if k + 1 < n else [])
+                    if len(seg) < 2: continue
+                    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0)); dl = ImageDraw.Draw(lay)
+                    dl.polygon(seg + [(seg[-1][0], py1), (seg[0][0], py1)], fill=col + (int(30 * alpha),))
+                    dl.line(seg, fill=col + (int(255 * alpha),), width=8, joint="curve")
+                    frame.alpha_composite(lay)
+                    ex, ey = seg[-1]; ImageDraw.Draw(frame).ellipse((ex - 11, ey - 11, ex + 11, ey + 11), fill=col + (255,), outline=(255, 255, 255, 255), width=3)
+                    if f >= n - 1.01:
+                        el = text_img(ln["label"], MONT, 36, col); paste_c(frame, el, ex + 24 + el.width / 2, ey, 1, alpha)
+                        if ln.get("name"):
+                            nm = text_img(ln["name"], MONT8, 22, COL["grey"]); paste_c(frame, nm, ex + 24 + nm.width / 2, ey + 34, 1, alpha)
+                continue
             # line
             pts = c["points"]; n = len(pts)
             px0, px1, py0, py1 = x0 + 50, x1 - 70, y0 + 150, y1 - 60
@@ -275,7 +297,7 @@ for fi in frames_to_do:
 
     # badge + progress
     if badge is None:
-        f = font(MONT, 30); txt = "BÖRSEN-NEWS · " + CFG["date"]; bb = f.getbbox(txt)
+        f = font(MONT, 30); txt = CFG.get("badge_prefix", "BÖRSEN-NEWS") + " · " + CFG["date"]; bb = f.getbbox(txt)
         badge = Image.new("RGBA", (bb[2] - bb[0] + 50, bb[3] - bb[1] + 30), (0, 0, 0, 0))
         ImageDraw.Draw(badge).rounded_rectangle((0, 0, badge.width - 1, badge.height - 1), 16, fill=COL["yellow"])
         ImageDraw.Draw(badge).text((25 - bb[0], 15 - bb[1]), txt, font=f, fill=NAVY)

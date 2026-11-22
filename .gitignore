@@ -1,0 +1,13 @@
+# Video-Pipeline: Arbeitsdateien (werden per video-tools/v3/setup.sh erzeugt)
+video-tools/pkgs/
+video-tools/nv/
+video-tools/v3/m_*.png
+video-tools/v3/test_*.jpg
+video-tools/v3/ct_*.jpg
+video-tools/v3/bg3d.mp4
+video-tools/v3/comp.mp4
+video-tools/v3/voice*.wav
+video-tools/v3/voice*.mp3
+video-tools/v3/render.log
+video-tools/v3/*_preview.jpg
+video-tools/v3/bg_preview.jpg

@@ -21,7 +21,7 @@ for t in CFG.get("bell", []):
     events.append(("bell", t, 0.45, 1.8))
 
 inputs = ["-i", video, "-i", f"{D}/voice.wav", "-i", f"{SP}/nv/music_long.wav"]
-fc = [f"[2:a]loudnorm=I=-26:TP=-6,afade=t=in:d=0.4,afade=t=out:st={DUR - 1.2}:d=1.2,atrim=0:{DUR}[m]",
+fc = [f"[2:a]loudnorm=I={CFG.get("music_lufs", -26)}:TP=-6,afade=t=in:d=0.4,afade=t=out:st={DUR - 1.2}:d=1.2,atrim=0:{DUR}[m]",
       f"[1:a]apad,atrim=0:{DUR},asplit=2[v][sc]",
       "[m][sc]sidechaincompress=threshold=0.04:ratio=6:attack=20:release=350[md]"]
 labels = ["[v]", "[md]"]
@@ -29,7 +29,7 @@ for i, (name, t, vol, trim) in enumerate(events):
     inputs += ["-i", f"{D}/sfx/{name}.mp3"]
     idx = 3 + i
     ms = int(t * 1000)
-    fc.append(f"[{idx}:a]atrim=0:{trim},afade=t=out:st={trim * 0.6}:d={trim * 0.4},volume={vol},adelay={ms}|{ms},apad,atrim=0:{DUR}[s{i}]")
+    fc.append(f"[{idx}:a]atrim=0:{trim},afade=t=out:st={trim * 0.6}:d={trim * 0.4},volume={vol * CFG.get("sfx_gain", 1.0):.3f},adelay={ms}|{ms},apad,atrim=0:{DUR}[s{i}]")
     labels.append(f"[s{i}]")
 fc.append("".join(labels) + f"amix=inputs={len(labels)}:duration=first:normalize=0,loudnorm=I=-14:TP=-1.5[a]")
 cmd = ["ffmpeg", "-v", "error", "-y"] + inputs + ["-filter_complex", ";".join(fc), "-map", "0:v", "-map", "[a]",

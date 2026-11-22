@@ -28,9 +28,15 @@ in kurzen Hochformat-Videos (~30–45 s), Stil angelehnt an die Eule von „fina
 
 ## Aktueller Stand (alles im Repo, Branch `claude/brave-brown-tk6ndu`)
 - Videos: Vorstellung, Nvidia-Zahlen, Nvidia & Fed-Zinsen, Anthropic-IPO (3×), Tech-Crash 19.11.,
-  Tech-Crash Teil 2 (20.11.), Tagesrückblick 20.11., Wochenausblick KW 48, Erklär-Video „Rekord & Minus“.
+  Tech-Crash Teil 2 (20.11.), Tagesrückblick 20.11., Wochenausblick KW 48, Erklär-Video „Rekord & Minus“,
+  Erklär-Video „Dividenden-ETFs über 10 %“ (22.11., Covered-Call-ETFs + Haken).
 - Branding: Profilbild, YouTube-Banner, Bios (`branding/`).
 - Website-Entwurf mit 3D-Hero (`website/`, Vorschau-Artifact vorhanden).
+
+## Assets wiederherstellen
+- In einer frischen Session zuerst `bash video-tools/v3/setup.sh` ausführen (Fonts, three.js, Pinguin-Sprites,
+  Hintergrund, Musik). Emojis: `node video-tools/v3/emoji.js <codes>`. Hinweis: Die Pinguin-Sprites werden aus
+  `website/assets/pinguin-hero.png` gebaut (eine Pose, 3 Mundstellungen) – die alten 4-Posen-Sprites waren nicht im Repo.
 
 ## Offene Punkte
 - Website: echte Social-Links eintragen, Impressum/Datenschutz ausfüllen, Hosting (z. B. GitHub Pages) einrichten.
