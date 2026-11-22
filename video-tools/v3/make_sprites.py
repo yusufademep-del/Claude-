@@ -1,5 +1,5 @@
 """Baut die Pinguin-Sprites m_<pose>_<mund>.png (Greenscreen) für compose3.py.
-Quelle: video-tools/v3/pinguin/pinguin_<pose>_mund_<zu|halb|offen>.png (4 Posen × 3 Mundstellungen).
+Quelle: pinguin/mundbewegung/ (Repo-Wurzel) pinguin_<pose>_mund_<zu|halb|offen>.png (4 Posen × 3 Mundstellungen).
 Entfernt den weißen Sticker-Rand und richtet alle Posen an den Füßen mittig aus."""
 import os, numpy as np
 from PIL import Image, ImageFilter
@@ -20,7 +20,7 @@ def feet_x(im):
     al = np.asarray(im.split()[3]); h = al.shape[0]
     cols = np.where((al[int(h * 0.88):] > 128).any(axis=0))[0]
     return (cols.min() + cols.max()) / 2
-src = {(p, m): unrim(Image.open(f"{D}/pinguin/pinguin_{POSES[p]}_mund_{MOUTH[m]}.png")) for p in POSES for m in MOUTH}
+src = {(p, m): unrim(Image.open(f"{os.path.dirname(os.path.dirname(D))}/pinguin/mundbewegung/pinguin_{POSES[p]}_mund_{MOUTH[m]}.png")) for p in POSES for m in MOUTH}
 CW = 900; H = max(im.height for im in src.values())
 for (p, m), im in src.items():
     cv = Image.new("RGBA", (CW, H), (0, 255, 0, 255))

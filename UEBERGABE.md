@@ -36,7 +36,7 @@ in kurzen Hochformat-Videos (~30–45 s), Stil angelehnt an die Eule von „fina
 ## Assets wiederherstellen
 - In einer frischen Session zuerst `bash video-tools/v3/setup.sh` ausführen (Fonts, three.js, Pinguin-Sprites,
   Hintergrund, Musik). Emojis: `node video-tools/v3/emoji.js <codes>`. Die Pinguin-Originale (4 Posen: neutral, fragend,
-  geschockt, erklärend × Mund zu/halb/offen) liegen in `video-tools/v3/pinguin/`, freigestellte Posen in `branding/pinguin/`.
+  geschockt, erklärend × Mund zu/halb/offen) liegen in `pinguin/` (mundbewegung/, transparent/, greenscreen/).
 
 ## Offene Punkte
 - Website: echte Social-Links eintragen, Impressum/Datenschutz ausfüllen, Hosting (z. B. GitHub Pages) einrichten.
