@@ -515,5 +515,17 @@
   "file": "cover_dividenden_etfs_10prozent",
   "pen_w": 1150,
   "pen_dx": 20
- }
+ },
+ "filter": {
+  "t1": 4.3,
+  "fade": 0.9,
+  "blur": 5,
+  "strength": 0.5,
+  "tint": [
+   246,
+   206,
+   222
+  ]
+ },
+ "dof_blur": 6
 }

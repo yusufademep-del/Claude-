@@ -21,6 +21,8 @@ Diese Regeln gelten für jedes Video, das für den Kanal „Börsenlehre“ erst
   Welt und wachsen beim Ankommen heraus (kein Auf-/Zuploppen). Szenen-Bausteine: Münzstapel + %, Angelhaken + ?,
   Zahnräder, GEWINN-Sockel mit Chartlinie gegen roten DECKEL (Buchstaben kippen nacheinander), wachsende
   Vergleichssäulen, Pokal + Pfeil, Münzregen.
+- **Filter am Anfang** (`filter` in compose4.json): weicher Rosa-Lila-Verlauf + leichte Unschärfe über dem Hintergrund,
+  blendet beim ersten Kamerawechsel aus. Bei Close-ups Tiefenunschärfe im Hintergrund (`dof_blur`).
 - **Headlines**: große dunkle Anton-Schrift, 1–2 Zeilen (2. Zeile optional rot), Pop-in mit Überschwingen, raus nach oben.
 - **Großer Pinguin** mit weichen Kamerafahrten: `full` ↔ `mid` ↔ `close` (Close-up bei Pointen), 4 Posen
   (base/q/shock/explain) mit Mundbewegung, kleiner Hüpfer beim Posenwechsel.

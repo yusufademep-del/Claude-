@@ -16,17 +16,17 @@ const DUR = S.dur || 30;
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(1); renderer.setSize(W, H);
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.12;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.04;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 const SKY = 0xf3f0f8;
 scene.background = new THREE.Color(SKY);
-scene.fog = new THREE.Fog(SKY, 26, 75);
+scene.fog = new THREE.Fog(SKY, 38, 115);
 const camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 300);
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0xdcd6e6, 0.95));
-const sun = new THREE.DirectionalLight(0xffffff, 1.05);
+scene.add(new THREE.HemisphereLight(0xffffff, 0xd2cbe0, 0.8));
+const sun = new THREE.DirectionalLight(0xffffff, 1.25);
 sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 5; sun.shadow.bias = -0.0005;
 Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 18, bottom: -8, near: 1, far: 70 });
 scene.add(sun); scene.add(sun.target);
@@ -34,7 +34,7 @@ const fillL = new THREE.DirectionalLight(0xf3ecff, 0.35); fillL.position.set(-10
 
 const lin = (h) => new THREE.Color(h).convertSRGBToLinear();
 const M = (c, r = 0.85, extra = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: lin(c), roughness: r, metalness: 0 }, extra));
-const clay = M(0xf6f4f9), clay2 = M(0xe6e2ee), clay3 = M(0xd9d4e4), dark = M(0x2a2d38, 0.6);
+const clay = M(0xf6f4f9), clay2 = M(0xdfd9ea), clay3 = M(0xcec7dc), dark = M(0x2a2d38, 0.6);
 const red = M(0xe0302e, 0.45, { emissive: lin(0x3a0606) }), green = M(0x1aa457, 0.45, { emissive: lin(0x03260f) });
 const gold = M(0xf2b705, 0.3, { metalness: 0.6, emissive: lin(0x3a2600) });
 const glassRed = new THREE.MeshStandardMaterial({ color: lin(0xff4d4d), roughness: 0.2, transparent: true, opacity: 0.38, emissive: lin(0x400000) });
@@ -61,8 +61,8 @@ function windowTex(cols, rows, round) {
   x.fillStyle = "#f5f3f9"; x.fillRect(0, 0, 256, 512);
   const cw = 256 / cols, rh = 512 / rows;
   for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
-    x.fillStyle = "#dcd7e6"; x.fillRect(i * cw + cw * 0.16, j * rh + rh * 0.18, cw * 0.68, rh * 0.62);
-    x.fillStyle = "#ebe7f2"; x.fillRect(i * cw + cw * 0.16, j * rh + rh * 0.18, cw * 0.68, rh * 0.12);
+    x.fillStyle = "#c9c1d9"; x.fillRect(i * cw + cw * 0.16, j * rh + rh * 0.18, cw * 0.68, rh * 0.62);
+    x.fillStyle = "#e2dcec"; x.fillRect(i * cw + cw * 0.16, j * rh + rh * 0.18, cw * 0.68, rh * 0.12);
   }
   const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t;
 }

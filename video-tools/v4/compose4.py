@@ -148,6 +148,14 @@ def make_topbar():
     d.text((x, 48), topic, font=ft, fill=(30, 30, 34)); d.text((x + tw + 14, 50), date, font=fd, fill=(150, 150, 158))
     return bar
 TOPBAR = make_topbar()
+def make_tint():
+    FL = CFG.get("filter") or {}; col = tuple(FL.get("tint", [246, 206, 222])); top = tuple(FL.get("tint_top", [250, 246, 252]))
+    a = np.zeros((H, W, 4), dtype=np.uint8); ys = np.linspace(0, 1, H)[:, None]
+    k = np.clip((ys - 0.25) / 0.75, 0, 1) ** 1.2
+    for i in range(3): a[..., i] = (top[i] * (1 - k) + col[i] * k).astype(np.uint8)
+    a[..., 3] = (FL.get("strength", 0.55) * 255 * (0.35 + 0.65 * k)).astype(np.uint8)[:, 0][:, None]
+    return Image.fromarray(a, "RGBA")
+TINT = make_tint()
 
 # ---------------- Milchglas-Karte ----------------
 def draw_card(frame, c, t):
@@ -217,6 +225,16 @@ for fi in frames_to_do:
         buf = bgp.stdout.read(W * H * 3)
         if len(buf) == W * H * 3: last = buf
         frame = Image.frombytes("RGB", (W, H), last).convert("RGBA")
+
+    # Filter: weicher Rosa-Verlauf + Unschärfe am Anfang, Tiefenunschärfe bei Close-ups
+    FL = CFG.get("filter")
+    fk = 0.0
+    if FL: fk = 1 - clamp((t - FL["t1"]) / FL.get("fade", 0.8))
+    ph0, _ = shot_at(t)
+    dof = clamp((ph0 - SHOT["full"][0]) / (SHOT["close"][0] - SHOT["full"][0])) * CFG.get("dof_blur", 7)
+    blur = max(dof, fk * (FL or {}).get("blur", 9))
+    if blur > 0.4: frame = frame.filter(ImageFilter.GaussianBlur(blur))
+    if fk > 0.01: frame.alpha_composite(TINT if fk > 0.99 else Image.blend(Image.new("RGBA", (W, H), (0, 0, 0, 0)), TINT, fk))
 
     for c in CARDS:
         if c["t0"] <= t < c["t1"] + 0.35: draw_card(frame, c, t)
