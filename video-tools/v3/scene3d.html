@@ -193,7 +193,8 @@ const white = new THREE.MeshStandardMaterial({ color: lin(0xffffff), roughness: 
   const band = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.95, 0.4), red); band.position.y = 1.35; tile.add(band);
   const wd = text3d(dd[0], 0.5, white, 0.1); wd.position.set(0, 1.12, 0.22); tile.add(wd);
   const num = text3d(dd[1], dd[2] ? 1.25 : 1.5, dark, 0.25); num.position.set(0, dd[2] ? -0.75 : -1.15, 0.2); tile.add(num);
-  if (dd[2]) { const note = text3d(dd[2], 0.32, red, 0.08); note.position.set(0, -1.45, 0.22); tile.add(note); }
+  { const nb = new THREE.Box3().setFromObject(num); const nw = nb.max.x - nb.min.x; if (nw > 3.0) num.scale.set(3.0 / nw, 3.0 / nw, 1); }
+  if (dd[2]) { const note = text3d(dd[2], 0.32, red, 0.08); { const b2 = new THREE.Box3().setFromObject(note); const w2 = b2.max.x - b2.min.x; if (w2 > 3.0) note.scale.set(3.0 / w2, 3.0 / w2, 1); } note.position.set(0, -1.45, 0.22); tile.add(note); }
   piv.add(tile); cast(piv);
   piv.userData = { i }; cal.add(piv); calTiles.push(piv);
 });
