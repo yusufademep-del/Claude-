@@ -1,0 +1,22 @@
+{
+ "file": "story_etoro_vorteile",
+ "dur": 8.0,
+ "fps": 60,
+ "top_note": "Werbung · Keine Anlageberatung. Investieren ist mit Risiken verbunden.",
+ "title": "DEINE VORTEILE BEI",
+ "brand": "eToro",
+ "cards": [
+  ["1f4b6", "0 € ORDERGEBÜHR", "bei ETFs (Kauf & Verkauf)"],
+  ["1f4c8", "ETF-SPARPLÄNE", "ab 25 $ · ohne Ausführungsgebühr"],
+  ["1f30d", "RIESIGE AUSWAHL", "Aktien, ETFs & Krypto"],
+  ["1f3ae", "DEMOKONTO", "100.000 $ virtuelles Geld"],
+  ["1f465", "COPYTRADER", "Profis automatisch kopieren"],
+  ["1f4ac", "SOCIAL TRADING", "Community & Feed in der App"],
+  ["1f4f1", "ALLES IN EINER APP", "Handy, Tablet & Web"],
+  ["1f381", "KONTO KOSTENLOS", "eröffnen in wenigen Minuten"]
+ ],
+ "link_hint": true,
+ "link_hint_text": "Link-Sticker hier platzieren",
+ "bubble": "Bei Fragen schreib mir gerne!",
+ "risk": "CFDs sind komplexe Instrumente mit hohem Verlustrisiko durch Hebelwirkung. Bitte aktuellen Risikohinweis von eToro prüfen."
+}
