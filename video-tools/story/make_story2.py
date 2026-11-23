@@ -1,6 +1,6 @@
 """Börsenlehre-Story „Eisscholle“ (1080x1920): eigenes Pinguin-Konzept.
 Vorteile auf schaukelnden Eisschollen, Link-Sticker kommt aufs Eisloch (= „Einstieg wagen“),
-News-Laufband oben, Schneefall, Fische, Pinguin mit Comic-Sprechblase. Konfig: story.json
+Schneefall, Fische, Pinguin mit Comic-Sprechblase. Konfig: story.json
 Nutzung: python3 make_story2.py [--still]"""
 import json, math, os, subprocess, sys
 import numpy as np
@@ -84,14 +84,8 @@ def frame(t, hint=True, static=False):
         x0, sp, sz = rng.uniform(0, W), rng.uniform(60, 140), rng.uniform(4, 10)
         y = (rng.uniform(0, H) + (0 if static else t * sp)) % H; x = x0 + math.sin(t * .8 + i) * 18
         d.ellipse((x - sz, y - sz, x + sz, y + sz), fill=(255, 255, 255, 220))
-    # Laufband oben
-    d.rectangle((0, 140, W, 196), fill=NAVY)
-    ft = F(ANTON, 34); txt = (C["ticker"] * 6); off = 0 if static else (t * 160) % ft.getlength(C["ticker"])
-    d.text((20 - off, 147), txt, font=ft, fill=YEL)
-    d.rectangle((0, 140, 170, 196), fill=YEL); d.text((22, 147), "LIVE", font=ft, fill=NAVY)
-    d.ellipse((120, 160, 140, 180), fill=(220, 38, 38) if (static or (t * 2) % 2 < 1.3) else NAVY)
     # Werbung-Hinweis
-    fn = F(INTER("600SemiBold"), 24); nt = C["top_note"]; nw = fn.getlength(nt); d.text((W / 2 - nw / 2, 214), nt, font=fn, fill=INK)
+    fn = F(INTER("600SemiBold"), 24); nt = C["top_note"]; nw = fn.getlength(nt); d.text((W / 2 - nw / 2, 190), nt, font=fn, fill=INK)
     # Headline
     e = 1 if static else back(t / .6)
     hl = Image.new("RGBA", (W, 330), (0, 0, 0, 0)); hd = ImageDraw.Draw(hl)
@@ -130,10 +124,8 @@ def frame(t, hint=True, static=False):
         pd.text((40, 43 - fh.size * .6), ht, font=fh, fill=(28, 120, 60))
         paste_c(fr, pill, hx, hy, 1 + .03 * pulse)
     # Pinguin rechts unten zeigt aufs Loch, Sprechblase links
-    pose = "q" if (static or (t % 3.4) < 2.2) else "explain"
-    talk = (not static) and math.sin(t * 9) > .2 and (t % 2.8) < 1.9
-    p = pen(pose, "open" if talk else "closed", 470)
-    hop = 0 if static else abs(math.sin(t * 2.4)) * 12
+    p = pen("q", "closed", 470)  # eine feste Pose, nur sanftes Atmen/Wippen
+    hop = 0 if static else (math.sin(t * 2 * math.pi / 2.0) * .5 + .5) * 8
     shd = Image.new("RGBA", (420, 120), (0, 0, 0, 0)); ImageDraw.Draw(shd).ellipse((40, 30, 380, 90), fill=(20, 60, 100, 80))
     fr.alpha_composite(shd.filter(ImageFilter.GaussianBlur(16)), (int(800 - 210), 1800 - 60))
     fr.alpha_composite(p, (int(800 - p.width / 2), int(1800 - p.height - hop)))
