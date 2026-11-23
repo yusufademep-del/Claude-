@@ -50,7 +50,7 @@
  "link_hint": true,
  "link_hint_text": "Link-Sticker hier platzieren",
  "bubble": "Bei Fragen schreib mir gerne!",
- "risk": "CFDs sind komplexe Instrumente mit hohem Verlustrisiko durch Hebelwirkung. Bitte aktuellen Risikohinweis von eToro prüfen.",
+ "risk": "*Aktionsbedingungen laut eToro-Partnerangebot. CFDs sind komplexe Instrumente mit hohem Verlustrisiko durch Hebelwirkung. Bitte aktuellen Risikohinweis von eToro prüfen.",
  "file2": "story_etoro_eisscholle",
  "headline1": "DEIN START",
  "headline2": "AN DER BÖRSE",
@@ -89,5 +89,10 @@
   ]
  ],
  "hole_text": "Link-Sticker aufs Eisloch",
- "bubble2": "Fragen? Schreib mir!"
+ "bubble2": "Fragen? Schreib mir!",
+ "featured": [
+  "1f381",
+  "50 € GRATIS IN AKTIEN",
+  "bei einmalig 200 € Einzahlung*"
+ ]
 }

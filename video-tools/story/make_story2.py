@@ -64,6 +64,21 @@ def floe(code, title, sub, seed):
     ld.text((30 + 112, 30 + 96), sub, font=F(INTER("600SemiBold"), 25), fill=(30, 120, 170))
     return lay
 FLOES = [floe(c, a, b, i + 4) for i, (c, a, b) in enumerate(C["floes"])]
+def featured_floe(code, title, sub):
+    rng = np.random.RandomState(21); w, h = 940, 190; pts = []
+    for k in range(18):
+        a = k / 18 * 2 * math.pi; r = 1 + rng.uniform(-.04, .05)
+        pts.append((w / 2 + math.cos(a) * w / 2 * r * .97, h / 2 + math.sin(a) * h / 2 * r * .9))
+    lay = Image.new("RGBA", (w + 60, h + 90), (0, 0, 0, 0)); ld = ImageDraw.Draw(lay)
+    sh = Image.new("RGBA", lay.size, (0, 0, 0, 0)); ImageDraw.Draw(sh).polygon([(x + 30, y + 56) for x, y in pts], fill=(160, 110, 0, 90)); lay.alpha_composite(sh.filter(ImageFilter.GaussianBlur(14)))
+    ld.polygon([(x + 30, y + 46) for x, y in pts], fill=(222, 170, 40, 255))
+    ld.polygon([(x + 30, y + 30) for x, y in pts], fill=(255, 236, 150, 255), outline=(236, 190, 60, 255))
+    ld.polygon([(x + 40, y + 36) for x, y in pts[:6]] + [(w / 2 + 30, h / 2 + 30)], fill=(255, 245, 196, 255))
+    lay.alpha_composite(em(code, 96), (30 + 46, 30 + (h - 96) // 2))
+    ft = F(ANTON, 72); ld.text((30 + 170, 30 + 22), title, font=ft, fill=INK)
+    ld.text((30 + 172, 30 + 118), sub, font=F(INTER("700Bold"), 30), fill=(150, 95, 0))
+    return lay
+FEAT = featured_floe(*C["featured"]) if C.get("featured") else None
 
 def key(path):
     a = np.asarray(Image.open(path).convert("RGB")).astype(np.int16)
@@ -96,14 +111,20 @@ def frame(t, hint=True, static=False):
     hd.text((W / 2 - bw / 2, 286 - fb.size * .6), bl, font=fb, fill=(255, 255, 255))
     paste_c(fr, hl, W / 2, 268 + 165, max(.01, .88 + .12 * e), clamp(e * 2), (1 - clamp(e)) * -4)
     # Eisschollen (Zickzack)
-    pos = [(285, 700), (795, 700), (285, 880), (795, 880), (285, 1060), (795, 1060)]
+    if FEAT is not None:
+        kf = 1 if static else back((t - .3) / .6)
+        glow = 0 if static else .5 + .5 * math.sin(t * 3)
+        paste_c(fr, FEAT, W / 2, 752 + (0 if static else math.sin(t * 1.6) * 6) + (1 - clamp(kf)) * 60, max(.01, (.85 + .15 * kf) * (1 + .015 * glow)), clamp(kf * 2), 0 if static else math.sin(t * 1.1) * 1.0)
+        for sgn in (-1, 1): paste_c(fr, em("2728", 60), W / 2 + sgn * 455, 680 + math.sin(t * 3 + sgn) * 8, .7 + .3 * glow)
+    oy = 120 if FEAT is not None else 0
+    pos = [(285, 700 + oy + 75), (795, 700 + oy + 75), (285, 880 + oy + 50), (795, 880 + oy + 50), (285, 1060 + oy + 25), (795, 1060 + oy + 25)]
     for i, (im, (x, y)) in enumerate(zip(FLOES, pos)):
         k = 1 if static else back((t - .4 - i * .12) / .55)
         bob = 0 if static else math.sin(t * 1.8 + i * 1.1) * 7
         rot = 0 if static else math.sin(t * 1.3 + i) * 1.6
         paste_c(fr, im, x, y + bob + (1 - clamp(k)) * 60, max(.01, .85 + .15 * k), clamp(k * 2), rot)
     # Eisloch (Link-Fläche)
-    hx, hy = W / 2, 1300
+    hx, hy = W / 2 - (40 if FEAT is not None else 0), 1300 + (112 if FEAT is not None else 0)
     ice = Image.new("RGBA", (760, 300), (0, 0, 0, 0)); idr = ImageDraw.Draw(ice)
     idr.ellipse((10, 30, 750, 290), fill=(255, 255, 255, 255), outline=(205, 228, 244, 255), width=4)
     idr.ellipse((90, 70, 670, 250), fill=(36, 110, 160, 255))
@@ -124,11 +145,12 @@ def frame(t, hint=True, static=False):
         pd.text((40, 43 - fh.size * .6), ht, font=fh, fill=(28, 120, 60))
         paste_c(fr, pill, hx, hy, 1 + .03 * pulse)
     # Pinguin rechts unten zeigt aufs Loch, Sprechblase links
-    p = pen("q", "closed", 470)  # eine feste Pose, nur sanftes Atmen/Wippen
+    p = pen("q", "closed", 400 if FEAT is not None else 470)  # eine feste Pose, nur sanftes Atmen/Wippen
     hop = 0 if static else (math.sin(t * 2 * math.pi / 2.0) * .5 + .5) * 8
     shd = Image.new("RGBA", (420, 120), (0, 0, 0, 0)); ImageDraw.Draw(shd).ellipse((40, 30, 380, 90), fill=(20, 60, 100, 80))
-    fr.alpha_composite(shd.filter(ImageFilter.GaussianBlur(16)), (int(800 - 210), 1800 - 60))
-    fr.alpha_composite(p, (int(800 - p.width / 2), int(1800 - p.height - hop)))
+    px = 905 if FEAT is not None else 800; pyb = 1830 if FEAT is not None else 1800
+    fr.alpha_composite(shd.filter(ImageFilter.GaussianBlur(16)), (int(px - 210), pyb - 60))
+    fr.alpha_composite(p, (int(px - p.width / 2), int(pyb - p.height - hop)))
     # Comic-Sprechblase
     fb2 = F(INTER("800ExtraBold"), 40); bt = C["bubble2"]; bw2 = fb2.getlength(bt)
     bb = Image.new("RGBA", (int(bw2) + 100, 170), (0, 0, 0, 0)); bdr = ImageDraw.Draw(bb)
@@ -137,7 +159,7 @@ def frame(t, hint=True, static=False):
     bdr.line([(bb.width - 118, 108), (bb.width - 62, 108)], fill=(255, 255, 255, 255), width=8)
     bdr.text((50, 60 - fb2.size * .62), bt, font=fb2, fill=NAVY)
     k = 1 if static else back((t - 1.3) / .5)
-    paste_c(fr, bb, 330, 1560 + (0 if static else math.sin(t * 2) * 5), max(.01, .8 + .2 * k), clamp(k * 2), 0 if static else math.sin(t * 1.5) * 2)
+    paste_c(fr, bb, 340, 1650 + (0 if static else math.sin(t * 2) * 5), max(.01, .8 + .2 * k), clamp(k * 2), 0 if static else math.sin(t * 1.5) * 2)
     # Risikohinweis
     fr2 = F(INTER("500Medium"), 21); words = C["risk"].split(); lines = [""]
     for w_ in words:
