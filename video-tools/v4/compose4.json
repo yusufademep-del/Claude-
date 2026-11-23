@@ -5,16 +5,16 @@
  "music_lufs": -33,
  "sfx_gain": 0.45,
  "dof_blur": 6,
+ "dur": 46.5,
+ "topic": "NVIDIA",
+ "date_long": "23.11.2026",
  "particles": {
   "n": 14,
   "t0": 0,
-  "t1": 47.4
+  "t1": 46.5
  },
- "dur": 47.4,
- "topic": "ERHOLUNG?",
- "date_long": "23.11.2026",
  "filter": {
-  "t1": 6.9,
+  "t1": 3.8,
   "fade": 0.9,
   "blur": 3,
   "strength": 0.5,
@@ -26,24 +26,24 @@
  },
  "banner": {
   "t0": 0.1,
-  "t1": 7.1,
+  "t1": 4.0,
   "y": 250,
   "size": 96,
   "lines": [
    [
     [
-     "FAST ALLES",
+     "PAUKENSCHLAG",
      "black"
-    ],
-    [
-     "GRÜN",
-     "green"
     ]
    ],
    [
     [
-     "EINSTIEGSSIGNAL?",
-     "gold"
+     "BEI",
+     "black"
+    ],
+    [
+     "NVIDIA!",
+     "green"
     ]
    ]
   ]
@@ -51,50 +51,50 @@
  "poses": [
   [
    0,
-   "explain"
-  ],
-  [
-   2.0,
-   "base"
-  ],
-  [
-   7.2,
-   "q"
-  ],
-  [
-   9.1,
    "shock"
   ],
   [
-   17.8,
+   1.8,
    "explain"
   ],
   [
-   21.8,
-   "shock"
-  ],
-  [
-   26.9,
-   "q"
-  ],
-  [
-   29.6,
-   "explain"
-  ],
-  [
-   35.4,
-   "q"
-  ],
-  [
-   39.3,
-   "explain"
-  ],
-  [
-   43.0,
+   9.4,
    "base"
   ],
   [
-   45.0,
+   14.4,
+   "shock"
+  ],
+  [
+   16.0,
+   "q"
+  ],
+  [
+   18.9,
+   "explain"
+  ],
+  [
+   29.36,
+   "shock"
+  ],
+  [
+   31.1,
+   "explain"
+  ],
+  [
+   34.4,
+   "q"
+  ],
+  [
+   36.8,
+   "explain"
+  ],
+  [
+   42.2,
+   "base"
+  ],
+  [
+   44.0,
    "explain"
   ]
  ],
@@ -104,287 +104,304 @@
    "full"
   ],
   [
-   9.1,
+   3.3,
+   "mid"
+  ],
+  [
+   4.1,
+   "full"
+  ],
+  [
+   14.5,
    "close"
   ],
   [
-   10.6,
+   16.0,
+   "full"
+  ],
+  [
+   20.5,
    560,
    2700
   ],
   [
-   17.8,
+   29.4,
    "mid"
   ],
   [
-   19.0,
+   31.0,
    "full"
   ],
   [
-   28.3,
-   "mid"
-  ],
-  [
-   29.6,
-   "full"
-  ],
-  [
-   41.0,
+   37.5,
    "close"
   ],
   [
-   43.0,
+   38.9,
    "full"
   ]
  ],
  "headlines": [
   {
-   "t0": 7.3,
-   "t1": 9.05,
-   "text": "EINSTEIGEN?",
-   "y": 360
-  },
-  {
-   "t0": 9.14,
-   "t1": 10.3,
-   "text": "NICHT\nUNBEDINGT!",
-   "y": 360,
+   "t0": 14.45,
+   "t1": 15.4,
+   "text": "ACHTUNG!",
+   "y": 380,
    "color": "red"
   },
   {
-   "t0": 28.3,
-   "t1": 32.8,
-   "text": "DEAD CAT\nBOUNCE",
+   "t0": 15.45,
+   "t1": 20.2,
+   "text": "NICHT AUS PANIK\nREINSPRINGEN!",
+   "y": 360,
+   "color2": "red",
+   "size": 106
+  },
+  {
+   "t0": 29.4,
+   "t1": 31.0,
+   "text": "NICHT IMMER!",
+   "y": 380,
+   "color": "red"
+  },
+  {
+   "t0": 36.8,
+   "t1": 38.85,
+   "text": "KEIN\nPANIK-KAUF",
    "y": 360,
    "color2": "red"
   },
   {
-   "t0": 33.0,
-   "t1": 35.4,
-   "text": "EIN GRÜNER TAG =\nKEIN SIGNAL",
-   "y": 360,
-   "color2": "red",
-   "size": 108
-  },
-  {
-   "t0": 35.5,
-   "t1": 39.2,
-   "text": "HÄLT DIE\nERHOLUNG?",
-   "y": 360
-  },
-  {
-   "t0": 43.05,
-   "t1": 47.4,
+   "t0": 42.25,
+   "t1": 46.5,
    "text": "FOLG\nBÖRSENLEHRE",
    "y": 360
   },
   {
-   "t0": 45.1,
-   "t1": 47.4,
+   "t0": 44.05,
+   "t1": 46.5,
    "text": "KEINE ANLAGEBERATUNG",
    "y": 640,
    "size": 56,
    "color": "lgrey"
   }
  ],
- "counts": [
+ "counts": [],
+ "cards": [
   {
-   "t0": 2.1,
-   "t1": 4.3,
-   "from": 0,
-   "to": 0.9,
-   "dec": 1,
-   "suffix": " %",
-   "color": "green",
-   "y": 650,
-   "size": 170,
-   "sub": "DAX · HEUTE VORMITTAG",
-   "sub_t": 2.6,
-   "dur": 0.9
+   "t0": 4.2,
+   "t1": 12.4,
+   "y": 330,
+   "title": "Nvidia-Chaos",
+   "tag": "NVDA",
+   "sub": "Was in 11 Tagen passiert ist",
+   "rows": [
+    {
+     "t": 4.4,
+     "label": "Rücktritt",
+     "value": "vor 11 Tagen",
+     "size": 50,
+     "color": "red"
+    },
+    {
+     "t": 7.4,
+     "label": "Vorstand",
+     "value": "einstimmig zurück",
+     "size": 44
+    },
+    {
+     "t": 9.4,
+     "label": "Aktie",
+     "count": {
+      "from": 0,
+      "to": 30,
+      "dec": 0,
+      "prefix": "+ ca. ",
+      "suffix": " %",
+      "dur": 1.2
+     },
+     "color": "green"
+    }
+   ],
+   "footer": "Kursplus zeitweise, laut Berichten · Zwischenstand"
   },
   {
-   "t0": 4.4,
-   "t1": 7.1,
-   "from": 0,
-   "to": 3,
-   "dec": 0,
-   "prefix": "ca. ",
-   "suffix": " %",
-   "color": "green",
-   "y": 650,
-   "size": 170,
-   "sub": "NASDAQ-FUTURES · VORBÖRSLICH",
-   "sub_t": 4.9,
-   "dur": 1.0
+   "t0": 38.9,
+   "t1": 42.1,
+   "y": 330,
+   "title": "Statt Panik-Kauf",
+   "tag": "3 SCHRITTE",
+   "sub": "Gilt auch bei grünen Tagen",
+   "rows": [
+    {
+     "t": 38.98,
+     "label": "Plan machen",
+     "value": "vorher",
+     "size": 50
+    },
+    {
+     "t": 39.77,
+     "label": "Risiko kennen",
+     "value": "Stop & Größe",
+     "size": 46
+    },
+    {
+     "t": 40.98,
+     "label": "In Ruhe entscheiden",
+     "value": "kein FOMO",
+     "size": 46,
+     "color": "green"
+    }
+   ],
+   "footer": "Keine Anlageberatung"
   }
  ],
- "cards": [],
  "toppills": [
   {
-   "t0": 10.6,
-   "t1": 18.8,
-   "text": "S&P 500 · die 10 stärksten Tage",
+   "t0": 12.5,
+   "t1": 14.2,
+   "text": "DAX · Nasdaq · alles grün",
    "y": 300
   },
   {
-   "t0": 19.1,
-   "t1": 26.8,
-   "text": "Beispiel: Oktober 2008",
+   "t0": 20.5,
+   "t1": 34.2,
+   "text": "Kurslücke (Gap) · vereinfacht",
+   "y": 300
+  },
+  {
+   "t0": 34.4,
+   "t1": 36.7,
+   "text": "Untersuchung zu Nvidia läuft weiter",
    "y": 300
   }
  ],
  "labels": [
   {
-   "t0": 17.5,
-   "t1": 18.8,
+   "t0": 23.3,
+   "t1": 25.3,
    "x": 290,
-   "y": 800,
+   "y": 420,
    "w": 500,
-   "h": 150,
-   "title": "alle im Bärenmarkt",
-   "anchor": [
-    540,
-    640
-   ]
+   "h": 140,
+   "title": "Gap = Kurslücke"
   },
   {
-   "t0": 24.4,
-   "t1": 26.8,
-   "x": 440,
-   "y": 1010,
-   "w": 580,
-   "h": 190,
-   "title": "danach 5 Monate abwärts",
-   "sub": "Okt 2008 → Tief im März 2009",
-   "anchor": [
-    880,
-    860
-   ]
+   "t0": 27.8,
+   "t1": 29.2,
+   "x": 290,
+   "y": 420,
+   "w": 500,
+   "h": 140,
+   "title": "Einstieg günstiger?"
   },
   {
-   "t0": 40.9,
-   "t1": 42.9,
-   "x": 140,
-   "y": 540,
-   "w": 800,
+   "t0": 31.9,
+   "t1": 34.2,
+   "x": 90,
+   "y": 400,
+   "w": 900,
    "h": 200,
-   "title": "„Erholung auf Bewährung“",
-   "size": 50,
-   "sub": "Jochen Stanzl, Consorsbank (via dpa-AFX)"
+   "title": "Gap ≥ 10 %: nur ~26 % schließen am selben Tag",
+   "size": 36,
+   "sub": "Gap ≥ 20 %: ~18 % · Quelle: Gap-Studie (US-Aktien)"
   }
  ],
  "dimlines": [],
  "emojis": [
   {
+   "code": "1f4a5",
+   "t0": 0.3,
+   "t1": 4.0,
+   "x": 880,
+   "y": 1000,
+   "size": 140
+  },
+  {
    "code": "1f4c8",
-   "t0": 0.4,
-   "t1": 7.0,
-   "x": 180,
-   "y": 1040,
-   "size": 140
-  },
-  {
-   "code": "1f680",
-   "t0": 4.5,
-   "t1": 7.0,
-   "x": 900,
-   "y": 1000,
-   "size": 140
-  },
-  {
-   "code": "1f914",
-   "t0": 7.4,
-   "t1": 9.1,
+   "t0": 12.6,
+   "t1": 14.2,
    "x": 880,
    "y": 1000,
    "size": 140
   },
   {
-   "code": "1f43b",
-   "t0": 17.9,
-   "t1": 18.8,
-   "x": 880,
-   "y": 1040,
-   "size": 140
-  },
-  {
-   "code": "1faa8",
-   "t0": 30.2,
-   "t1": 32.8,
-   "x": 880,
-   "y": 1040,
-   "size": 120
-  },
-  {
-   "code": "2753",
-   "t0": 35.6,
-   "t1": 39.2,
+   "code": "26a0",
+   "t0": 15.5,
+   "t1": 20.2,
    "x": 190,
-   "y": 1060,
-   "size": 130
+   "y": 1000,
+   "size": 140
+  },
+  {
+   "code": "1f50d",
+   "t0": 34.4,
+   "t1": 36.7,
+   "x": 880,
+   "y": 1000,
+   "size": 140
   },
   {
    "code": "2b50",
-   "t0": 43.2,
-   "t1": 47.4,
+   "t0": 42.4,
+   "t1": 46.5,
    "x": 190,
    "y": 760,
    "size": 130
   },
   {
    "code": "1f447",
-   "t0": 43.7,
-   "t1": 47.4,
+   "t0": 42.9,
+   "t1": 46.5,
    "x": 890,
    "y": 760,
    "size": 130
   }
  ],
  "marks": [
-  9.43,
-  13.06,
-  17.28,
-  28.91,
-  34.57,
-  41.96
+  3.32,
+  14.64,
+  19.47,
+  30.53,
+  37.81
  ],
  "accents": [
-  9.43,
-  28.91
+  3.32,
+  14.64,
+  30.53
  ],
  "segments": [
-  7.2,
-  10.4,
-  19.0,
-  26.9,
-  32.9,
-  43.0
+  4.1,
+  14.3,
+  20.3,
+  34.3,
+  42.2
  ],
- "cash": [],
+ "cash": [
+  9.4
+ ],
  "boom": [
-  9.43
+  14.64
  ],
  "bell": [],
  "capmap": {
-  "US-Futures": "FUTURES",
-  "Crash-Phasen": "CRASH",
-  "Plus-Tage": "PLUS-TAGE"
+  "Panik-Kauf": "PANIK-KAUF"
  },
  "cover": {
-  "rubrik": "SPEZIALAUSGABE",
+  "rubrik": "BÖRSENNEWS",
   "lines": [
    [
-    "Alles grün:",
+    "Jensen Huang",
     "black"
    ],
    [
-    "Einstiegssignal?",
+    "ist zurück!",
     "accent"
    ]
   ],
-  "pose": "q",
-  "mouth": "closed",
-  "file": "cover_alles_gruen_einstieg",
+  "pose": "shock",
+  "mouth": "open",
+  "file": "cover_nvidia_huang_zurueck",
   "pen_w": 1150,
   "pen_dx": 20
  }

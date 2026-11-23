@@ -315,6 +315,38 @@ const bSteps = []; for (let i = 0; i < 4; i++) { const h = 3.2 - i * 0.9; const 
 const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.62, 1), M(0x6b6f7c, 0.7)); rock.castShadow = true; bnc.add(rock);
 const bArrow = new THREE.Group(); { const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.9, 12), green); sh.position.y = 0.45; bArrow.add(sh); const hd = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.5, 18), green); hd.position.y = 1.1; bArrow.add(hd); cast(bArrow); } bnc.add(bArrow);
 
+
+/* ---------- GPU-Chip mit Krone (Chef ist zurück) ---------- */
+const gpu = grp("gpu", ST.gpu != null ? ST.gpu : -200, -3.6);
+const gpuB = new THREE.Group(); gpu.add(gpuB);
+const nvGreen = M(0x76b900, 0.45, { emissive: lin(0x112600) });
+{ const board = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.35, 3.2), M(0x1f2329, 0.5)); board.position.y = 1.2; gpuB.add(board);
+  const die = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.3, 1.8), M(0x3a3f4a, 0.35, { metalness: 0.4 })); die.position.y = 1.5; gpuB.add(die);
+  const top = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 1.2), nvGreen); top.position.y = 1.68; gpuB.add(top);
+  for (let i = 0; i < 12; i++) { const fin = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.7, 2.6), M(0xb8bcc8, 0.3, { metalness: 0.6 })); fin.position.set(-2.4 + i * 0.12 + (i > 5 ? 3.4 : 0), 1.72, 0); gpuB.add(fin); }
+  for (let k = 0; k < 10; k++) for (const sg of [-1, 1]) { const pin = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.3), gold); pin.position.set(-2.2 + k * 0.48, 1.0, sg * 1.75); gpuB.add(pin); }
+  const g = text3d("GPU", 0.5, nvGreen, 0.12); g.rotation.x = -Math.PI / 2; g.position.set(0, 1.72, 0.85); gpuB.add(g);
+  cast(gpuB); }
+const crown = new THREE.Group(); gpu.add(crown);
+{ const band = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.95, 0.55, 40, 1, true), gold); band.material.side = THREE.DoubleSide; crown.add(band);
+  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; const sp = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.7, 14), gold); sp.position.set(Math.cos(a) * 0.85, 0.6, Math.sin(a) * 0.85); crown.add(sp);
+    const gem = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), red); gem.position.set(Math.cos(a) * 0.92, 0.05, Math.sin(a) * 0.92); crown.add(gem); }
+  cast(crown); }
+/* ---------- Kerzenchart mit Kurslücke (Gap) ---------- */
+const gapG = grp("gap", ST.gap != null ? ST.gap : -200, -3.6); gapG.position.y = 0.9;
+const gapC = [];
+const GAPDATA = S.gapData || [[1.6, 1.0, 1], [1.8, 0.9, 0], [1.7, 1.1, 1], [1.9, 0.8, 0], [1.75, 1.0, 1], /* Sprung */ [4.4, 1.2, 1], [4.9, 0.9, 1], [4.6, 1.1, 0], [5.2, 1.0, 1], [5.6, 0.9, 1]];
+GAPDATA.forEach(([y, h, up], i) => { const c = new THREE.Group();
+  const b = new THREE.Mesh(new THREE.BoxGeometry(0.5, h, 0.5), up ? green : red); c.add(b);
+  const w = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, h + 0.7, 8), dark); c.add(w); cast(c);
+  c.userData = { x: -4.2 + i * 0.93 + (i >= 5 ? 0.25 : 0), y }; c.position.set(c.userData.x, y, 0); gapG.add(c); gapC.push(c); });
+const gapZone = new THREE.Mesh(new THREE.BoxGeometry(5.0, 1.0, 0.2), new THREE.MeshStandardMaterial({ color: lin(0x76b900), transparent: true, opacity: 0.22, roughness: 0.5 }));
+gapZone.position.set(2.8, (2.4 + 3.8) / 2, -0.4); gapZone.scale.y = 1.4; gapG.add(gapZone);
+const gapEdges = [2.3, 3.75].map(y => { const e = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.05, 0.05), M(0x5a8f00, 0.5)); e.position.set(2.8, y, -0.3); gapG.add(e); return e; });
+const ghost = new THREE.Group(); { for (let i = 0; i < 7; i++) { const d = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.32, 0.1), red); d.position.set(0, -i * 0.5, 0); ghost.add(d); }
+  const hd = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.55, 18), red); hd.rotation.z = Math.PI; hd.position.y = -3.6; ghost.add(hd); cast(ghost); }
+ghost.position.set(1.4, 5.6, 0.4); gapG.add(ghost);
+
 /* ---------- Kamera ---------- */
 // S.cams: [[t, station|x, opts]] – Fahrt startet `lead` s vor t und dauert `move` s; dazwischen langsamer Dolly.
 const CAMS = (S.cams || [[0, "intro"]]).map(c => ({ t: c[0], x: typeof c[1] === "string" ? ST[c[1]] : c[1], o: c[2] || {} }));
@@ -429,6 +461,18 @@ window.renderAt = function (t) {
       const h0 = 3.2 - (i + 0.5) * 0.9, h1 = 3.2 - (i + 1.5) * 0.9; x = -2.0 + (i + fr) * 2.0; y = (i < 3 ? Math.max(0.3, h0) + (Math.max(0.3, h1) - Math.max(0.3, h0)) * fr * fr : 0.3) + 0.5 + Math.sin(fr * Math.PI) * 0.4; if (u >= 1) { x = 4.0; y = 0.8; } }
     rock.position.set(x, y, 0.2); rock.rotation.z = -d * 3;
     const ak = clamp((d - 0.7) / 0.2) * (1 - clamp((d - 1.5) / 0.3)); bArrow.scale.setScalar(Math.max(0.001, ak)); bArrow.position.set(-2.4, 5.2, 0.3); }
+
+  const GP = S.gpuT || [1e9, 1e9];
+  if (near(gpu)) { const k = appear(t, GP[0], 0.8); gpuB.scale.setScalar(Math.max(0.001, k)); gpuB.rotation.y = (1 - clamp(k)) * 2.5 + Math.sin(t * 0.6) * 0.2; gpuB.position.y = Math.sin(t * 1.5) * 0.1;
+    const ck = easeOut((t - GP[1]) / 0.9); crown.visible = t >= GP[1]; crown.position.set(0, 1.95 + (1 - ck) * 6 + (ck >= 1 ? Math.abs(Math.sin((t - GP[1] - 0.9) * 4)) * 0.0 : 0), 0); crown.rotation.y = t * 0.8; crown.scale.setScalar(1.0 + 0.15 * Math.max(0, Math.sin((t - GP[1] - 0.9) * 8)) * Math.exp(-Math.max(0, t - GP[1] - 0.9) * 3)); }
+  const GA = S.gapT || {};
+  if (near(gapG)) {
+    gapC.forEach((c, i) => { const t0 = i < 5 ? (GA.t0 || 1e9) + i * 0.12 : (i === 5 ? (GA.jump || 1e9) : (GA.more || 1e9) + (i - 6) * 0.18);
+      const k = easeOutBack((t - t0) / 0.45); c.scale.setScalar(Math.max(0.001, clamp(k * 1.1))); c.position.y = c.userData.y + (1 - clamp(k)) * (i === 5 ? -2.5 : 1.5); });
+    const zk = clamp((t - (GA.zone || 1e9)) / 0.5); gapZone.material.opacity = 0.25 * zk + 0.15 * zk * Math.max(0, Math.sin(t * 4)) * (t < (GA.more || 1e9) ? 1 : 0); gapZone.visible = zk > 0; gapEdges.forEach(e => { e.scale.x = Math.max(0.001, easeOut(zk)); });
+    const gk = clamp((t - (GA.ghost || 1e9)) / 0.6); const go = clamp((t - (GA.more || 1e9)) / 0.4);
+    ghost.visible = gk > 0 && go < 1; ghost.children.forEach((d, i) => { d.visible = i <= gk * 8; }); ghost.scale.setScalar(1 - go * 0.9);
+  }
   renderer.render(scene, camera);
 };
 window.READY = true;
