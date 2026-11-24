@@ -24,7 +24,7 @@ Diese Regeln gelten für jedes Video, das für den Kanal „Börsenlehre“ erst
 - **Filter am Anfang** (`filter` in compose4.json): weicher Rosa-Lila-Verlauf + leichte Unschärfe über dem Hintergrund,
   blendet beim ersten Kamerawechsel aus. Bei Close-ups Tiefenunschärfe im Hintergrund (`dof_blur`).
 - **Aus Vorlage 2 („Rechenzentren im All“):** Titel-Banner oben (cremefarbener Kasten, 2 Zeilen Anton, ein Wort gold;
-  `banner`), schwebende lila Bokeh-Partikel + kleine Sterne (`particles`), Orbit-Kamera um ein Held-Objekt
+  `banner`), **keine** schwebenden Bokeh-Partikel/„Blasen“ mehr (`particles` weglassen – Wunsch vom 24.11.), Orbit-Kamera um ein Held-Objekt
   (`cams` mit `orbit`/`a0`/`z`), Pinguin verlässt das Bild nach unten für reine 3D-Passagen (`shots` mit `[t, 560, 2700]`)
   und kommt zur Pointe im Close-up zurück, kleine Pille oben (`toppills`), Maßlinie mit Beschriftung (`dimlines`),
   Glas-Etikett mit Zeigerlinie (`labels`). Weitere 3D-Bausteine: Kalender-Held, rote Kerzen, Fabrik mit Flaggen + Rauch,
