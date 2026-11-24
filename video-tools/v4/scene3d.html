@@ -139,9 +139,10 @@ tower(ST.gain, -15, 8, 22, 6, matsB); tower(ST.gain - 8.5, -13, 5.5, 11, 5, mats
 rotunda(ST.cmp, -14, 4.0, 11); tower(ST.cmp - 9, -13, 6, 12, 5, matsB); tower(ST.cmp + 9, -13, 6, 18, 5, matsA);
 tower(ST.cup, -15, 7, 20, 6, matsA); tower(ST.cup - 8.5, -13, 6, 13, 5, matsC); tower(ST.cup + 8.5, -13, 6, 10, 5, matsB);
 exchange(ST.outro, -10.5, 1.0); tower(ST.outro - 9, -13, 6, 14, 5, matsB); tower(ST.outro + 9.5, -13.5, 6.5, 16, 5, matsA);
-for (let x = -24; x < 160; x += 9) lamp(x, -2.6);
-for (let x = -20; x < 160; x += 18) trafficLight(x + 5.5, -2.4);
-for (let x = -16; x < 160; x += 13) tree(x + 2, -7.8);
+const DCX = (S.stations && S.stations.dc != null) ? S.stations.dc : 150; const nearDC = (x) => Math.abs(x - DCX) < 9;
+for (let x = -24; x < 160; x += 9) if (!nearDC(x)) lamp(x, -2.6);
+for (let x = -20; x < 160; x += 18) if (!nearDC(x + 5.5)) trafficLight(x + 5.5, -2.4);
+for (let x = -16; x < 160; x += 13) if (!nearDC(x + 2)) tree(x + 2, -7.8);
 // zweite Reihe (Tiefe)
 for (let x = -30; x < 170; x += 11) tower(x + rnd() * 4, -30 - rnd() * 8, 6 + rnd() * 4, 14 + rnd() * 16, 6, [matsA, matsB, matsC][Math.floor(rnd() * 3)]);
 
@@ -348,21 +349,60 @@ const ghost = new THREE.Group(); { for (let i = 0; i < 7; i++) { const d = new T
   const hd = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.55, 18), red); hd.rotation.z = Math.PI; hd.position.y = -3.6; ghost.add(hd); cast(ghost); }
 ghost.position.set(1.4, 5.6, 0.4); gapG.add(ghost);
 
+
+/* ---------- Rechenzentrum: Gebäude mit Tor, Kamera fliegt hinein ---------- */
+const dcG = grp("dc", DCX, 0); dcG.userData.range = 40;
+const dcLeds = [];
+{ const FZ = -6, BZ = -30, HW = 9, HH = 9, DW = 5.2, DH = 6.4;
+  const wallM = M(0xf2eff7, 0.85), trim = M(0xd9d3e6, 0.85), glassM = new THREE.MeshStandardMaterial({ color: lin(0xcfe3f2), roughness: 0.15, transparent: true, opacity: 0.35 });
+  const box = (w, h, d, x, y, z, m) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.castShadow = true; b.receiveShadow = true; dcG.add(b); return b; };
+  // Fassade (links, rechts, Sturz)
+  const sideW = HW - DW / 2;
+  box(sideW, HH, 0.8, -(DW / 2 + sideW / 2), HH / 2, FZ, wallM); box(sideW, HH, 0.8, DW / 2 + sideW / 2, HH / 2, FZ, wallM);
+  box(DW, HH - DH, 0.8, 0, DH + (HH - DH) / 2, FZ, wallM);
+  box(DW + 0.6, 0.35, 1.0, 0, DH + 0.15, FZ + 0.1, trim); box(0.35, DH, 1.0, -DW / 2 - 0.15, DH / 2, FZ + 0.1, trim); box(0.35, DH, 1.0, DW / 2 + 0.15, DH / 2, FZ + 0.1, trim);
+  for (const sx of [-1, 1]) for (let r = 0; r < 3; r++) for (let k = 0; k < 2; k++) { const g = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.4, 0.1), glassM); g.position.set(sx * (DW / 2 + 1.2 + k * 1.9), 2.2 + r * 2.2, FZ + 0.45); dcG.add(g); }
+  const sign = text3d("KI-RECHENZENTRUM", 0.52, dark, 0.12); sign.position.set(0, HH - 1.05, FZ + 0.5); dcG.add(sign);
+  // Seiten, Dach, Rückwand, Boden, Decke
+  box(0.8, HH, FZ - BZ, -HW, HH / 2, (FZ + BZ) / 2, wallM); box(0.8, HH, FZ - BZ, HW, HH / 2, (FZ + BZ) / 2, wallM);
+  box(2 * HW + 0.8, 0.6, FZ - BZ + 0.8, 0, HH + 0.3, (FZ + BZ) / 2, trim);
+  box(2 * HW, HH, 0.8, 0, HH / 2, BZ, wallM);
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(2 * HW, 0.1, FZ - BZ), M(0xe9e6ef, 0.6)); floor.position.set(0, 0.05, (FZ + BZ) / 2); floor.receiveShadow = true; dcG.add(floor);
+  for (let z = FZ - 3; z > BZ + 2; z -= 2.4) { const strip = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.02, 1.6), M(0x9fb4c8, 0.5)); strip.position.set(0, 0.11, z); dcG.add(strip); }
+  // Deckenlichter
+  for (let z = FZ - 2.5; z > BZ + 1; z -= 3) for (const x of [-3.2, 3.2]) { const l = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.08, 0.6), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.9 })); l.position.set(x, HH - 0.35, z); dcG.add(l); }
+  const inLight = new THREE.PointLight(0xffffff, 0.6, 40); inLight.position.set(0, HH - 1.5, (FZ + BZ) / 2); dcG.add(inLight);
+  // Server-Reihen links/rechts vom Gang
+  for (const sx of [-1, 1]) for (const off of [2.9, 6.3]) for (let z = FZ - 3; z > BZ + 3; z -= 1.35) {
+    const rk = new THREE.Group();
+    const sh = new THREE.Mesh(new THREE.BoxGeometry(1.4, 4.2, 1.2), M(0x22252e, 0.55)); sh.position.y = 2.1; rk.add(sh);
+    for (let u = 0; u < 9; u++) { const pnl = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.3, 1.0), M(0x343845, 0.5)); pnl.position.set(-sx * 0.71, 0.45 + u * 0.42, 0); rk.add(pnl);
+      for (let q = 0; q < 2; q++) { const led = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.06, 0.1), new THREE.MeshStandardMaterial({ color: q ? 0x4fa3ff : 0x2bff88, emissive: q ? 0x2a7fff : 0x1bd96a, emissiveIntensity: 1 })); led.position.set(-sx * 0.75, 0.45 + u * 0.42, -0.3 + q * 0.25); rk.add(led); dcLeds.push(led); } }
+    rk.position.set(sx * off, 0, z); cast(rk); dcG.add(rk); }
+  // Kabeltrassen
+  for (const sx of [-1, 1]) { const tr = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.15, FZ - BZ - 4), M(0xb7bccb, 0.4, { metalness: 0.4 })); tr.position.set(sx * 3.8, 5.2, (FZ + BZ) / 2 - 1); dcG.add(tr); }
+  // Schild am Ende des Gangs
+  const back = text3d((S.dcTxt) || "DELL · KI-SERVER", 0.7, M(0x2a49b8, 0.4, { emissive: lin(0x0a1a55) }), 0.15); back.position.set(0, 6.3, BZ + 0.5); dcG.add(back);
+  const scr = new THREE.Mesh(new THREE.BoxGeometry(5.5, 2.6, 0.15), new THREE.MeshStandardMaterial({ color: lin(0x1b2a4a), emissive: lin(0x0f2a66), emissiveIntensity: 0.6 })); scr.position.set(0, 3.6, BZ + 0.45); dcG.add(scr);
+  for (let k = 0; k < 6; k++) { const bar = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4 + k * 0.28, 0.06), new THREE.MeshStandardMaterial({ color: 0x2bff88, emissive: 0x1bd96a, emissiveIntensity: 0.9 })); bar.position.set(-1.9 + k * 0.75, 2.5 + (0.4 + k * 0.28) / 2, BZ + 0.56); dcG.add(bar); }
+}
+
 /* ---------- Kamera ---------- */
 // S.cams: [[t, station|x, opts]] – Fahrt startet `lead` s vor t und dauert `move` s; dazwischen langsamer Dolly.
 const CAMS = (S.cams || [[0, "intro"]]).map(c => ({ t: c[0], x: typeof c[1] === "string" ? ST[c[1]] : c[1], o: c[2] || {} }));
 const MOVE = S.move || 1.25, LEAD = S.lead || 0.45;
 function camState(t) {
-  let i = 0; for (let k = 0; k < CAMS.length; k++) if (t >= CAMS[k].t - LEAD) i = k;
+  const LD = (cc) => cc.o.lead != null ? cc.o.lead : LEAD, MV = (cc) => cc.o.move != null ? cc.o.move : MOVE;
+  let i = 0; for (let k = 0; k < CAMS.length; k++) if (t >= CAMS[k].t - LD(CAMS[k])) i = k;
   const c = CAMS[i], pv = CAMS[Math.max(0, i - 1)];
-  const base = (cc) => { const p = { x: cc.x + (cc.o.dx || 0), y: cc.o.y || 6.4, z: cc.o.z || 19.5, ly: cc.o.ly || 2.4, fov: cc.o.fov || 42, lx: cc.x + (cc.o.dx || 0) };
+  const base = (cc) => { const p = { x: cc.x + (cc.o.dx || 0), y: cc.o.y || 6.4, z: cc.o.z || 19.5, ly: cc.o.ly || 2.4, fov: cc.o.fov || 42, lx: cc.x + (cc.o.dx || 0), lz: cc.o.lz != null ? cc.o.lz : -4 };
     if (cc.o.orbit) { const R = (cc.o.z || 19.5) + 4, a = (cc.o.a0 || 0) + (t - cc.t) * cc.o.orbit; p.x = p.lx + Math.sin(a) * R; p.z = -4 + Math.cos(a) * R; }
     return p; };
   const A = base(pv), B = base(c);
-  const u = i === 0 ? 1 : easeInOut((t - (c.t - LEAD)) / MOVE);
+  const u = i === 0 ? 1 : easeInOut((t - (c.t - LD(c))) / Math.max(0.001, MV(c)));
   const arc = Math.sin(Math.PI * clamp(u)) * clamp(Math.abs(B.lx - A.lx) / 15);
-  const s = { lx: A.lx + (B.lx - A.lx) * u, x: A.x + (B.x - A.x) * u, y: A.y + (B.y - A.y) * u + arc * 1.4, z: A.z + (B.z - A.z) * u + arc * 3.0, ly: A.ly + (B.ly - A.ly) * u, fov: A.fov + (B.fov - A.fov) * u };
-  const since = Math.max(0, t - (c.t - LEAD + MOVE));
+  const s = { lx: A.lx + (B.lx - A.lx) * u, x: A.x + (B.x - A.x) * u, y: A.y + (B.y - A.y) * u + arc * 1.4, z: A.z + (B.z - A.z) * u + arc * 3.0, ly: A.ly + (B.ly - A.ly) * u, lz: A.lz + (B.lz - A.lz) * u, fov: A.fov + (B.fov - A.fov) * u };
+  const since = Math.max(0, t - (c.t - LD(c) + MV(c)));
   if (!c.o.orbit) s.z -= Math.min(since, 8) * (c.o.dolly != null ? c.o.dolly : 0.22);  // langsamer Dolly
   s.x += Math.sin(t * 0.37) * 0.25; s.y += Math.sin(t * 0.51) * 0.12;
   s.yaw = (B.lx - A.lx) === 0 ? 0 : arc * Math.sign(B.lx - A.lx) * 1.2;     // leichter Schwenk in Fahrtrichtung
@@ -375,7 +415,7 @@ window.renderAt = function (t) {
   let kick = 0; (S.accents || []).forEach(a => { const d = t - a; if (d > 0 && d < 0.6) kick += Math.sin(d * 16) * Math.exp(-d * 7) * 0.18; });
   camera.fov = c.fov; camera.updateProjectionMatrix();
   camera.position.set(c.x + kick * 0.3, c.y + kick, c.z);
-  camera.lookAt(c.lx + c.yaw, c.ly, -4);
+  camera.lookAt(c.lx + c.yaw, c.ly, c.lz);
   sun.position.set(c.lx + 7, 16, 10); sun.target.position.set(c.lx, 0, -4); sun.target.updateMatrixWorld();
   const near = (g) => { g.visible = !g.userData.off && Math.abs(g.position.x - c.lx) < (g.userData.range || 26); return g.visible; };
 
@@ -474,6 +514,7 @@ window.renderAt = function (t) {
     const gk = clamp((t - (GA.ghost || 1e9)) / 0.6); const go = clamp((t - (GA.more || 1e9)) / 0.4);
     ghost.visible = gk > 0 && go < 1; ghost.children.forEach((d, i) => { d.visible = i <= gk * 8; }); ghost.scale.setScalar(1 - go * 0.9);
   }
+  if (near(dcG)) dcLeds.forEach((l, i) => { l.material.emissiveIntensity = 0.3 + 0.7 * (Math.sin(t * 7 + i * 2.3) > -0.2 ? 1 : 0); });
   renderer.render(scene, camera);
 };
 window.READY = true;

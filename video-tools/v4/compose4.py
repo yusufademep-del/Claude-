@@ -409,6 +409,11 @@ for fi in frames_to_do:
     if z > 0.001:
         cw, ch = int(W / (1 + z)), int(H / (1 + z))
         rgb = rgb.crop(((W - cw) // 2, (H - ch) // 2, (W - cw) // 2 + cw, (H - ch) // 2 + ch)).resize((W, H), Image.BILINEAR)
+    for fl in CFG.get("flashes", []):  # [t, dauer, stärke] weicher Weißblitz (z. B. beim Flug ins Gebäude)
+        dd = t - fl[0]; du = fl[1]
+        if -du / 2 <= dd < du / 2:
+            a = (1 - abs(dd) / (du / 2)) * (fl[2] if len(fl) > 2 else 1.0)
+            rgb = Image.blend(rgb, Image.new("RGB", (W, H), (255, 255, 255)), clamp(a))
     if TEST:
         rgb.save(f"{D}/ct_{t:.2f}.jpg"); continue
     ff.stdin.write(rgb.tobytes())

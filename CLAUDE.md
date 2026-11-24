@@ -29,6 +29,8 @@ Diese Regeln gelten für jedes Video, das für den Kanal „Börsenlehre“ erst
   und kommt zur Pointe im Close-up zurück, kleine Pille oben (`toppills`), Maßlinie mit Beschriftung (`dimlines`),
   Glas-Etikett mit Zeigerlinie (`labels`). Weitere 3D-Bausteine: Kalender-Held, rote Kerzen, Fabrik mit Flaggen + Rauch,
   aufgehende Sonne, Server-Rack mit LEDs + 3D-Logotext, Wochen-Kacheln MO–FR. Pro Video nur die nötigen Objekte (`use`).
+  **Flug ins Gebäude** (Vorlage 24.11.): Station `dc` = KI-Rechenzentrum mit Tor; Kamera-Keyframes mit `lz` (Blickziel z),
+  `move`/`lead` pro Keyframe fliegen durchs Tor in die Serverhalle; dazu weicher Weißblitz `flashes: [[t, dauer, stärke]]`.
 - Projekt-Konfigurationen liegen in `video-tools/v4/projects/<name>/` (compose4.json, seg.json, words.json).
 - **Headlines**: große dunkle Anton-Schrift, 1–2 Zeilen (2. Zeile optional rot), Pop-in mit Überschwingen, raus nach oben.
 - **Großer Pinguin** mit weichen Kamerafahrten: `full` ↔ `mid` ↔ `close` (Close-up bei Pointen), 4 Posen

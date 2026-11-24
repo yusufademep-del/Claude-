@@ -111,12 +111,12 @@
    "full"
   ],
   [
-   22.3,
+   21.6,
    560,
    2700
   ],
   [
-   31.0,
+   31.1,
    "full"
   ],
   [
@@ -162,7 +162,7 @@
    "suffix": " MRD. $",
    "sign": false,
    "color": "green",
-   "y": 640,
+   "y": 780,
    "size": 170,
    "sub": "KI-SERVER-AUFTRÄGE (BACKLOG)",
    "sub_t": 33.6,
@@ -262,7 +262,7 @@
  "toppills": [
   {
    "t0": 21.3,
-   "t1": 30.9,
+   "t1": 27.6,
    "text": "Heute ca. 22:00 · Dell-Zahlen",
    "y": 300
   }
@@ -279,30 +279,15 @@
    "size": 40
   },
   {
-   "t0": 27.0,
-   "t1": 29.7,
-   "x": 190,
-   "y": 930,
-   "w": 700,
-   "h": 150,
-   "title": "KI-Server für Rechenzentren",
-   "anchor": [
-    540,
-    760
-   ]
-  },
-  {
-   "t0": 29.8,
+   "t0": 28.0,
    "t1": 30.9,
-   "x": 190,
-   "y": 930,
-   "w": 700,
-   "h": 150,
-   "title": "… mit Nvidia-Chips drin",
-   "anchor": [
-    540,
-    760
-   ]
+   "x": 140,
+   "y": 420,
+   "w": 800,
+   "h": 170,
+   "title": "KI-Server für Rechenzentren",
+   "sub": "vollgepackt mit Nvidia-Chips",
+   "size": 42
   }
  ],
  "dimlines": [],
@@ -403,5 +388,17 @@
   "file": "cover_chips_rot_dell",
   "pen_w": 1150,
   "pen_dx": 20
- }
+ },
+ "flashes": [
+  [
+   26.6,
+   0.9,
+   0.55
+  ],
+  [
+   43.7,
+   0.7,
+   1.0
+  ]
+ ]
 }
