@@ -1,0 +1,402 @@
+{
+ "fps": 60,
+ "channel": "börsenlehre",
+ "shot_dur": 0.6,
+ "music_lufs": -33,
+ "sfx_gain": 0.45,
+ "dof_blur": 6,
+ "dur": 44.2,
+ "topic": "GESTERN & HEUTE",
+ "date_long": "24.11.2026",
+ "particles": {
+  "n": 14,
+  "t0": 0,
+  "t1": 44.2
+ },
+ "filter": {
+  "t1": 5.6,
+  "fade": 0.9,
+  "blur": 3,
+  "strength": 0.5,
+  "tint": [
+   246,
+   206,
+   222
+  ]
+ },
+ "banner": {
+  "t0": 0.1,
+  "t1": 5.7,
+  "y": 250,
+  "size": 96,
+  "lines": [
+   [
+    [
+     "WAS FÜR EIN",
+     "black"
+    ]
+   ],
+   [
+    [
+     "COMEBACK!",
+     "gold"
+    ]
+   ]
+  ]
+ },
+ "poses": [
+  [
+   0,
+   "explain"
+  ],
+  [
+   5.8,
+   "base"
+  ],
+  [
+   8.3,
+   "shock"
+  ],
+  [
+   11.8,
+   "explain"
+  ],
+  [
+   19.25,
+   "shock"
+  ],
+  [
+   21.7,
+   "q"
+  ],
+  [
+   24.0,
+   "explain"
+  ],
+  [
+   33.7,
+   "q"
+  ],
+  [
+   37.4,
+   "explain"
+  ],
+  [
+   39.0,
+   "base"
+  ],
+  [
+   41.0,
+   "explain"
+  ]
+ ],
+ "shots": [
+  [
+   0,
+   "full"
+  ],
+  [
+   8.2,
+   "mid"
+  ],
+  [
+   10.37,
+   "close"
+  ],
+  [
+   11.8,
+   "full"
+  ],
+  [
+   19.25,
+   "close"
+  ],
+  [
+   21.0,
+   "full"
+  ],
+  [
+   34.0,
+   560,
+   2700
+  ],
+  [
+   37.4,
+   "close"
+  ],
+  [
+   39.0,
+   "full"
+  ]
+ ],
+ "headlines": [
+  {
+   "t0": 5.85,
+   "t1": 8.1,
+   "text": "NVIDIA",
+   "y": 380,
+   "color": "green"
+  },
+  {
+   "t0": 19.3,
+   "t1": 21.7,
+   "text": "STIMMUNG\nBLEIBT NERVÖS",
+   "y": 360,
+   "color2": "red"
+  },
+  {
+   "t0": 21.75,
+   "t1": 24.0,
+   "text": "HÄLT DIE\nERHOLUNG?",
+   "y": 360
+  },
+  {
+   "t0": 39.05,
+   "t1": 44.2,
+   "text": "FOLG\nBÖRSENLEHRE",
+   "y": 360
+  },
+  {
+   "t0": 41.75,
+   "t1": 44.2,
+   "text": "KEINE ANLAGEBERATUNG",
+   "y": 640,
+   "size": 56,
+   "color": "lgrey"
+  }
+ ],
+ "counts": [
+  {
+   "t0": 8.2,
+   "t1": 10.3,
+   "from": 0,
+   "to": 31.5,
+   "dec": 1,
+   "suffix": " %",
+   "color": "green",
+   "y": 620,
+   "size": 170,
+   "sub": "NVIDIA · SCHLUSS 23.11.",
+   "sub_t": 8.7,
+   "dur": 1.1
+  },
+  {
+   "t0": 10.4,
+   "t1": 14.2,
+   "from": 1,
+   "to": 1,
+   "dec": 0,
+   "prefix": "≈ ",
+   "suffix": " BIO. $",
+   "sign": false,
+   "color": "green",
+   "y": 620,
+   "size": 150,
+   "sub": "MEHR BÖRSENWERT AN EINEM TAG",
+   "sub_t": 11.0,
+   "dur": 0.1
+  }
+ ],
+ "cards": [
+  {
+   "t0": 14.35,
+   "t1": 19.1,
+   "y": 330,
+   "title": "Schlusskurse 23.11.",
+   "tag": "GESTERN",
+   "sub": "Bester Tag seit April 2025",
+   "rows": [
+    {
+     "t": 14.42,
+     "label": "Nasdaq",
+     "count": {
+      "from": 0,
+      "to": 6.5,
+      "dec": 1,
+      "prefix": "+ ",
+      "suffix": " %",
+      "dur": 0.9
+     },
+     "color": "green"
+    },
+    {
+     "t": 15.9,
+     "label": "S&P 500",
+     "count": {
+      "from": 0,
+      "to": 4.7,
+      "dec": 1,
+      "prefix": "+ ",
+      "suffix": " %",
+      "dur": 0.9
+     },
+     "color": "green"
+    },
+    {
+     "t": 16.83,
+     "label": "DAX · 25.337 Pkt.",
+     "count": {
+      "from": 0,
+      "to": 2.15,
+      "dec": 2,
+      "prefix": "+ ",
+      "suffix": " %",
+      "dur": 0.9
+     },
+     "color": "green"
+    }
+   ],
+   "footer": "Werte je nach Quelle leicht abweichend"
+  },
+  {
+   "t0": 24.1,
+   "t1": 33.6,
+   "y": 330,
+   "title": "Heute, 24.11.",
+   "tag": "DIENSTAG",
+   "sub": "ifo-Prognose: 90,5 (zuvor 90,2)",
+   "rows": [
+    {
+     "t": 24.98,
+     "label": "ifo-Index",
+     "value": "10:00",
+     "size": 54
+    },
+    {
+     "t": 28.75,
+     "label": "US-Verbrauchervertrauen",
+     "value": "16:00",
+     "size": 54
+    },
+    {
+     "t": 30.72,
+     "label": "Dell & HP",
+     "value": "ca. 22:00",
+     "size": 54,
+     "color": "green"
+    }
+   ],
+   "footer": "Termine laut dpa-AFX · Zeiten MEZ · Zwischenstand"
+  }
+ ],
+ "toppills": [
+  {
+   "t0": 33.8,
+   "t1": 38.9,
+   "text": "Heute Abend · nach US-Börsenschluss",
+   "y": 300
+  }
+ ],
+ "labels": [
+  {
+   "t0": 37.3,
+   "t1": 38.9,
+   "x": 270,
+   "y": 930,
+   "w": 540,
+   "h": 150,
+   "title": "Test für den KI-Boom",
+   "anchor": [
+    540,
+    760
+   ]
+  }
+ ],
+ "dimlines": [],
+ "emojis": [
+  {
+   "code": "1f680",
+   "t0": 0.3,
+   "t1": 5.7,
+   "x": 880,
+   "y": 1000,
+   "size": 140
+  },
+  {
+   "code": "1f4b0",
+   "t0": 10.4,
+   "t1": 14.2,
+   "x": 190,
+   "y": 1000,
+   "size": 140
+  },
+  {
+   "code": "1f62c",
+   "t0": 19.3,
+   "t1": 23.9,
+   "x": 880,
+   "y": 1060,
+   "size": 140
+  },
+  {
+   "code": "1f319",
+   "t0": 33.8,
+   "t1": 37.3,
+   "x": 880,
+   "y": 620,
+   "size": 130
+  },
+  {
+   "code": "2b50",
+   "t0": 39.2,
+   "t1": 44.2,
+   "x": 190,
+   "y": 760,
+   "size": 130
+  },
+  {
+   "code": "1f447",
+   "t0": 39.7,
+   "t1": 44.2,
+   "x": 890,
+   "y": 760,
+   "size": 130
+  }
+ ],
+ "marks": [
+  0.83,
+  8.3,
+  20.79,
+  37.43
+ ],
+ "accents": [
+  0.83,
+  8.3
+ ],
+ "segments": [
+  14.3,
+  19.2,
+  24.0,
+  33.7,
+  39.0
+ ],
+ "cash": [
+  10.87
+ ],
+ "boom": [],
+ "bell": [],
+ "capmap": {
+  "US-Verbrauchervertrauen": "VERBRAUCHER",
+  "ifo-Index": "IFO",
+  "KI-Servern": "KI-SERVER",
+  "KI-Boom": "KI-BOOM"
+ },
+ "cover": {
+  "rubrik": "BÖRSENNEWS",
+  "lines": [
+   [
+    "Was für ein",
+    "black"
+   ],
+   [
+    "Comeback!",
+    "accent"
+   ]
+  ],
+  "pose": "explain",
+  "mouth": "open",
+  "file": "cover_gestern_heute_24nov",
+  "pen_w": 1150,
+  "pen_dx": 20
+ }
+}
