@@ -61,6 +61,32 @@ def spr_scaled(key, h):
         s = h / BASE_H; _sc[kk] = SPR[key].resize((max(1, int(SPW * s)), h), Image.BILINEAR)
     return _sc[kk]
 
+
+_bk = {}
+def spr_bucket(key, h):
+    hb = int(math.ceil(h / 64.0) * 64)
+    kk = (key, hb)
+    if kk not in _bk:
+        if len(_bk) > 120: _bk.clear()
+        _bk[kk] = SPR[key].resize((max(1, int(SPW * hb / BASE_H)), hb), Image.LANCZOS)
+    return _bk[kk]
+def place_sprite(frame, key, h, fx, fy, ang_deg, key2=None, mix=0.0):
+    """Zeichnet den Pinguin subpixel-genau: exakte Höhe h, Fußpunkt (fx, fy), Drehung um den Fuß – ohne Rundungs-Ruckeln."""
+    src = spr_bucket(key, h); wc, hc = src.size; k = h / hc
+    bw, bh = int(wc * k * 1.12) + 8, int(hc * k * 1.04) + 8
+    ox, oy = int(math.floor(fx - bw / 2)), int(math.floor(fy - bh + 4))
+    a = math.radians(ang_deg); ca, sa = math.cos(a), math.sin(a)
+    # Ausgabe (X,Y) -> Welt -> relativ zum Fuß -> zurückdrehen -> zurückskalieren -> Quellkoordinaten
+    c0x, c0y = ox - fx, oy - fy
+    A = ca / k; B = sa / k; C = (ca * c0x + sa * c0y) / k + wc / 2
+    D = -sa / k; E = ca / k; F = (-sa * c0x + ca * c0y) / k + hc
+    def tf(im): return im.transform((bw, bh), Image.AFFINE, (A, B, C, D, E, F), resample=Image.BILINEAR)
+    out = tf(src)
+    if key2 is not None and mix > 0:
+        src2 = spr_bucket(key2, h)
+        if src2.size == src.size: out = Image.blend(tf(src2), out, 1 - mix) if mix < 1 else tf(src2)
+    frame.alpha_composite(out, (ox, oy))
+
 pcm = subprocess.run(["ffmpeg", "-v", "error", "-i", f"{D}/voice.wav", "-ac", "1", "-ar", "48000", "-f", "f32le", "-"], capture_output=True).stdout
 A = np.frombuffer(pcm, dtype=np.float32)
 hop = 48000 // FPS
@@ -359,19 +385,17 @@ for fi in frames_to_do:
     hist = [(st, n) for st, n in POSES if t >= st]; pst, pn = hist[-1]
     mo = mouth[min(fi, NF - 1)]
     br = 1 + 0.010 * math.sin(2 * math.pi * t / 2.4)
-    sp = spr_scaled((pn, mo), ph * br)
+    prevkey, mix = None, 0.0
     if len(hist) > 1 and t - pst < 0.2:
         u = (t - pst) / 0.2; u = u * u * (3 - 2 * u)
-        prev = spr_scaled((hist[-2][1], mo), ph * br)
-        if prev.size == sp.size: sp = Image.blend(prev, sp, u)
+        prevkey, mix = (hist[-2][1], mo), 1 - u
         hop = math.sin(u * math.pi) * 18
     else: hop = 0
-    sp = sp.rotate(1.0 * math.sin(2 * math.pi * t / 3.6), Image.BILINEAR, expand=True)
     enter = spring(clamp(t / 0.8)); yoff = (1 - enter) * 900 - hop
     s = ph / BASE_H
     g = glow.resize((max(1, int(1000 * s * 1.1)), max(1, int(240 * s * 1.1))))
     frame.alpha_composite(g, (int(W / 2 - g.width / 2), int(foot - g.height * 0.55 + yoff)))
-    frame.alpha_composite(sp, (int(W / 2 - sp.width / 2), int(foot - sp.height + yoff)))
+    place_sprite(frame, (pn, mo), ph * br, W / 2, foot + yoff, 1.0 * math.sin(2 * math.pi * t / 3.6), prevkey, mix)
     head_y = foot - ph * br - 30 + yoff
 
     # Einzelwort über dem Kopf (+ Betonungsstriche)

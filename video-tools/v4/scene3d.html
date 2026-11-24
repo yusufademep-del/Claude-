@@ -399,6 +399,9 @@ function camState(t) {
     if (cc.o.orbit) { const R = (cc.o.z || 19.5) + 4, a = (cc.o.a0 || 0) + (t - cc.t) * cc.o.orbit; p.x = p.lx + Math.sin(a) * R; p.z = -4 + Math.cos(a) * R; }
     return p; };
   const A = base(pv), B = base(c);
+  if (i > 0 && !pv.o.orbit) {  // Dolly des vorherigen Keyframes mitnehmen -> kein Sprung beim Wechsel
+    const sw = c.t - LD(c), arr = pv.t - LD(pv) + MV(pv);
+    A.z -= Math.min(Math.max(0, sw - arr), 8) * (pv.o.dolly != null ? pv.o.dolly : 0.22); }
   const u = i === 0 ? 1 : easeInOut((t - (c.t - LD(c))) / Math.max(0.001, MV(c)));
   const arc = Math.sin(Math.PI * clamp(u)) * clamp(Math.abs(B.lx - A.lx) / 15);
   const s = { lx: A.lx + (B.lx - A.lx) * u, x: A.x + (B.x - A.x) * u, y: A.y + (B.y - A.y) * u + arc * 1.4, z: A.z + (B.z - A.z) * u + arc * 3.0, ly: A.ly + (B.ly - A.ly) * u, lz: A.lz + (B.lz - A.lz) * u, fov: A.fov + (B.fov - A.fov) * u };
