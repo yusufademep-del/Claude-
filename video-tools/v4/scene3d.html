@@ -242,6 +242,7 @@ const calHT = new THREE.Group(); calH.add(calHT);
   const band = new THREE.Mesh(new THREE.BoxGeometry(4.6, 1.3, 0.78), red); band.position.y = 4.15; calHT.add(band);
   const wd = text3d(CH[0], 0.75, M(0xffffff, 0.6), 0.15); wd.position.set(0, 3.8, 0.42); calHT.add(wd);
   const num = text3d(CH[1], 2.1, dark, 0.4); num.position.set(0, 0.95, 0.3); calHT.add(num);
+  { const nb = new THREE.Box3().setFromObject(num); const nw = nb.max.x - nb.min.x; if (nw > 4.0) num.scale.set(4.0 / nw, 4.0 / nw, 1); }
   if (CH[2]) { const mo = text3d(CH[2], 0.42, red, 0.08); mo.position.set(0, 0.35, 0.4); calHT.add(mo); }
   [-1.2, 1.2].forEach(x => { const r = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.09, 10, 24), dark); r.position.set(x, 4.85, 0); calHT.add(r); });
   cast(calHT); }

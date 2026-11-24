@@ -5,16 +5,16 @@
  "music_lufs": -33,
  "sfx_gain": 0.45,
  "dof_blur": 6,
- "dur": 44.2,
- "topic": "GESTERN & HEUTE",
+ "dur": 43.9,
+ "topic": "HEUTE ROT?",
  "date_long": "24.11.2026",
  "particles": {
   "n": 14,
   "t0": 0,
-  "t1": 44.2
+  "t1": 43.9
  },
  "filter": {
-  "t1": 5.6,
+  "t1": 3.3,
   "fade": 0.9,
   "blur": 3,
   "strength": 0.5,
@@ -26,20 +26,28 @@
  },
  "banner": {
   "t0": 0.1,
-  "t1": 5.7,
+  "t1": 3.45,
   "y": 250,
   "size": 96,
   "lines": [
    [
     [
-     "WAS FÜR EIN",
+     "GESTERN",
      "black"
+    ],
+    [
+     "GRÜN,",
+     "green"
     ]
    ],
    [
     [
-     "COMEBACK!",
-     "gold"
+     "HEUTE",
+     "black"
+    ],
+    [
+     "ROT?",
+     "red"
     ]
    ]
   ]
@@ -47,46 +55,46 @@
  "poses": [
   [
    0,
-   "explain"
-  ],
-  [
-   5.8,
-   "base"
-  ],
-  [
-   8.3,
    "shock"
   ],
   [
-   11.8,
+   3.55,
    "explain"
   ],
   [
-   19.25,
+   6.3,
+   "q"
+  ],
+  [
+   10.1,
+   "explain"
+  ],
+  [
+   23.47,
    "shock"
   ],
   [
-   21.7,
-   "q"
-  ],
-  [
-   24.0,
+   25.0,
    "explain"
   ],
   [
-   33.7,
+   27.6,
    "q"
   ],
   [
-   37.4,
+   29.7,
    "explain"
   ],
   [
-   39.0,
+   36.8,
    "base"
   ],
   [
-   41.0,
+   39.5,
+   "base"
+  ],
+  [
+   41.4,
    "explain"
   ]
  ],
@@ -96,306 +104,268 @@
    "full"
   ],
   [
-   8.2,
-   "mid"
-  ],
-  [
-   10.37,
+   3.55,
    "close"
   ],
   [
-   11.8,
+   5.3,
    "full"
   ],
   [
-   19.25,
-   "close"
-  ],
-  [
-   21.0,
-   "full"
-  ],
-  [
-   34.0,
+   14.0,
    560,
    2700
   ],
   [
-   37.4,
+   23.47,
+   "mid"
+  ],
+  [
+   25.0,
+   "full"
+  ],
+  [
+   28.3,
+   "mid"
+  ],
+  [
+   29.7,
+   "full"
+  ],
+  [
+   36.8,
    "close"
   ],
   [
-   39.0,
+   39.5,
    "full"
   ]
  ],
  "headlines": [
   {
-   "t0": 5.85,
-   "t1": 8.1,
-   "text": "NVIDIA",
-   "y": 380,
-   "color": "green"
-  },
-  {
-   "t0": 19.3,
-   "t1": 21.7,
-   "text": "STIMMUNG\nBLEIBT NERVÖS",
+   "t0": 3.6,
+   "t1": 6.2,
+   "text": "KEINE PANIK!\nGANZ NORMAL",
    "y": 360,
-   "color2": "red"
+   "color2": "green"
   },
   {
-   "t0": 21.75,
-   "t1": 24.0,
-   "text": "HÄLT DIE\nERHOLUNG?",
-   "y": 360
+   "t0": 26.4,
+   "t1": 29.6,
+   "text": "WICHTIGSTE ZEIT\nHEUTE",
+   "y": 360,
+   "size": 110
   },
   {
-   "t0": 39.05,
-   "t1": 44.2,
+   "t0": 35.7,
+   "t1": 39.4,
+   "text": "RUHE\nBEWAHREN",
+   "y": 360,
+   "color2": "green"
+  },
+  {
+   "t0": 39.55,
+   "t1": 43.9,
    "text": "FOLG\nBÖRSENLEHRE",
    "y": 360
   },
   {
-   "t0": 41.75,
-   "t1": 44.2,
+   "t0": 41.45,
+   "t1": 43.9,
    "text": "KEINE ANLAGEBERATUNG",
    "y": 640,
    "size": 56,
    "color": "lgrey"
   }
  ],
- "counts": [
-  {
-   "t0": 8.2,
-   "t1": 10.3,
-   "from": 0,
-   "to": 31.5,
-   "dec": 1,
-   "suffix": " %",
-   "color": "green",
-   "y": 620,
-   "size": 170,
-   "sub": "NVIDIA · SCHLUSS 23.11.",
-   "sub_t": 8.7,
-   "dur": 1.1
-  },
-  {
-   "t0": 10.4,
-   "t1": 14.2,
-   "from": 1,
-   "to": 1,
-   "dec": 0,
-   "prefix": "≈ ",
-   "suffix": " BIO. $",
-   "sign": false,
-   "color": "green",
-   "y": 620,
-   "size": 150,
-   "sub": "MEHR BÖRSENWERT AN EINEM TAG",
-   "sub_t": 11.0,
-   "dur": 0.1
-  }
- ],
+ "counts": [],
  "cards": [
   {
-   "t0": 14.35,
-   "t1": 19.1,
+   "t0": 6.4,
+   "t1": 13.3,
    "y": 330,
-   "title": "Schlusskurse 23.11.",
-   "tag": "GESTERN",
-   "sub": "Bester Tag seit April 2025",
+   "title": "Gewinnmitnahmen",
+   "tag": "HEUTE",
+   "sub": "Nach dem Riesen-Sprung von gestern",
    "rows": [
     {
-     "t": 14.42,
-     "label": "Nasdaq",
-     "count": {
-      "from": 0,
-      "to": 6.5,
-      "dec": 1,
-      "prefix": "+ ",
-      "suffix": " %",
-      "dur": 0.9
-     },
+     "t": 8.9,
+     "label": "Anleger",
+     "value": "sichern Gewinne",
+     "size": 46,
      "color": "green"
     },
     {
-     "t": 15.9,
-     "label": "S&P 500",
-     "count": {
-      "from": 0,
-      "to": 4.7,
-      "dec": 1,
-      "prefix": "+ ",
-      "suffix": " %",
-      "dur": 0.9
-     },
-     "color": "green"
+     "t": 10.11,
+     "label": "DAX",
+     "value": "leicht im Minus",
+     "size": 46,
+     "color": "red"
     },
     {
-     "t": 16.83,
-     "label": "DAX · 25.337 Pkt.",
-     "count": {
-      "from": 0,
-      "to": 2.15,
-      "dec": 2,
-      "prefix": "+ ",
-      "suffix": " %",
-      "dur": 0.9
-     },
-     "color": "green"
+     "t": 11.77,
+     "label": "Chipwerte",
+     "value": "schwächer",
+     "size": 50,
+     "color": "red"
     }
    ],
-   "footer": "Werte je nach Quelle leicht abweichend"
+   "footer": "Stand Vormittag · Zwischenstand"
   },
   {
-   "t0": 24.1,
-   "t1": 33.6,
+   "t0": 29.75,
+   "t1": 35.5,
    "y": 330,
-   "title": "Heute, 24.11.",
+   "title": "Heute noch",
    "tag": "DIENSTAG",
-   "sub": "ifo-Prognose: 90,5 (zuvor 90,2)",
+   "sub": "Alle Zeiten MEZ",
    "rows": [
     {
-     "t": 24.98,
-     "label": "ifo-Index",
-     "value": "10:00",
-     "size": 54
+     "t": 30.04,
+     "label": "US-Börse öffnet",
+     "value": "15:30",
+     "size": 58,
+     "color": "green"
     },
     {
-     "t": 28.75,
-     "label": "US-Verbrauchervertrauen",
+     "t": 32.68,
+     "label": "Verbrauchervertrauen",
      "value": "16:00",
-     "size": 54
+     "size": 58
     },
     {
-     "t": 30.72,
+     "t": 34.72,
      "label": "Dell & HP",
      "value": "ca. 22:00",
-     "size": 54,
-     "color": "green"
+     "size": 54
     }
    ],
-   "footer": "Termine laut dpa-AFX · Zeiten MEZ · Zwischenstand"
+   "footer": "Termine laut dpa-AFX"
   }
  ],
  "toppills": [
   {
-   "t0": 33.8,
-   "t1": 38.9,
-   "text": "Heute Abend · nach US-Börsenschluss",
+   "t0": 13.5,
+   "t1": 26.2,
+   "text": "Fair Value Gap (FVG) · vereinfacht",
    "y": 300
   }
  ],
  "labels": [
   {
-   "t0": 37.3,
-   "t1": 38.9,
-   "x": 270,
-   "y": 930,
-   "w": 540,
-   "h": 150,
-   "title": "Test für den KI-Boom",
-   "anchor": [
-    540,
-    760
-   ]
+   "t0": 19.4,
+   "t1": 21.6,
+   "x": 290,
+   "y": 400,
+   "w": 500,
+   "h": 140,
+   "title": "FVG = Lücke im Chart"
+  },
+  {
+   "t0": 22.0,
+   "t1": 23.4,
+   "x": 290,
+   "y": 400,
+   "w": 500,
+   "h": 140,
+   "title": "Retest der Lücke?"
+  },
+  {
+   "t0": 24.6,
+   "t1": 26.2,
+   "x": 140,
+   "y": 400,
+   "w": 800,
+   "h": 170,
+   "title": "Kein Gesetz: Der Kurs kann auch",
+   "sub": "einfach weiterlaufen",
+   "size": 40
   }
  ],
  "dimlines": [],
  "emojis": [
   {
-   "code": "1f680",
+   "code": "1f4c9",
    "t0": 0.3,
-   "t1": 5.7,
+   "t1": 3.4,
    "x": 880,
    "y": 1000,
    "size": 140
   },
   {
    "code": "1f4b0",
-   "t0": 10.4,
-   "t1": 14.2,
+   "t0": 8.9,
+   "t1": 13.3,
    "x": 190,
    "y": 1000,
    "size": 140
   },
   {
-   "code": "1f62c",
-   "t0": 19.3,
-   "t1": 23.9,
+   "code": "1f9d8",
+   "t0": 36.9,
+   "t1": 39.4,
    "x": 880,
-   "y": 1060,
-   "size": 140
-  },
-  {
-   "code": "1f319",
-   "t0": 33.8,
-   "t1": 37.3,
-   "x": 880,
-   "y": 620,
-   "size": 130
+   "y": 1000,
+   "size": 150
   },
   {
    "code": "2b50",
-   "t0": 39.2,
-   "t1": 44.2,
+   "t0": 39.7,
+   "t1": 43.9,
    "x": 190,
    "y": 760,
    "size": 130
   },
   {
    "code": "1f447",
-   "t0": 39.7,
-   "t1": 44.2,
+   "t0": 40.2,
+   "t1": 43.9,
    "x": 890,
    "y": 760,
    "size": 130
   }
  ],
  "marks": [
-  0.83,
-  8.3,
-  20.79,
-  37.43
+  3.92,
+  11.09,
+  24.08,
+  28.98,
+  36.83
  ],
  "accents": [
-  0.83,
-  8.3
+  3.92,
+  24.08
  ],
  "segments": [
-  14.3,
-  19.2,
-  24.0,
-  33.7,
-  39.0
+  13.4,
+  26.3,
+  39.5
  ],
  "cash": [
-  10.87
+  8.94
  ],
  "boom": [],
  "bell": [],
  "capmap": {
-  "US-Verbrauchervertrauen": "VERBRAUCHER",
-  "ifo-Index": "IFO",
-  "KI-Servern": "KI-SERVER",
-  "KI-Boom": "KI-BOOM"
+  "Riesen-Sprung": "RIESEN-SPRUNG",
+  "US-Börse": "US-BÖRSE",
+  "Dell-Zahlen": "DELL"
  },
  "cover": {
-  "rubrik": "BÖRSENNEWS",
+  "rubrik": "SPEZIALAUSGABE",
   "lines": [
    [
-    "Was für ein",
+    "Heute rot –",
     "black"
    ],
    [
-    "Comeback!",
+    "keine Panik!",
     "accent"
    ]
   ],
   "pose": "explain",
-  "mouth": "open",
-  "file": "cover_gestern_heute_24nov",
+  "mouth": "closed",
+  "file": "cover_heute_rot_fvg",
   "pen_w": 1150,
   "pen_dx": 20
  }
