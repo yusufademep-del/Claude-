@@ -375,7 +375,7 @@ for fi in frames_to_do:
             v = c["from"] + (c["to"] - c["from"]) * p
             s = c.get("prefix", "") + (("+ " if c["to"] >= 0 else "− ") if c.get("sign", True) else "") + fmt_num(v, c.get("dec", 1)) + c.get("suffix", "")
             e = back(clamp((t - c["t0"]) / 0.45), 1.6)
-            paste_c(frame, text_img(s, ANTON, c.get("size", 150), COL[c.get("color", "green")]), W / 2, c.get("y", 560), max(0.01, e) * (1 - 0.4 * xo), 1 - xo)
+            paste_c(frame, text_img(s, ANTON, c.get("size", 150), COL[c.get("color", "green")], c.get("stroke", 0), (255, 255, 255)), W / 2, c.get("y", 560), max(0.01, e) * (1 - 0.4 * xo), 1 - xo)
             if c.get("sub"):
                 se = clamp((t - c.get("sub_t", c["t0"] + 0.5)) / 0.3)
                 paste_c(frame, text_img(c["sub"], ANTON, 54, COL["lgrey"]), W / 2, c.get("y", 560) + c.get("size", 150) * 0.78, 0.7 + 0.3 * back(se), se * (1 - xo))

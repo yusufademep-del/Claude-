@@ -198,7 +198,8 @@
    "size": 170,
    "sub": "KI-SERVER-UMSATZ · 22 MRD. $",
    "sub_t": 10.8,
-   "dur": 1.6
+   "dur": 1.6,
+   "stroke": 9
   },
   {
    "t0": 13.96,
@@ -213,7 +214,8 @@
    "size": 160,
    "sub": "KI-AUFTRAGSBESTAND (BACKLOG)",
    "sub_t": 14.6,
-   "dur": 1.8
+   "dur": 1.8,
+   "stroke": 9
   },
   {
    "t0": 36.5,
@@ -229,7 +231,8 @@
    "size": 170,
    "sub": "DELL-AKTIE NACHBÖRSLICH",
    "sub_t": 37.0,
-   "dur": 0.8
+   "dur": 0.8,
+   "stroke": 9
   }
  ],
  "cards": [
