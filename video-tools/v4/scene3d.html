@@ -212,7 +212,7 @@ const sparks = []; for (let i = 0; i < 10; i++) { const s = new THREE.Mesh(new T
 const cmp = grp("cmp", ST.cmp, -3.0);
 function bar(mat, x) { const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.BoxGeometry(1.7, 1, 1.7), mat); b.position.y = 0.5; g.add(b); g.position.x = x; g.userData.b = b; cast(g); cmp.add(g); return g; }
 const barG = bar(green, -2.7), barR = bar(red, 2.7);
-const lblG = text3d("+100 %", 0.5, green, 0.12), lblR = text3d("+50 %", 0.5, red, 0.12); cmp.add(lblG); cmp.add(lblR);
+const CL = S.cmpLbl || ["+100 %", "+50 %"]; const lblG = text3d(CL[0], 0.5, green, 0.12), lblR = text3d(CL[1], 0.5, red, 0.12); cmp.add(lblG); cmp.add(lblR);
 
 // Pokal + Pfeil
 const cup = grp("cup", ST.cup, -4.0);
@@ -420,7 +420,8 @@ window.renderAt = function (t) {
   camera.position.set(c.x + kick * 0.3, c.y + kick, c.z);
   camera.lookAt(c.lx + c.yaw, c.ly, c.lz);
   sun.position.set(c.lx + 7, 16, 10); sun.target.position.set(c.lx, 0, -4); sun.target.updateMatrixWorld();
-  const near = (g) => { g.visible = !g.userData.off && Math.abs(g.position.x - c.lx) < (g.userData.range || 26); return g.visible; };
+  const HIDE = S.hideAfter || {};  // {gruppe: zeit} -> danach unsichtbar (z. B. Angelhaken im Outro)
+  const near = (g) => { const nm = Object.keys(OBJ).find(k => OBJ[k] === g); g.visible = !g.userData.off && !(nm && HIDE[nm] != null && t > HIDE[nm]) && Math.abs(g.position.x - c.lx) < (g.userData.range || 26); return g.visible; };
 
   // Intro
   const I = S.intro || [0];
