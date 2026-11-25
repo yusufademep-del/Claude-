@@ -5,11 +5,11 @@
  "music_lufs": -33,
  "sfx_gain": 0.45,
  "dof_blur": 6,
- "dur": 51.3,
- "topic": "DELL-ZAHLEN",
+ "dur": 45.8,
+ "topic": "TROTZ REKORD ROT",
  "date_long": "25.11.2026",
  "filter": {
-  "t1": 2.5,
+  "t1": 3.2,
   "fade": 0.9,
   "blur": 3,
   "strength": 0.5,
@@ -21,42 +21,31 @@
  },
  "banner": {
   "t0": 0.1,
-  "t1": 2.6,
+  "t1": 3.25,
   "y": 250,
   "size": 96,
   "lines": [
    [
     [
-     "DELL HAT",
+     "REKORDZAHLEN –",
      "black"
     ]
    ],
    [
     [
-     "GELIEFERT!",
-     "green"
+     "TROTZDEM",
+     "black"
+    ],
+    [
+     "ROT?",
+     "red"
     ]
    ]
   ]
  },
  "flashes": [
   [
-   25.1,
-   0.7,
-   0.9
-  ],
-  [
-   34.7,
-   0.6,
-   0.7
-  ],
-  [
-   43.1,
-   0.6,
-   0.7
-  ],
-  [
-   47.0,
+   41.7,
    0.7,
    1.0
   ]
@@ -64,54 +53,46 @@
  "poses": [
   [
    0,
-   "explain"
-  ],
-  [
-   2.6,
-   "base"
-  ],
-  [
-   7.25,
-   "q"
-  ],
-  [
-   9.9,
-   "explain"
-  ],
-  [
-   19.1,
-   "explain"
-  ],
-  [
-   25.1,
-   "q"
-  ],
-  [
-   27.0,
-   "explain"
-  ],
-  [
-   34.8,
    "shock"
   ],
   [
-   36.5,
+   3.3,
+   "explain"
+  ],
+  [
+   10.87,
    "q"
   ],
   [
-   39.4,
+   12.6,
    "explain"
   ],
   [
-   43.2,
+   18.34,
    "explain"
   ],
   [
-   47.0,
+   28.5,
+   "shock"
+  ],
+  [
+   31.3,
+   "explain"
+  ],
+  [
+   34.87,
+   "explain"
+  ],
+  [
+   37.36,
+   "explain"
+  ],
+  [
+   41.7,
    "base"
   ],
   [
-   48.8,
+   43.5,
    "explain"
   ]
  ],
@@ -121,24 +102,23 @@
    "full"
   ],
   [
-   0.4,
+   0.1,
    "mid"
   ],
   [
-   1.6,
+   1.4,
    "full"
   ],
   [
-   10.4,
-   560,
-   2700
+   13.7,
+   "close"
   ],
   [
-   19.1,
+   15.0,
    "full"
   ],
   [
-   25.1,
+   31.3,
    "full"
   ],
   [
@@ -146,176 +126,153 @@
    "close"
   ],
   [
-   36.4,
+   36.6,
    "full"
   ],
   [
-   47.0,
+   41.7,
    "full"
   ]
  ],
  "headlines": [
   {
-   "t0": 25.15,
-   "t1": 26.95,
-   "text": "WAS HEISST DAS?",
-   "y": 380
+   "t0": 10.9,
+   "t1": 12.55,
+   "text": "WIE PASST\nDAS ZUSAMMEN?",
+   "y": 360,
+   "size": 110
   },
   {
-   "t0": 34.8,
-   "t1": 36.4,
-   "text": "ABER:",
-   "y": 380,
-   "color": "red"
+   "t0": 12.6,
+   "t1": 18.2,
+   "text": "SELL THE\nNEWS",
+   "y": 360,
+   "color2": "red"
   },
   {
-   "t0": 47.05,
-   "t1": 51.3,
+   "t0": 31.35,
+   "t1": 34.8,
+   "text": "STARKE ZAHLEN,\nFALLENDE KURSE",
+   "y": 360,
+   "color2": "red",
+   "size": 104
+  },
+  {
+   "t0": 41.75,
+   "t1": 45.8,
    "text": "FOLG\nBÖRSENLEHRE",
    "y": 360
   },
   {
-   "t0": 49.1,
-   "t1": 51.3,
+   "t0": 43.4,
+   "t1": 45.8,
    "text": "KEINE ANLAGEBERATUNG",
    "y": 640,
    "size": 56,
    "color": "lgrey"
   }
  ],
- "counts": [
-  {
-   "t0": 10.0,
-   "t1": 13.85,
-   "from": 0,
-   "to": 291,
-   "dec": 0,
-   "prefix": "+ ",
-   "suffix": " %",
-   "sign": false,
-   "color": "green",
-   "y": 1000,
-   "size": 170,
-   "sub": "KI-SERVER-UMSATZ · 22 MRD. $",
-   "sub_t": 10.8,
-   "dur": 1.6,
-   "stroke": 9
-  },
-  {
-   "t0": 13.96,
-   "t1": 18.95,
-   "from": 0,
-   "to": 132.3,
-   "dec": 1,
-   "suffix": " MRD. $",
-   "sign": false,
-   "color": "green",
-   "y": 1000,
-   "size": 160,
-   "sub": "KI-AUFTRAGSBESTAND (BACKLOG)",
-   "sub_t": 14.6,
-   "dur": 1.8,
-   "stroke": 9
-  },
-  {
-   "t0": 36.5,
-   "t1": 39.3,
-   "from": 0,
-   "to": 3,
-   "dec": 0,
-   "prefix": "ca. + ",
-   "suffix": " %",
-   "sign": false,
-   "color": "green",
-   "y": 620,
-   "size": 170,
-   "sub": "DELL-AKTIE NACHBÖRSLICH",
-   "sub_t": 37.0,
-   "dur": 0.8,
-   "stroke": 9
-  }
- ],
+ "counts": [],
  "cards": [
   {
-   "t0": 2.65,
-   "t1": 9.8,
+   "t0": 3.35,
+   "t1": 10.8,
    "y": 330,
-   "title": "Dell Q3 (Geschäftsjahr 2027)",
-   "tag": "24.11.",
-   "sub": "Quartal bis 30.10.2026",
+   "title": "Heute vorbörslich",
+   "tag": "25.11.",
+   "sub": "Trotz Rekordquartal bei Dell",
    "rows": [
     {
-     "t": 2.72,
-     "label": "Umsatz",
+     "t": 3.4,
+     "label": "Dell-Umsatz",
+     "value": "verdoppelt",
+     "size": 52,
+     "color": "green"
+    },
+    {
+     "t": 5.6,
+     "label": "Dell-Aktie",
      "count": {
       "from": 0,
-      "to": 54.9,
-      "dec": 1,
-      "suffix": " Mrd. $",
-      "dur": 1.2
-     },
-     "color": "green",
-     "old": "erwartet: ~49,3 Mrd. $",
-     "strike_t": 7.6
-    },
-    {
-     "t": 4.6,
-     "label": "Plus zum Vorjahr",
-     "value": "+ 103 %",
-     "size": 58,
-     "color": "green"
-    }
-   ],
-   "footer": "Quelle: Dell-Pressemitteilung · Analystenschätzungen"
-  },
-  {
-   "t0": 19.15,
-   "t1": 25.0,
-   "y": 330,
-   "title": "Dell legt nach",
-   "tag": "PROGNOSE",
-   "sub": "Geschäftsjahr 2027",
-   "rows": [
-    {
-     "t": 19.15,
-     "label": "Umsatz-Prognose",
-     "count": {
-      "from": 192,
-      "to": 202,
+      "to": 7,
       "dec": 0,
-      "suffix": " Mrd. $",
-      "dur": 1.0
+      "prefix": "ca. − ",
+      "suffix": " %",
+      "dur": 0.8
      },
-     "color": "green",
-     "old": "vorher: 192 Mrd. $",
-     "strike_t": 20.4
+     "color": "red"
     },
     {
-     "t": 21.28,
-     "label": "Aktienrückkauf",
-     "value": "+ 25 Mrd. $",
-     "size": 58,
-     "color": "green"
+     "t": 8.45,
+     "label": "Nvidia",
+     "count": {
+      "from": 0,
+      "to": 4.6,
+      "dec": 1,
+      "prefix": "ca. − ",
+      "suffix": " %",
+      "dur": 0.8
+     },
+     "color": "red"
     }
    ],
-   "footer": "laut Dell, 24.11.2026"
+   "footer": "US-Vorbörse · Zwischenstand"
   },
   {
-   "t0": 43.3,
-   "t1": 46.9,
+   "t0": 18.4,
+   "t1": 31.2,
    "y": 330,
-   "title": "Heute, 25.11.",
-   "tag": "MITTWOCH",
-   "sub": "Alle Zeiten MEZ",
+   "title": "Die Haken",
+   "tag": "WARUM ROT?",
+   "sub": "Was Anleger stört",
    "rows": [
     {
-     "t": 44.15,
+     "t": 20.08,
+     "label": "HPE warnt vor Margen",
+     "value": "Konkurrent",
+     "size": 44,
+     "color": "red"
+    },
+    {
+     "t": 23.17,
+     "label": "Teure Speicherchips",
+     "value": "Marge sinkt",
+     "size": 44,
+     "color": "red"
+    },
+    {
+     "t": 26.79,
+     "label": "PC-Geschäft",
+     "value": "nur + 3 %",
+     "size": 50,
+     "color": "red"
+    },
+    {
+     "t": 28.53,
+     "label": "Zinsangst",
+     "value": "Fed",
+     "size": 54,
+     "color": "red"
+    }
+   ],
+   "footer": "laut Marktberichten vom 24./25.11."
+  },
+  {
+   "t0": 37.4,
+   "t1": 41.6,
+   "y": 330,
+   "title": "Heute, 14:30 Uhr",
+   "tag": "MEZ",
+   "sub": "Nächster Test für den Markt",
+   "rows": [
+    {
+     "t": 39.17,
      "label": "PCE-Inflation",
      "value": "14:30",
      "size": 58
     },
     {
-     "t": 45.7,
+     "t": 40.6,
      "label": "US-BIP (Q3)",
      "value": "14:30",
      "size": 58
@@ -326,153 +283,117 @@
  ],
  "toppills": [
   {
-   "t0": 10.0,
-   "t1": 18.9,
-   "text": "Im KI-Rechenzentrum · Dell-Server",
-   "y": 300
+   "t0": 13.9,
+   "t1": 18.2,
+   "text": "Erwartung schon im Kurs drin",
+   "y": 640
   }
  ],
  "labels": [
   {
-   "t0": 27.0,
-   "t1": 30.6,
+   "t0": 34.87,
+   "t1": 37.3,
    "x": 140,
-   "y": 420,
-   "w": 800,
-   "h": 170,
-   "title": "KI-Nachfrage weiter riesig",
-   "sub": "Rechenzentren bestellen mehr Server",
-   "size": 42
-  },
-  {
-   "t0": 30.7,
-   "t1": 34.6,
-   "x": 140,
-   "y": 420,
-   "w": 800,
-   "h": 170,
-   "title": "Nvidia-Chips im Server",
-   "sub": "gutes Zeichen für die ganze Branche",
-   "size": 42
-  },
-  {
-   "t0": 39.4,
-   "t1": 41.15,
-   "x": 140,
-   "y": 420,
+   "y": 540,
    "w": 800,
    "h": 150,
-   "title": "Erwartungen waren schon hoch",
-   "size": 40
-  },
-  {
-   "t0": 41.2,
-   "t1": 43.0,
-   "x": 140,
-   "y": 420,
-   "w": 800,
-   "h": 150,
-   "title": "Nervosität im Markt bleibt",
-   "size": 40
+   "title": "Entscheidend: Was hat der Markt erwartet?",
+   "size": 36
   }
  ],
  "dimlines": [],
  "emojis": [
   {
-   "code": "1f680",
+   "code": "1f4c9",
    "t0": 0.3,
-   "t1": 2.6,
-   "x": 880,
-   "y": 1000,
-   "size": 140
-  },
-  {
-   "code": "1f4b0",
-   "t0": 21.3,
-   "t1": 25.0,
-   "x": 190,
-   "y": 1000,
-   "size": 140
-  },
-  {
-   "code": "1f4c8",
-   "t0": 30.7,
-   "t1": 34.6,
+   "t1": 3.2,
    "x": 880,
    "y": 1000,
    "size": 140
   },
   {
    "code": "1f914",
-   "t0": 39.4,
-   "t1": 43.0,
+   "t0": 10.95,
+   "t1": 12.55,
    "x": 880,
    "y": 1000,
    "size": 140
   },
   {
+   "code": "1f4b8",
+   "t0": 13.9,
+   "t1": 18.2,
+   "x": 190,
+   "y": 1000,
+   "size": 140
+  },
+  {
+   "code": "26a0",
+   "t0": 20.1,
+   "t1": 31.2,
+   "x": 890,
+   "y": 1120,
+   "size": 120
+  },
+  {
    "code": "2b50",
-   "t0": 47.2,
-   "t1": 51.3,
+   "t0": 41.9,
+   "t1": 45.8,
    "x": 190,
    "y": 760,
    "size": 130
   },
   {
    "code": "1f447",
-   "t0": 47.7,
-   "t1": 51.3,
+   "t0": 42.4,
+   "t1": 45.8,
    "x": 890,
    "y": 760,
    "size": 130
   }
  ],
  "marks": [
-  0.4,
-  12.08,
-  28.73,
-  34.8
+  0.1,
+  13.81,
+  17.0,
+  31.32,
+  34.87
  ],
  "accents": [
-  0.4
+  0.1,
+  13.81
  ],
  "segments": [
-  9.9,
-  25.1,
-  34.7,
-  43.1,
-  47.0
+  10.87,
+  18.3,
+  31.3,
+  41.7
  ],
- "cash": [
-  2.9,
-  21.3
+ "cash": [],
+ "boom": [
+  13.81
  ],
- "boom": [],
  "bell": [],
  "capmap": {
-  "KI-Server-Geschäft": "KI-SERVER",
-  "KI-Server": "KI-SERVER",
-  "KI-Rechenzentren": "RECHENZENTREN",
-  "Nvidia-Chips": "NVIDIA-CHIPS",
+  "PC-Geschäft": "PC-GESCHÄFT",
   "PCE-Inflation": "PCE",
-  "US-Wachstum": "US-WACHSTUM",
-  "Jahresprognose": "PROGNOSE"
+  "US-Wachstum": "US-WACHSTUM"
  },
  "cover": {
-  "rubrik": "BÖRSENNEWS",
+  "rubrik": "SPEZIALAUSGABE",
   "lines": [
    [
-    "Dell liefert",
+    "Rekordzahlen –",
     "black"
    ],
    [
-    "Rekordzahlen!",
+    "trotzdem rot?",
     "accent"
    ]
   ],
-  "pose": "explain",
-  "mouth": "open",
-  "file": "cover_dell_zahlen",
+  "pose": "q",
+  "mouth": "closed",
+  "file": "cover_rekord_trotzdem_rot",
   "pen_w": 1150,
   "pen_dx": 20
  }
