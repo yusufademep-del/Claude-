@@ -1,0 +1,434 @@
+{
+ "fps": 60,
+ "channel": "börsenlehre",
+ "shot_dur": 0.6,
+ "music_lufs": -33,
+ "sfx_gain": 0.45,
+ "dof_blur": 6,
+ "dur": 49.9,
+ "topic": "FRÜHSTARTRENTE",
+ "date_long": "27.11.2026",
+ "filter": {
+  "t1": 8.1,
+  "fade": 0.9,
+  "blur": 3,
+  "strength": 0.5,
+  "tint": [
+   246,
+   206,
+   222
+  ]
+ },
+ "banner": {
+  "t0": 0.1,
+  "t1": 4.3,
+  "y": 250,
+  "size": 96,
+  "lines": [
+   [
+    [
+     "GELD VOM",
+     "black"
+    ],
+    [
+     "STAAT",
+     "gold"
+    ]
+   ],
+   [
+    [
+     "FÜRS KINDERDEPOT",
+     "black"
+    ]
+   ]
+  ]
+ },
+ "flashes": [
+  [
+   47.7,
+   0.7,
+   1.0
+  ]
+ ],
+ "poses": [
+  [
+   0,
+   "base"
+  ],
+  [
+   0.9,
+   "explain"
+  ],
+  [
+   8.15,
+   "explain"
+  ],
+  [
+   20.91,
+   "explain"
+  ],
+  [
+   30.57,
+   "shock"
+  ],
+  [
+   31.4,
+   "explain"
+  ],
+  [
+   38.1,
+   "shock"
+  ],
+  [
+   39.0,
+   "explain"
+  ],
+  [
+   45.13,
+   "base"
+  ],
+  [
+   45.8,
+   "explain"
+  ],
+  [
+   47.74,
+   "base"
+  ]
+ ],
+ "shots": [
+  [
+   0,
+   "full"
+  ],
+  [
+   0.1,
+   "mid"
+  ],
+  [
+   1.3,
+   "full"
+  ],
+  [
+   4.38,
+   "close"
+  ],
+  [
+   5.6,
+   "full"
+  ],
+  [
+   31.4,
+   560,
+   2700
+  ],
+  [
+   38.05,
+   "close"
+  ],
+  [
+   39.6,
+   "full"
+  ],
+  [
+   47.7,
+   "full"
+  ]
+ ],
+ "headlines": [
+  {
+   "t0": 4.38,
+   "t1": 5.6,
+   "text": "FRÜHSTART-\nRENTE",
+   "y": 360,
+   "color2": "green",
+   "size": 120
+  },
+  {
+   "t0": 30.57,
+   "t1": 31.35,
+   "text": "ZINSESZINS",
+   "y": 360,
+   "size": 120
+  },
+  {
+   "t0": 39.66,
+   "t1": 42.15,
+   "text": "NUR EIN BEISPIEL –\nKEINE GARANTIE",
+   "y": 360,
+   "color2": "red",
+   "size": 96
+  },
+  {
+   "t0": 42.23,
+   "t1": 45.05,
+   "text": "AUSZAHLUNG\nERST AB 65",
+   "y": 360,
+   "color2": "red",
+   "size": 110
+  },
+  {
+   "t0": 45.13,
+   "t1": 47.65,
+   "text": "START:\nJANUAR 2027",
+   "y": 360,
+   "color2": "green",
+   "size": 110
+  },
+  {
+   "t0": 47.75,
+   "t1": 49.9,
+   "text": "FOLG\nBÖRSENLEHRE",
+   "y": 360
+  },
+  {
+   "t0": 48.4,
+   "t1": 49.9,
+   "text": "KEINE ANLAGEBERATUNG",
+   "y": 640,
+   "size": 56,
+   "color": "lgrey"
+  }
+ ],
+ "counts": [],
+ "cards": [
+  {
+   "t0": 9.47,
+   "t1": 20.8,
+   "y": 330,
+   "title": "So funktioniert's",
+   "tag": "STAAT",
+   "sub": "Frühstartrente pro Kind",
+   "rows": [
+    {
+     "t": 10.64,
+     "label": "Für Kinder ab",
+     "value": "Jahrgang 2020",
+     "size": 46
+    },
+    {
+     "t": 12.3,
+     "label": "Zeitraum",
+     "value": "6 bis 18 Jahre",
+     "size": 46
+    },
+    {
+     "t": 13.36,
+     "label": "Pro Monat",
+     "count": {
+      "from": 0,
+      "to": 10,
+      "dec": 0,
+      "prefix": "",
+      "suffix": " €",
+      "dur": 0.6
+     },
+     "color": "green"
+    },
+    {
+     "t": 16.42,
+     "label": "Pro Jahr",
+     "count": {
+      "from": 0,
+      "to": 120,
+      "dec": 0,
+      "prefix": "",
+      "suffix": " €",
+      "dur": 0.7
+     },
+     "color": "green"
+    },
+    {
+     "t": 18.72,
+     "label": "Insgesamt",
+     "count": {
+      "from": 0,
+      "to": 1440,
+      "dec": 0,
+      "prefix": "",
+      "suffix": " €",
+      "dur": 0.9
+     },
+     "color": "green"
+    }
+   ],
+   "footer": "Bundesrat-Beschluss 20.11.2026 · Start 2027"
+  },
+  {
+   "t0": 23.32,
+   "t1": 30.45,
+   "y": 330,
+   "title": "Trade Republic",
+   "tag": "LAUT ANBIETER",
+   "sub": "Kinderdepot mit Frühstartrente",
+   "rows": [
+    {
+     "t": 26.08,
+     "label": "Depotkosten",
+     "value": "0 €",
+     "size": 58,
+     "color": "green"
+    },
+    {
+     "t": 27.17,
+     "label": "Ausführungskosten",
+     "value": "0 €",
+     "size": 58,
+     "color": "green"
+    },
+    {
+     "t": 28.45,
+     "label": "ETF-Produktkosten",
+     "value": "0 €",
+     "size": 58,
+     "color": "green"
+    }
+   ],
+   "footer": "Angaben von Trade Republic · Investieren birgt Risiken"
+  }
+ ],
+ "toppills": [
+  {
+   "t0": 5.66,
+   "t1": 8.05,
+   "text": "Bundesrat: beschlossen am 20.11.",
+   "y": 300
+  },
+  {
+   "t0": 20.91,
+   "t1": 23.25,
+   "text": "Geld landet in einem Depot",
+   "y": 300
+  }
+ ],
+ "labels": [
+  {
+   "t0": 32.79,
+   "t1": 37.95,
+   "x": 140,
+   "y": 300,
+   "w": 800,
+   "h": 190,
+   "title": "Rechenbeispiel: 6 % pro Jahr",
+   "sub": "10 €/Monat von 6 bis 18, dann liegen lassen bis 65",
+   "size": 42
+  }
+ ],
+ "dimlines": [],
+ "emojis": [
+  {
+   "code": "1f4b6",
+   "t0": 0.3,
+   "t1": 4.3,
+   "x": 880,
+   "y": 1000,
+   "size": 140
+  },
+  {
+   "code": "1f476",
+   "t0": 9.5,
+   "t1": 20.8,
+   "x": 880,
+   "y": 1200,
+   "size": 120
+  },
+  {
+   "code": "1f4c8",
+   "t0": 36.2,
+   "t1": 37.95,
+   "x": 880,
+   "y": 1250,
+   "size": 130
+  },
+  {
+   "code": "26a0",
+   "t0": 38.1,
+   "t1": 39.6,
+   "x": 890,
+   "y": 1000,
+   "size": 120
+  },
+  {
+   "code": "1f474",
+   "t0": 42.3,
+   "t1": 45.0,
+   "x": 880,
+   "y": 1100,
+   "size": 130
+  },
+  {
+   "code": "2b50",
+   "t0": 47.9,
+   "t1": 49.9,
+   "x": 190,
+   "y": 760,
+   "size": 130
+  },
+  {
+   "code": "1f447",
+   "t0": 48.3,
+   "t1": 49.9,
+   "x": 890,
+   "y": 760,
+   "size": 130
+  }
+ ],
+ "marks": [
+  1.58,
+  4.38,
+  31.4,
+  38.1
+ ],
+ "accents": [
+  4.38,
+  31.4,
+  38.1
+ ],
+ "segments": [
+  8.1,
+  20.85,
+  30.5,
+  38.05,
+  45.1,
+  47.7
+ ],
+ "cash": [
+  13.36,
+  18.72,
+  36.2
+ ],
+ "boom": [],
+ "bell": [],
+ "capmap": {
+  "Frühstartrente": "FRÜHSTARTRENTE",
+  "zwanzigzwanzig": "2020",
+  "hundertzwanzig": "120 €",
+  "tausendvierhundertvierzig": "1.440 €",
+  "dreißigtausend": "30.000",
+  "fünfundsechzig": "65",
+  "zwanzigsiebenundzwanzig": "2027",
+  "Ausführungskosten": "KOSTEN"
+ },
+ "cover": {
+  "rubrik": "ERKLÄRT",
+  "lines": [
+   [
+    "Frühstartrente:",
+    "black"
+   ],
+   [
+    "10 € im Monat",
+    "accent"
+   ],
+   [
+    "vom Staat",
+    "black"
+   ]
+  ],
+  "pose": "explain",
+  "mouth": "closed",
+  "file": "cover_fruehstartrente",
+  "pen_w": 1150,
+  "pen_dx": 20
+ }
+}

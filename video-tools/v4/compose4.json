@@ -5,11 +5,11 @@
  "music_lufs": -33,
  "sfx_gain": 0.45,
  "dof_blur": 6,
- "dur": 45.4,
- "topic": "HEUTE IM BLICK",
+ "dur": 49.9,
+ "topic": "FRÜHSTARTRENTE",
  "date_long": "27.11.2026",
  "filter": {
-  "t1": 3.2,
+  "t1": 8.1,
   "fade": 0.9,
   "blur": 3,
   "strength": 0.5,
@@ -21,31 +21,31 @@
  },
  "banner": {
   "t0": 0.1,
-  "t1": 3.6,
+  "t1": 4.3,
   "y": 250,
   "size": 96,
   "lines": [
    [
     [
-     "GESTERN",
+     "GELD VOM",
      "black"
     ],
     [
-     "GRÜN",
-     "green"
+     "STAAT",
+     "gold"
     ]
    ],
    [
     [
-     "– WAS KOMMT HEUTE?",
-     "gold"
+     "FÜRS KINDERDEPOT",
+     "black"
     ]
    ]
   ]
  },
  "flashes": [
   [
-   42.8,
+   47.7,
    0.7,
    1.0
   ]
@@ -56,39 +56,43 @@
    "base"
   ],
   [
-   1.1,
+   0.9,
    "explain"
   ],
   [
-   14.19,
-   "q"
-  ],
-  [
-   16.3,
+   8.15,
    "explain"
   ],
   [
-   27.81,
+   20.91,
+   "explain"
+  ],
+  [
+   30.57,
    "shock"
   ],
   [
-   28.75,
+   31.4,
    "explain"
   ],
   [
-   34.69,
-   "explain"
-  ],
-  [
-   40.11,
+   38.1,
    "shock"
   ],
   [
-   41.0,
+   39.0,
    "explain"
   ],
   [
-   42.83,
+   45.13,
+   "base"
+  ],
+  [
+   45.8,
+   "explain"
+  ],
+  [
+   47.74,
    "base"
   ]
  ],
@@ -102,301 +106,328 @@
    "mid"
   ],
   [
-   1.2,
+   1.3,
    "full"
   ],
   [
-   14.19,
+   4.38,
    "close"
   ],
   [
-   15.6,
+   5.6,
    "full"
   ],
   [
-   40.11,
+   31.4,
+   560,
+   2700
+  ],
+  [
+   38.05,
    "close"
   ],
   [
-   42.0,
+   39.6,
    "full"
   ],
   [
-   42.8,
+   47.7,
    "full"
   ]
  ],
  "headlines": [
   {
-   "t0": 14.2,
-   "t1": 16.2,
-   "text": "WORAUF MUSST DU\nHEUTE ACHTEN?",
+   "t0": 4.38,
+   "t1": 5.6,
+   "text": "FRÜHSTART-\nRENTE",
    "y": 360,
-   "size": 104
+   "color2": "green",
+   "size": 120
   },
   {
-   "t0": 40.11,
-   "t1": 42.75,
-   "text": "NICHT JEDER AUSSCHLAG\nIST EIN SIGNAL",
+   "t0": 30.57,
+   "t1": 31.35,
+   "text": "ZINSESZINS",
+   "y": 360,
+   "size": 120
+  },
+  {
+   "t0": 39.66,
+   "t1": 42.15,
+   "text": "NUR EIN BEISPIEL –\nKEINE GARANTIE",
    "y": 360,
    "color2": "red",
-   "size": 88
+   "size": 96
   },
   {
-   "t0": 42.85,
-   "t1": 45.4,
+   "t0": 42.23,
+   "t1": 45.05,
+   "text": "AUSZAHLUNG\nERST AB 65",
+   "y": 360,
+   "color2": "red",
+   "size": 110
+  },
+  {
+   "t0": 45.13,
+   "t1": 47.65,
+   "text": "START:\nJANUAR 2027",
+   "y": 360,
+   "color2": "green",
+   "size": 110
+  },
+  {
+   "t0": 47.75,
+   "t1": 49.9,
    "text": "FOLG\nBÖRSENLEHRE",
    "y": 360
   },
   {
-   "t0": 43.6,
-   "t1": 45.4,
+   "t0": 48.4,
+   "t1": 49.9,
    "text": "KEINE ANLAGEBERATUNG",
    "y": 640,
    "size": 56,
    "color": "lgrey"
   }
  ],
- "counts": [
-  {
-   "t0": 3.7,
-   "t1": 6.0,
-   "from": 0,
-   "to": 2.1,
-   "dec": 1,
-   "suffix": " %",
-   "color": "green",
-   "y": 430,
-   "size": 170,
-   "sub": "DAX · SCHLUSS GESTERN (26.11.)",
-   "sub_t": 4.2,
-   "dur": 0.9,
-   "stroke": 8
-  },
-  {
-   "t0": 6.04,
-   "t1": 8.8,
-   "from": 24702,
-   "to": 25216,
-   "dec": 0,
-   "sign": false,
-   "suffix": "",
-   "color": "green",
-   "y": 430,
-   "size": 170,
-   "sub": "DAX-PUNKTE · WIEDER ÜBER 25.000",
-   "sub_t": 6.5,
-   "dur": 1.2,
-   "stroke": 8
-  },
-  {
-   "t0": 8.83,
-   "t1": 11.3,
-   "from": 0,
-   "to": 39,
-   "dec": 0,
-   "sign": false,
-   "suffix": " / 40",
-   "color": "green",
-   "y": 430,
-   "size": 170,
-   "sub": "DAX-WERTE IM PLUS",
-   "sub_t": 9.3,
-   "dur": 0.9,
-   "stroke": 8
-  }
- ],
+ "counts": [],
  "cards": [
   {
-   "t0": 16.3,
-   "t1": 24.4,
+   "t0": 9.47,
+   "t1": 20.8,
    "y": 330,
-   "title": "Heute im Blick",
-   "tag": "FR 27.11.",
-   "sub": "Termine (MEZ)",
+   "title": "So funktioniert's",
+   "tag": "STAAT",
+   "sub": "Frühstartrente pro Kind",
    "rows": [
     {
-     "t": 16.34,
-     "label": "Frankreich-Inflation",
-     "value": "08:45",
-     "size": 54
+     "t": 10.64,
+     "label": "Für Kinder ab",
+     "value": "Jahrgang 2020",
+     "size": 46
     },
     {
-     "t": 19.62,
-     "label": "Arbeitsmarkt DE",
-     "value": "09:55",
-     "size": 54
+     "t": 12.3,
+     "label": "Zeitraum",
+     "value": "6 bis 18 Jahre",
+     "size": 46
     },
     {
-     "t": 22.68,
-     "label": "Rheinmetall-Ziele",
-     "value": "10:00",
-     "size": 54,
-     "color": "red"
-    }
-   ],
-   "footer": "Quelle: dpa-AFX-Tagesvorschau"
-  },
-  {
-   "t0": 29.8,
-   "t1": 34.6,
-   "y": 330,
-   "title": "Wall Street heute",
-   "tag": "MEZ",
-   "sub": "Black Friday · verkürzter Handel",
-   "rows": [
-    {
-     "t": 29.81,
-     "label": "Eröffnung",
-     "value": "15:30",
-     "size": 56,
+     "t": 13.36,
+     "label": "Pro Monat",
+     "count": {
+      "from": 0,
+      "to": 10,
+      "dec": 0,
+      "prefix": "",
+      "suffix": " €",
+      "dur": 0.6
+     },
      "color": "green"
     },
     {
-     "t": 33.32,
-     "label": "Schluss",
-     "value": "19:00",
-     "size": 56,
-     "color": "red",
-     "old": "22:00",
-     "strike_t": 33.6
+     "t": 16.42,
+     "label": "Pro Jahr",
+     "count": {
+      "from": 0,
+      "to": 120,
+      "dec": 0,
+      "prefix": "",
+      "suffix": " €",
+      "dur": 0.7
+     },
+     "color": "green"
+    },
+    {
+     "t": 18.72,
+     "label": "Insgesamt",
+     "count": {
+      "from": 0,
+      "to": 1440,
+      "dec": 0,
+      "prefix": "",
+      "suffix": " €",
+      "dur": 0.9
+     },
+     "color": "green"
     }
    ],
-   "footer": "NYSE/Nasdaq: Schluss 13:00 Uhr New York"
+   "footer": "Bundesrat-Beschluss 20.11.2026 · Start 2027"
+  },
+  {
+   "t0": 23.32,
+   "t1": 30.45,
+   "y": 330,
+   "title": "Trade Republic",
+   "tag": "LAUT ANBIETER",
+   "sub": "Kinderdepot mit Frühstartrente",
+   "rows": [
+    {
+     "t": 26.08,
+     "label": "Depotkosten",
+     "value": "0 €",
+     "size": 58,
+     "color": "green"
+    },
+    {
+     "t": 27.17,
+     "label": "Ausführungskosten",
+     "value": "0 €",
+     "size": 58,
+     "color": "green"
+    },
+    {
+     "t": 28.45,
+     "label": "ETF-Produktkosten",
+     "value": "0 €",
+     "size": 58,
+     "color": "green"
+    }
+   ],
+   "footer": "Angaben von Trade Republic · Investieren birgt Risiken"
   }
  ],
  "toppills": [
   {
-   "t0": 11.4,
-   "t1": 14.1,
-   "text": "Heute früh: DAX vorbörslich im Plus · Zwischenstand",
+   "t0": 5.66,
+   "t1": 8.05,
+   "text": "Bundesrat: beschlossen am 20.11.",
    "y": 300
   },
   {
-   "t0": 34.7,
-   "t1": 40.0,
-   "text": "Wenig Volumen · langes Wochenende",
+   "t0": 20.91,
+   "t1": 23.25,
+   "text": "Geld landet in einem Depot",
    "y": 300
   }
  ],
  "labels": [
   {
-   "t0": 24.55,
-   "t1": 28.65,
+   "t0": 32.79,
+   "t1": 37.95,
    "x": 140,
-   "y": 420,
+   "y": 300,
    "w": 800,
-   "h": 170,
-   "title": "Rheinmetall: Kapitalmarkttag",
-   "sub": "neue Mittelfristziele · Webcast 10:00 Uhr",
-   "size": 44
+   "h": 190,
+   "title": "Rechenbeispiel: 6 % pro Jahr",
+   "sub": "10 €/Monat von 6 bis 18, dann liegen lassen bis 65",
+   "size": 42
   }
  ],
  "dimlines": [],
  "emojis": [
   {
-   "code": "1f4c8",
+   "code": "1f4b6",
    "t0": 0.3,
-   "t1": 11.3,
+   "t1": 4.3,
    "x": 880,
    "y": 1000,
    "size": 140
   },
   {
-   "code": "1f914",
-   "t0": 14.3,
-   "t1": 16.2,
+   "code": "1f476",
+   "t0": 9.5,
+   "t1": 20.8,
    "x": 880,
-   "y": 1000,
-   "size": 140
+   "y": 1200,
+   "size": 120
+  },
+  {
+   "code": "1f4c8",
+   "t0": 36.2,
+   "t1": 37.95,
+   "x": 880,
+   "y": 1250,
+   "size": 130
   },
   {
    "code": "26a0",
-   "t0": 27.81,
-   "t1": 28.65,
+   "t0": 38.1,
+   "t1": 39.6,
    "x": 890,
    "y": 1000,
    "size": 120
   },
   {
-   "code": "1f6cd",
-   "t0": 32.2,
-   "t1": 34.6,
-   "x": 190,
+   "code": "1f474",
+   "t0": 42.3,
+   "t1": 45.0,
+   "x": 880,
    "y": 1100,
    "size": 130
   },
   {
-   "code": "1f4a4",
-   "t0": 38.0,
-   "t1": 40.0,
-   "x": 190,
-   "y": 1000,
-   "size": 130
-  },
-  {
    "code": "2b50",
-   "t0": 43.0,
-   "t1": 45.4,
+   "t0": 47.9,
+   "t1": 49.9,
    "x": 190,
    "y": 760,
    "size": 130
   },
   {
    "code": "1f447",
-   "t0": 43.4,
-   "t1": 45.4,
+   "t0": 48.3,
+   "t1": 49.9,
    "x": 890,
    "y": 760,
    "size": 130
   }
  ],
  "marks": [
-  2.5,
-  23.81,
-  27.81,
-  40.11
+  1.58,
+  4.38,
+  31.4,
+  38.1
  ],
  "accents": [
-  3.7,
-  14.19,
-  27.81
+  4.38,
+  31.4,
+  38.1
  ],
  "segments": [
-  14.15,
-  24.45,
-  28.7,
-  34.65,
-  40.11,
-  42.8
+  8.1,
+  20.85,
+  30.5,
+  38.05,
+  45.1,
+  47.7
  ],
- "cash": [],
- "boom": [
-  27.81
+ "cash": [
+  13.36,
+  18.72,
+  36.2
  ],
- "bell": [
-  29.81
- ],
+ "boom": [],
+ "bell": [],
  "capmap": {
-  "Rheinmetall": "RHEINMETALL",
-  "fünfundzwanzigtausendzweihundertsechzehn": "25.216",
-  "Neununddreißig": "39"
+  "Frühstartrente": "FRÜHSTARTRENTE",
+  "zwanzigzwanzig": "2020",
+  "hundertzwanzig": "120 €",
+  "tausendvierhundertvierzig": "1.440 €",
+  "dreißigtausend": "30.000",
+  "fünfundsechzig": "65",
+  "zwanzigsiebenundzwanzig": "2027",
+  "Ausführungskosten": "KOSTEN"
  },
  "cover": {
-  "rubrik": "BÖRSENNEWS",
+  "rubrik": "ERKLÄRT",
   "lines": [
    [
-    "Gestern grün –",
+    "Frühstartrente:",
     "black"
    ],
    [
-    "was kommt heute?",
+    "10 € im Monat",
     "accent"
+   ],
+   [
+    "vom Staat",
+    "black"
    ]
   ],
   "pose": "explain",
   "mouth": "closed",
-  "file": "cover_heute_im_blick_27nov",
+  "file": "cover_fruehstartrente",
   "pen_w": 1150,
   "pen_dx": 20
  }
