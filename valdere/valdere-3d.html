@@ -53,7 +53,7 @@ env.add(new THREE.Mesh(new THREE.SphereGeometry(100,32,16),new THREE.MeshBasicMa
 const pm=new THREE.PMREMGenerator(R);S.environment=pm.fromScene(env,.04).texture;
 const kl=new THREE.DirectionalLight(0xfff0d8,1.6);kl.position.set(30,60,80);S.add(kl);S.add(new THREE.AmbientLight(0x406050,.4));
 const metal=new THREE.MeshStandardMaterial({color:M[0].metal,metalness:1,roughness:.18});
-const brushed=new THREE.MeshStandardMaterial({color:M[0].metal,metalness:1,roughness:.38});
+const brushed=new THREE.MeshStandardMaterial({color:M[0].metal,metalness:1,roughness:.42});
 const W=new THREE.Group();S.add(W);
 // case via lathe (profile in r,z)
 const prof=[[0,-6.5],[15,-6.5],[17.6,-5.8],[19,-4],[19.6,-1],[19.6,1.5],[19.1,3],[18.2,3.6],[17,3.7],[16.6,3.2]].map(p=>new THREE.Vector2(p[0],p[1]));
@@ -98,18 +98,26 @@ glass.position.z=3.9-60;
 const cr=new THREE.Group();const knob=new THREE.Mesh(new THREE.CylinderGeometry(2.6,2.6,3.2,24),metal);knob.rotation.z=Math.PI/2;cr.add(knob);
 const cab=new THREE.Mesh(new THREE.SphereGeometry(1.4,24,12),new THREE.MeshStandardMaterial({color:0x0f4a3a,roughness:.1,metalness:.2}));cab.position.x=1.7;cab.scale.x=.5;cr.add(cab);
 const stem=new THREE.Mesh(new THREE.CylinderGeometry(1,1,2,16),metal);stem.rotation.z=Math.PI/2;stem.position.x=-2;cr.add(stem);cr.position.set(21.6,0,-1.2);W.add(cr);
+function rbox(w,l,h,r){r=Math.min(r,w/2-.05,l/2-.05);const b=Math.min(.32,h/4),s=new THREE.Shape(),x=-w/2+b,y=-l/2+b,W2=w-2*b,L2=l-2*b,rr=Math.max(.1,r-b);
+ s.moveTo(x+rr,y);s.lineTo(x+W2-rr,y);s.quadraticCurveTo(x+W2,y,x+W2,y+rr);s.lineTo(x+W2,y+L2-rr);s.quadraticCurveTo(x+W2,y+L2,x+W2-rr,y+L2);s.lineTo(x+rr,y+L2);s.quadraticCurveTo(x,y+L2,x,y+L2-rr);s.lineTo(x,y+rr);s.quadraticCurveTo(x,y,x+rr,y);
+ const g=new THREE.ExtrudeGeometry(s,{depth:h-2*b,bevelEnabled:true,bevelThickness:b,bevelSize:b,bevelSegments:4,curveSegments:6});g.translate(0,0,-(h-2*b)/2);g.computeVertexNormals();return g}
 // lugs
-for(const sy of[1,-1])for(const sx of[1,-1]){const g=new THREE.BoxGeometry(2.6,9,4.2);const l=new THREE.Mesh(g,metal);l.position.set(sx*8.6,sy*20.5,-2.6);l.rotation.x=sy*.32;W.add(l)}
-// strap along wrist ellipse
-const strapMat=new THREE.MeshStandardMaterial({color:M[0].strap,roughness:.75,metalness:0,envMapIntensity:.25});
+for(const sy of[1,-1])for(const sx of[1,-1]){const g=rbox(2.6,9,4.2,1);const l=new THREE.Mesh(g,metal);l.position.set(sx*10,sy*20.5,-2.6);l.rotation.x=sy*.32;W.add(l)}
+// metal link bracelet along wrist ellipse: polished centre links, brushed outer links
 const st=new THREE.Group();W.add(st);
 const A=33,B=27,cz=-3.6;const P=t=>new THREE.Vector3(0,A*Math.sin(t),cz-B*(1-Math.cos(t)));
-for(const sg of[1,-1]){const N=70,t0=.72,t1=3.05;for(let i=0;i<N;i++){const t=sg*(t0+(t1-t0)*i/N),t2=sg*(t0+(t1-t0)*(i+1)/N);const a=P(t),b=P(t2);const len=a.distanceTo(b)+.15;
- const taper=20-4*i/N;const seg=new THREE.Mesh(new THREE.BoxGeometry(taper,len,3.2),strapMat);seg.position.copy(a).add(b).multiplyScalar(.5);seg.lookAt(seg.position.clone().add(new THREE.Vector3(0,0,1)));
- const dir=b.clone().sub(a).normalize();seg.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);st.add(seg)}}
-const keeper=new THREE.Mesh(new THREE.TorusGeometry(1,.5,8,4),metal);
-// buckle
-const bk=new THREE.Mesh(new THREE.TorusGeometry(10,.8,12,48,Math.PI),metal);bk.position.copy(P(-2.95));bk.rotation.set(-Math.PI/2+.2,0,0);st.add(bk);
+const X=new THREE.Vector3(1,0,0),mk=new THREE.Matrix4();
+function place(mesh,pos,tan){const n=new THREE.Vector3().crossVectors(X,tan);mk.makeBasis(X,tan,n);mesh.quaternion.setFromRotationMatrix(mk);mesh.position.copy(pos);st.add(mesh)}
+const pitch=6.2,gap=.35,t0=.72,t1=Math.PI-.36;
+for(const sg of[1,-1]){const pts=[],len=[0];for(let i=0;i<=600;i++){pts.push(P(sg*(t0+(t1-t0)*i/600)));if(i)len.push(len[i-1]+pts[i].distanceTo(pts[i-1]))}
+ const total=len[600],n=Math.round(total/pitch),pp=total/n;let j=0;
+ for(let k=0;k<n;k++){const s=(k+.5)*pp;while(len[j+1]<s)j++;const pos=pts[j],tan=pts[j+1].clone().sub(pts[j]).normalize();const f=1-.14*k/n,l=pp-gap;
+  if(k==0){place(new THREE.Mesh(rbox(17.2,l,3.2,1),metal),pos,tan);continue}
+  place(new THREE.Mesh(rbox(3.6*f,l,3,1),metal),pos,tan);
+  for(const sx of[1,-1]){const o=new THREE.Mesh(rbox(6.6*f,l,2.5,.9),brushed);o.geometry.translate(sx*5.25*f,0,0);place(o,pos,tan)}}}
+// folding clasp
+const cl=new THREE.Mesh(rbox(15,24,1.6,3),metal);place(cl,P(Math.PI).add(new THREE.Vector3(0,0,-1.6)),new THREE.Vector3(0,-1,0));
+const cl2=new THREE.Mesh(rbox(13,20,1.1,2.5),brushed);place(cl2,P(Math.PI).add(new THREE.Vector3(0,0,-2.6)),new THREE.Vector3(0,-1,0));
 // caseback with engraving
 const bc=document.createElement('canvas');bc.width=bc.height=512;const bx=bc.getContext('2d');
 bx.fillStyle='#b98a6e';bx.fillRect(0,0,512,512);for(let r=30;r<256;r+=3){bx.strokeStyle=r%6?'rgba(255,240,220,.18)':'rgba(60,30,10,.15)';bx.beginPath();bx.arc(256,256,r,0,7);bx.stroke()}
@@ -118,7 +126,7 @@ const bt=new THREE.CanvasTexture(bc);bt.encoding=THREE.sRGBEncoding;
 const back=new THREE.Mesh(new THREE.CircleGeometry(14.5,96),new THREE.MeshStandardMaterial({map:bt,metalness:.9,roughness:.32}));back.rotation.y=Math.PI;back.position.z=-6.55;W.add(back);
 W.rotation.set(-.15,0,0);
 // apply model
-function apply(i){const m=M[i];drawDial(m);metal.color.setHex(m.metal).convertSRGBToLinear();brushed.color.setHex(m.metal).convertSRGBToLinear();strapMat.color.setHex(m.strap).convertSRGBToLinear();
+function apply(i){const m=M[i];drawDial(m);metal.color.setHex(m.metal).convertSRGBToLinear();brushed.color.setHex(m.metal).convertSRGBToLinear();
  handMat.color.set(m.ink).convertSRGBToLinear();secMat.color.set(m.sec).convertSRGBToLinear();tour.visible=!!m.tour;cab.material.color.set(i==1?0x2a4a6a:i==2?0x111111:0x0f4a3a).convertSRGBToLinear();
  document.getElementById('nm').textContent=m.n;document.getElementById('rf').textContent=m.r;document.getElementById('sp').textContent=m.s;
  document.querySelectorAll('#bar button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m==i))}
