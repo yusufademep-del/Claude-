@@ -5,9 +5,9 @@
  "music_lufs": -33,
  "sfx_gain": 0.45,
  "dof_blur": 6,
- "dur": 48.0,
- "topic": "ALLES GRÜN",
- "date_long": "26.11.2026",
+ "dur": 45.4,
+ "topic": "HEUTE IM BLICK",
+ "date_long": "27.11.2026",
  "filter": {
   "t1": 3.2,
   "fade": 0.9,
@@ -21,13 +21,13 @@
  },
  "banner": {
   "t0": 0.1,
-  "t1": 2.25,
+  "t1": 3.6,
   "y": 250,
   "size": 96,
   "lines": [
    [
     [
-     "FAST ALLES",
+     "GESTERN",
      "black"
     ],
     [
@@ -37,7 +37,7 @@
    ],
    [
     [
-     "– UND JETZT?",
+     "– WAS KOMMT HEUTE?",
      "gold"
     ]
    ]
@@ -45,7 +45,7 @@
  },
  "flashes": [
   [
-   45.7,
+   42.8,
    0.7,
    1.0
   ]
@@ -56,51 +56,39 @@
    "base"
   ],
   [
-   2.0,
+   1.1,
    "explain"
   ],
   [
-   9.36,
-   "explain"
-  ],
-  [
-   16.89,
-   "shock"
-  ],
-  [
-   18.0,
-   "explain"
-  ],
-  [
-   22.19,
+   14.19,
    "q"
   ],
   [
-   24.75,
+   16.3,
    "explain"
   ],
   [
-   29.28,
+   27.81,
    "shock"
   ],
   [
-   31.3,
+   28.75,
    "explain"
   ],
   [
-   36.9,
+   34.69,
    "explain"
   ],
   [
-   42.19,
-   "base"
+   40.11,
+   "shock"
   ],
   [
-   42.94,
+   41.0,
    "explain"
   ],
   [
-   45.7,
+   42.83,
    "base"
   ]
  ],
@@ -114,73 +102,55 @@
    "mid"
   ],
   [
-   1.4,
+   1.2,
    "full"
   ],
   [
-   16.89,
+   14.19,
    "close"
   ],
   [
-   18.1,
+   15.6,
    "full"
   ],
   [
-   24.75,
+   40.11,
    "close"
   ],
   [
-   26.2,
+   42.0,
    "full"
   ],
   [
-   29.3,
-   560,
-   2700
-  ],
-  [
-   36.85,
-   "full"
-  ],
-  [
-   42.9,
-   "close"
-  ],
-  [
-   44.9,
-   "full"
-  ],
-  [
-   45.7,
+   42.8,
    "full"
   ]
  ],
  "headlines": [
   {
-   "t0": 20.1,
-   "t1": 22.1,
-   "text": "WALL STREET\nGESCHLOSSEN",
+   "t0": 14.2,
+   "t1": 16.2,
+   "text": "WORAUF MUSST DU\nHEUTE ACHTEN?",
    "y": 360,
-   "color2": "red",
    "size": 104
   },
   {
-   "t0": 42.94,
-   "t1": 45.6,
-   "text": "GRÜNER TAG –\nKEINE TRENDWENDE",
+   "t0": 40.11,
+   "t1": 42.75,
+   "text": "NICHT JEDER AUSSCHLAG\nIST EIN SIGNAL",
    "y": 360,
    "color2": "red",
-   "size": 96
+   "size": 88
   },
   {
-   "t0": 45.75,
-   "t1": 48.0,
+   "t0": 42.85,
+   "t1": 45.4,
    "text": "FOLG\nBÖRSENLEHRE",
    "y": 360
   },
   {
-   "t0": 46.6,
-   "t1": 48.0,
+   "t0": 43.6,
+   "t1": 45.4,
    "text": "KEINE ANLAGEBERATUNG",
    "y": 640,
    "size": 56,
@@ -189,8 +159,8 @@
  ],
  "counts": [
   {
-   "t0": 2.3,
-   "t1": 4.4,
+   "t0": 3.7,
+   "t1": 6.0,
    "from": 0,
    "to": 2.1,
    "dec": 1,
@@ -198,14 +168,14 @@
    "color": "green",
    "y": 430,
    "size": 170,
-   "sub": "DAX · XETRA-SCHLUSS 26.11.",
-   "sub_t": 2.8,
+   "sub": "DAX · SCHLUSS GESTERN (26.11.)",
+   "sub_t": 4.2,
    "dur": 0.9,
    "stroke": 8
   },
   {
-   "t0": 4.45,
-   "t1": 6.8,
+   "t0": 6.04,
+   "t1": 8.8,
    "from": 24702,
    "to": 25216,
    "dec": 0,
@@ -214,92 +184,82 @@
    "color": "green",
    "y": 430,
    "size": 170,
-   "sub": "DAX-PUNKTE · GESTERN 24.702",
-   "sub_t": 4.9,
-   "dur": 1.0,
+   "sub": "DAX-PUNKTE · WIEDER ÜBER 25.000",
+   "sub_t": 6.5,
+   "dur": 1.2,
+   "stroke": 8
+  },
+  {
+   "t0": 8.83,
+   "t1": 11.3,
+   "from": 0,
+   "to": 39,
+   "dec": 0,
+   "sign": false,
+   "suffix": " / 40",
+   "color": "green",
+   "y": 430,
+   "size": 170,
+   "sub": "DAX-WERTE IM PLUS",
+   "sub_t": 9.3,
+   "dur": 0.9,
    "stroke": 8
   }
  ],
  "cards": [
   {
-   "t0": 9.4,
-   "t1": 16.8,
+   "t0": 16.3,
+   "t1": 24.4,
    "y": 330,
-   "title": "Heute an der Börse",
-   "tag": "26.11.",
-   "sub": "Chipwerte erholen sich",
+   "title": "Heute im Blick",
+   "tag": "FR 27.11.",
+   "sub": "Termine (MEZ)",
    "rows": [
     {
-     "t": 9.5,
-     "label": "DAX",
-     "count": {
-      "from": 0,
-      "to": 2.1,
-      "dec": 1,
-      "prefix": "+ ",
-      "suffix": " %",
-      "dur": 0.8
-     },
-     "color": "green",
-     "old": "− 1,3 %",
-     "strike_t": 10.1
+     "t": 16.34,
+     "label": "Frankreich-Inflation",
+     "value": "08:45",
+     "size": 54
     },
     {
-     "t": 11.77,
-     "label": "Infineon",
-     "count": {
-      "from": 0,
-      "to": 4,
-      "dec": 0,
-      "prefix": "ca. + ",
-      "suffix": " %",
-      "dur": 0.8
-     },
-     "color": "green"
+     "t": 19.62,
+     "label": "Arbeitsmarkt DE",
+     "value": "09:55",
+     "size": 54
     },
     {
-     "t": 14.11,
-     "label": "Aixtron",
-     "value": "kräftig im Plus",
-     "size": 44,
-     "color": "green"
-    },
-    {
-     "t": 14.72,
-     "label": "Süss Microtec",
-     "value": "kräftig im Plus",
-     "size": 44,
-     "color": "green"
+     "t": 22.68,
+     "label": "Rheinmetall-Ziele",
+     "value": "10:00",
+     "size": 54,
+     "color": "red"
     }
    ],
-   "footer": "Xetra · Stand 26.11., Tagesschluss"
+   "footer": "Quelle: dpa-AFX-Tagesvorschau"
   },
   {
-   "t0": 37.0,
-   "t1": 42.1,
+   "t0": 29.8,
+   "t1": 34.6,
    "y": 330,
-   "title": "Morgen, Freitag",
-   "tag": "27.11.",
-   "sub": "Black Friday an der Wall Street",
+   "title": "Wall Street heute",
+   "tag": "MEZ",
+   "sub": "Black Friday · verkürzter Handel",
    "rows": [
     {
-     "t": 37.66,
-     "label": "US-Börse",
-     "value": "verkürzt",
-     "size": 54
+     "t": 29.81,
+     "label": "Eröffnung",
+     "value": "15:30",
+     "size": 56,
+     "color": "green"
     },
     {
-     "t": 38.6,
-     "label": "Handelsschluss",
-     "value": "19:00 MEZ",
-     "size": 54
-    },
-    {
-     "t": 40.68,
-     "label": "Erholung hält?",
-     "value": "?",
-     "size": 64,
-     "color": "red"
+     "t": 33.32,
+     "label": "Schluss",
+     "value": "19:00",
+     "size": 56,
+     "color": "red",
+     "old": "22:00",
+     "strike_t": 33.6
     }
    ],
    "footer": "NYSE/Nasdaq: Schluss 13:00 Uhr New York"
@@ -307,34 +267,29 @@
  ],
  "toppills": [
   {
-   "t0": 22.2,
-   "t1": 29.2,
-   "text": "Thanksgiving · dünner Handel",
+   "t0": 11.4,
+   "t1": 14.1,
+   "text": "Heute früh: DAX vorbörslich im Plus · Zwischenstand",
+   "y": 300
+  },
+  {
+   "t0": 34.7,
+   "t1": 40.0,
+   "text": "Wenig Volumen · langes Wochenende",
    "y": 300
   }
  ],
  "labels": [
   {
-   "t0": 24.8,
-   "t1": 29.2,
-   "x": 140,
-   "y": 540,
-   "w": 800,
-   "h": 170,
-   "title": "Wenig Volumen = große Ausschläge",
-   "sub": "weniger aussagekräftig",
-   "size": 42
-  },
-  {
-   "t0": 31.4,
-   "t1": 36.8,
+   "t0": 24.55,
+   "t1": 28.65,
    "x": 140,
    "y": 420,
    "w": 800,
    "h": 170,
-   "title": "US-Kerninflation: 3,3 %",
-   "sub": "Zinserhöhung im Dezember fast sicher",
-   "size": 42
+   "title": "Rheinmetall: Kapitalmarkttag",
+   "sub": "neue Mittelfristziele · Webcast 10:00 Uhr",
+   "size": 44
   }
  ],
  "dimlines": [],
@@ -342,103 +297,106 @@
   {
    "code": "1f4c8",
    "t0": 0.3,
-   "t1": 6.8,
+   "t1": 11.3,
    "x": 880,
    "y": 1000,
    "size": 140
   },
   {
-   "code": "1f983",
-   "t0": 19.0,
-   "t1": 22.1,
+   "code": "1f914",
+   "t0": 14.3,
+   "t1": 16.2,
    "x": 880,
    "y": 1000,
-   "size": 150
-  },
-  {
-   "code": "1f4a4",
-   "t0": 22.2,
-   "t1": 24.7,
-   "x": 190,
-   "y": 1000,
-   "size": 130
+   "size": 140
   },
   {
    "code": "26a0",
-   "t0": 16.9,
-   "t1": 18.6,
+   "t0": 27.81,
+   "t1": 28.65,
    "x": 890,
    "y": 1000,
    "size": 120
   },
   {
-   "code": "1f914",
-   "t0": 40.4,
-   "t1": 42.1,
+   "code": "1f6cd",
+   "t0": 32.2,
+   "t1": 34.6,
    "x": 190,
    "y": 1100,
    "size": 130
   },
   {
+   "code": "1f4a4",
+   "t0": 38.0,
+   "t1": 40.0,
+   "x": 190,
+   "y": 1000,
+   "size": 130
+  },
+  {
    "code": "2b50",
-   "t0": 45.9,
-   "t1": 48.0,
+   "t0": 43.0,
+   "t1": 45.4,
    "x": 190,
    "y": 760,
    "size": 130
   },
   {
    "code": "1f447",
-   "t0": 46.3,
-   "t1": 48.0,
+   "t0": 43.4,
+   "t1": 45.4,
    "x": 890,
    "y": 760,
    "size": 130
   }
  ],
  "marks": [
-  1.28,
-  17.09,
-  24.75,
-  44.68
+  2.5,
+  23.81,
+  27.81,
+  40.11
  ],
  "accents": [
-  2.3,
-  16.9,
-  33.96
+  3.7,
+  14.19,
+  27.81
  ],
  "segments": [
-  6.9,
-  16.85,
-  29.25,
-  36.85,
-  42.19,
-  45.7
+  14.15,
+  24.45,
+  28.7,
+  34.65,
+  40.11,
+  42.8
  ],
  "cash": [],
  "boom": [
-  33.96
+  27.81
  ],
- "bell": [],
+ "bell": [
+  29.81
+ ],
  "capmap": {
-  "US-Börse": "US-BÖRSE",
-  "Süss": "SÜSS"
+  "Rheinmetall": "RHEINMETALL",
+  "fünfundzwanzigtausendzweihundertsechzehn": "25.216",
+  "Neununddreißig": "39"
  },
  "cover": {
   "rubrik": "BÖRSENNEWS",
   "lines": [
    [
-    "Fast alles grün –",
+    "Gestern grün –",
     "black"
    ],
    [
-    "und jetzt?",
+    "was kommt heute?",
     "accent"
    ]
   ],
   "pose": "explain",
   "mouth": "closed",
-  "file": "cover_alles_gruen_26nov",
+  "file": "cover_heute_im_blick_27nov",
   "pen_w": 1150,
   "pen_dx": 20
  }

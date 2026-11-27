@@ -1,0 +1,403 @@
+{
+ "fps": 60,
+ "channel": "börsenlehre",
+ "shot_dur": 0.6,
+ "music_lufs": -33,
+ "sfx_gain": 0.45,
+ "dof_blur": 6,
+ "dur": 45.4,
+ "topic": "HEUTE IM BLICK",
+ "date_long": "27.11.2026",
+ "filter": {
+  "t1": 3.2,
+  "fade": 0.9,
+  "blur": 3,
+  "strength": 0.5,
+  "tint": [
+   246,
+   206,
+   222
+  ]
+ },
+ "banner": {
+  "t0": 0.1,
+  "t1": 3.6,
+  "y": 250,
+  "size": 96,
+  "lines": [
+   [
+    [
+     "GESTERN",
+     "black"
+    ],
+    [
+     "GRÜN",
+     "green"
+    ]
+   ],
+   [
+    [
+     "– WAS KOMMT HEUTE?",
+     "gold"
+    ]
+   ]
+  ]
+ },
+ "flashes": [
+  [
+   42.8,
+   0.7,
+   1.0
+  ]
+ ],
+ "poses": [
+  [
+   0,
+   "base"
+  ],
+  [
+   1.1,
+   "explain"
+  ],
+  [
+   14.19,
+   "q"
+  ],
+  [
+   16.3,
+   "explain"
+  ],
+  [
+   27.81,
+   "shock"
+  ],
+  [
+   28.75,
+   "explain"
+  ],
+  [
+   34.69,
+   "explain"
+  ],
+  [
+   40.11,
+   "shock"
+  ],
+  [
+   41.0,
+   "explain"
+  ],
+  [
+   42.83,
+   "base"
+  ]
+ ],
+ "shots": [
+  [
+   0,
+   "full"
+  ],
+  [
+   0.1,
+   "mid"
+  ],
+  [
+   1.2,
+   "full"
+  ],
+  [
+   14.19,
+   "close"
+  ],
+  [
+   15.6,
+   "full"
+  ],
+  [
+   40.11,
+   "close"
+  ],
+  [
+   42.0,
+   "full"
+  ],
+  [
+   42.8,
+   "full"
+  ]
+ ],
+ "headlines": [
+  {
+   "t0": 14.2,
+   "t1": 16.2,
+   "text": "WORAUF MUSST DU\nHEUTE ACHTEN?",
+   "y": 360,
+   "size": 104
+  },
+  {
+   "t0": 40.11,
+   "t1": 42.75,
+   "text": "NICHT JEDER AUSSCHLAG\nIST EIN SIGNAL",
+   "y": 360,
+   "color2": "red",
+   "size": 88
+  },
+  {
+   "t0": 42.85,
+   "t1": 45.4,
+   "text": "FOLG\nBÖRSENLEHRE",
+   "y": 360
+  },
+  {
+   "t0": 43.6,
+   "t1": 45.4,
+   "text": "KEINE ANLAGEBERATUNG",
+   "y": 640,
+   "size": 56,
+   "color": "lgrey"
+  }
+ ],
+ "counts": [
+  {
+   "t0": 3.7,
+   "t1": 6.0,
+   "from": 0,
+   "to": 2.1,
+   "dec": 1,
+   "suffix": " %",
+   "color": "green",
+   "y": 430,
+   "size": 170,
+   "sub": "DAX · SCHLUSS GESTERN (26.11.)",
+   "sub_t": 4.2,
+   "dur": 0.9,
+   "stroke": 8
+  },
+  {
+   "t0": 6.04,
+   "t1": 8.8,
+   "from": 24702,
+   "to": 25216,
+   "dec": 0,
+   "sign": false,
+   "suffix": "",
+   "color": "green",
+   "y": 430,
+   "size": 170,
+   "sub": "DAX-PUNKTE · WIEDER ÜBER 25.000",
+   "sub_t": 6.5,
+   "dur": 1.2,
+   "stroke": 8
+  },
+  {
+   "t0": 8.83,
+   "t1": 11.3,
+   "from": 0,
+   "to": 39,
+   "dec": 0,
+   "sign": false,
+   "suffix": " / 40",
+   "color": "green",
+   "y": 430,
+   "size": 170,
+   "sub": "DAX-WERTE IM PLUS",
+   "sub_t": 9.3,
+   "dur": 0.9,
+   "stroke": 8
+  }
+ ],
+ "cards": [
+  {
+   "t0": 16.3,
+   "t1": 24.4,
+   "y": 330,
+   "title": "Heute im Blick",
+   "tag": "FR 27.11.",
+   "sub": "Termine (MEZ)",
+   "rows": [
+    {
+     "t": 16.34,
+     "label": "Frankreich-Inflation",
+     "value": "08:45",
+     "size": 54
+    },
+    {
+     "t": 19.62,
+     "label": "Arbeitsmarkt DE",
+     "value": "09:55",
+     "size": 54
+    },
+    {
+     "t": 22.68,
+     "label": "Rheinmetall-Ziele",
+     "value": "10:00",
+     "size": 54,
+     "color": "red"
+    }
+   ],
+   "footer": "Quelle: dpa-AFX-Tagesvorschau"
+  },
+  {
+   "t0": 29.8,
+   "t1": 34.6,
+   "y": 330,
+   "title": "Wall Street heute",
+   "tag": "MEZ",
+   "sub": "Black Friday · verkürzter Handel",
+   "rows": [
+    {
+     "t": 29.81,
+     "label": "Eröffnung",
+     "value": "15:30",
+     "size": 56,
+     "color": "green"
+    },
+    {
+     "t": 33.32,
+     "label": "Schluss",
+     "value": "19:00",
+     "size": 56,
+     "color": "red",
+     "old": "22:00",
+     "strike_t": 33.6
+    }
+   ],
+   "footer": "NYSE/Nasdaq: Schluss 13:00 Uhr New York"
+  }
+ ],
+ "toppills": [
+  {
+   "t0": 11.4,
+   "t1": 14.1,
+   "text": "Heute früh: DAX vorbörslich im Plus · Zwischenstand",
+   "y": 300
+  },
+  {
+   "t0": 34.7,
+   "t1": 40.0,
+   "text": "Wenig Volumen · langes Wochenende",
+   "y": 300
+  }
+ ],
+ "labels": [
+  {
+   "t0": 24.55,
+   "t1": 28.65,
+   "x": 140,
+   "y": 420,
+   "w": 800,
+   "h": 170,
+   "title": "Rheinmetall: Kapitalmarkttag",
+   "sub": "neue Mittelfristziele · Webcast 10:00 Uhr",
+   "size": 44
+  }
+ ],
+ "dimlines": [],
+ "emojis": [
+  {
+   "code": "1f4c8",
+   "t0": 0.3,
+   "t1": 11.3,
+   "x": 880,
+   "y": 1000,
+   "size": 140
+  },
+  {
+   "code": "1f914",
+   "t0": 14.3,
+   "t1": 16.2,
+   "x": 880,
+   "y": 1000,
+   "size": 140
+  },
+  {
+   "code": "26a0",
+   "t0": 27.81,
+   "t1": 28.65,
+   "x": 890,
+   "y": 1000,
+   "size": 120
+  },
+  {
+   "code": "1f6cd",
+   "t0": 32.2,
+   "t1": 34.6,
+   "x": 190,
+   "y": 1100,
+   "size": 130
+  },
+  {
+   "code": "1f4a4",
+   "t0": 38.0,
+   "t1": 40.0,
+   "x": 190,
+   "y": 1000,
+   "size": 130
+  },
+  {
+   "code": "2b50",
+   "t0": 43.0,
+   "t1": 45.4,
+   "x": 190,
+   "y": 760,
+   "size": 130
+  },
+  {
+   "code": "1f447",
+   "t0": 43.4,
+   "t1": 45.4,
+   "x": 890,
+   "y": 760,
+   "size": 130
+  }
+ ],
+ "marks": [
+  2.5,
+  23.81,
+  27.81,
+  40.11
+ ],
+ "accents": [
+  3.7,
+  14.19,
+  27.81
+ ],
+ "segments": [
+  14.15,
+  24.45,
+  28.7,
+  34.65,
+  40.11,
+  42.8
+ ],
+ "cash": [],
+ "boom": [
+  27.81
+ ],
+ "bell": [
+  29.81
+ ],
+ "capmap": {
+  "Rheinmetall": "RHEINMETALL",
+  "fünfundzwanzigtausendzweihundertsechzehn": "25.216",
+  "Neununddreißig": "39"
+ },
+ "cover": {
+  "rubrik": "BÖRSENNEWS",
+  "lines": [
+   [
+    "Gestern grün –",
+    "black"
+   ],
+   [
+    "was kommt heute?",
+    "accent"
+   ]
+  ],
+  "pose": "explain",
+  "mouth": "closed",
+  "file": "cover_heute_im_blick_27nov",
+  "pen_w": 1150,
+  "pen_dx": 20
+ }
+}
