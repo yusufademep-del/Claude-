@@ -1,0 +1,422 @@
+{
+ "fps": 60,
+ "channel": "börsenlehre",
+ "shot_dur": 0.6,
+ "music_lufs": -33,
+ "sfx_gain": 0.45,
+ "dof_blur": 6,
+ "dur": 54.4,
+ "topic": "JETZT INVESTIEREN?",
+ "date_long": "27.11.2026",
+ "filter": {
+  "t1": 3.5,
+  "fade": 0.9,
+  "blur": 3,
+  "strength": 0.5,
+  "tint": [
+   246,
+   206,
+   222
+  ]
+ },
+ "banner": {
+  "t0": 0.1,
+  "t1": 3.45,
+  "y": 250,
+  "size": 96,
+  "lines": [
+   [
+    [
+     "JETZT",
+     "black"
+    ],
+    [
+     "INVESTIEREN",
+     "gold"
+    ]
+   ],
+   [
+    [
+     "ODER WARTEN?",
+     "black"
+    ]
+   ]
+  ]
+ },
+ "flashes": [
+  [
+   52.0,
+   0.7,
+   1.0
+  ]
+ ],
+ "poses": [
+  [
+   0,
+   "q"
+  ],
+  [
+   3.55,
+   "explain"
+  ],
+  [
+   10.49,
+   "q"
+  ],
+  [
+   14.42,
+   "explain"
+  ],
+  [
+   17.51,
+   "explain"
+  ],
+  [
+   26.04,
+   "shock"
+  ],
+  [
+   26.79,
+   "explain"
+  ],
+  [
+   36.38,
+   "explain"
+  ],
+  [
+   43.08,
+   "explain"
+  ],
+  [
+   48.15,
+   "base"
+  ],
+  [
+   49.0,
+   "explain"
+  ],
+  [
+   52.04,
+   "base"
+  ]
+ ],
+ "shots": [
+  [
+   0,
+   "full"
+  ],
+  [
+   0.1,
+   "mid"
+  ],
+  [
+   1.3,
+   "full"
+  ],
+  [
+   14.42,
+   "close"
+  ],
+  [
+   17.45,
+   "full"
+  ],
+  [
+   26.75,
+   560,
+   2700
+  ],
+  [
+   36.35,
+   "full"
+  ],
+  [
+   43.08,
+   "close"
+  ],
+  [
+   48.1,
+   "full"
+  ],
+  [
+   52.0,
+   "full"
+  ]
+ ],
+ "headlines": [
+  {
+   "t0": 11.55,
+   "t1": 14.35,
+   "text": "JETZT KAUFEN –\nODER WARTEN?",
+   "y": 360,
+   "size": 110
+  },
+  {
+   "t0": 15.92,
+   "t1": 17.45,
+   "text": "DEN PERFEKTEN ZEITPUNKT\nKENNT NIEMAND",
+   "y": 360,
+   "color2": "red",
+   "size": 86
+  },
+  {
+   "t0": 43.08,
+   "t1": 46.9,
+   "text": "NUR GELD, DAS DU\nLANGE NICHT BRAUCHST",
+   "y": 360,
+   "color2": "red",
+   "size": 92
+  },
+  {
+   "t0": 46.94,
+   "t1": 48.05,
+   "text": "BREIT\nSTREUEN",
+   "y": 360,
+   "color2": "green",
+   "size": 120
+  },
+  {
+   "t0": 49.06,
+   "t1": 51.95,
+   "text": "ZEIT IM MARKT\nSCHLÄGT TIMING",
+   "y": 360,
+   "color2": "green",
+   "size": 110
+  },
+  {
+   "t0": 52.05,
+   "t1": 54.4,
+   "text": "FOLG\nBÖRSENLEHRE",
+   "y": 360
+  },
+  {
+   "t0": 52.8,
+   "t1": 54.4,
+   "text": "KEINE ANLAGEBERATUNG",
+   "y": 640,
+   "size": 56,
+   "color": "lgrey"
+  }
+ ],
+ "counts": [
+  {
+   "t0": 7.4,
+   "t1": 10.4,
+   "from": 0,
+   "to": 0.9,
+   "dec": 1,
+   "suffix": " %",
+   "color": "green",
+   "y": 430,
+   "size": 170,
+   "sub": "DAX · SCHLUSS FREITAG 27.11.",
+   "sub_t": 7.9,
+   "dur": 0.9,
+   "stroke": 8
+  }
+ ],
+ "cards": [
+  {
+   "t0": 22.57,
+   "t1": 26.7,
+   "y": 330,
+   "title": "S&P 500 · 20 Jahre",
+   "tag": "J.P. MORGAN",
+   "sub": "Rendite pro Jahr, 2004–2024",
+   "rows": [
+    {
+     "t": 22.6,
+     "label": "Immer investiert",
+     "value": "10,6 %",
+     "size": 58,
+     "color": "green"
+    },
+    {
+     "t": 23.4,
+     "label": "Ohne 10 beste Tage",
+     "value": "6,4 %",
+     "size": 58,
+     "color": "red"
+    },
+    {
+     "t": 26.04,
+     "label": "Endbetrag",
+     "value": "mehr als halbiert",
+     "size": 44,
+     "color": "red"
+    }
+   ],
+   "footer": "Quelle: J.P. Morgan Asset Management (via Webull/Chase)"
+  },
+  {
+   "t0": 37.74,
+   "t1": 43.0,
+   "y": 330,
+   "title": "Sparplan",
+   "tag": "IDEE",
+   "sub": "Jeden Monat der gleiche Betrag",
+   "rows": [
+    {
+     "t": 38.68,
+     "label": "Betrag",
+     "value": "immer gleich",
+     "size": 48
+    },
+    {
+     "t": 41.43,
+     "label": "Markt oben",
+     "value": "weniger Anteile",
+     "size": 44,
+     "color": "red"
+    },
+    {
+     "t": 42.04,
+     "label": "Markt unten",
+     "value": "mehr Anteile",
+     "size": 44,
+     "color": "green"
+    }
+   ],
+   "footer": "Durchschnittskosteneffekt · keine Garantie"
+  }
+ ],
+ "toppills": [
+  {
+   "t0": 17.55,
+   "t1": 22.5,
+   "text": "Die 10 besten Börsentage",
+   "y": 300
+  },
+  {
+   "t0": 28.08,
+   "t1": 32.9,
+   "text": "7 der 10 besten Tage: nah an den schlimmsten",
+   "y": 300
+  }
+ ],
+ "labels": [
+  {
+   "t0": 32.98,
+   "t1": 36.3,
+   "x": 140,
+   "y": 420,
+   "w": 800,
+   "h": 170,
+   "title": "Panik-Verkauf = Erholung verpasst",
+   "sub": "die grünen Pfeile kommen mitten im Absturz",
+   "size": 42
+  }
+ ],
+ "dimlines": [],
+ "emojis": [
+  {
+   "code": "1f914",
+   "t0": 0.3,
+   "t1": 3.4,
+   "x": 880,
+   "y": 1000,
+   "size": 140
+  },
+  {
+   "code": "1f3a2",
+   "t0": 3.6,
+   "t1": 7.3,
+   "x": 880,
+   "y": 1000,
+   "size": 140
+  },
+  {
+   "code": "1f52e",
+   "t0": 15.9,
+   "t1": 17.4,
+   "x": 880,
+   "y": 1150,
+   "size": 130
+  },
+  {
+   "code": "1f631",
+   "t0": 33.0,
+   "t1": 36.3,
+   "x": 880,
+   "y": 1150,
+   "size": 130
+  },
+  {
+   "code": "1f4c5",
+   "t0": 38.7,
+   "t1": 43.0,
+   "x": 880,
+   "y": 1200,
+   "size": 120
+  },
+  {
+   "code": "2b50",
+   "t0": 52.2,
+   "t1": 54.4,
+   "x": 190,
+   "y": 760,
+   "size": 130
+  },
+  {
+   "code": "1f447",
+   "t0": 52.6,
+   "t1": 54.4,
+   "x": 890,
+   "y": 760,
+   "size": 130
+  }
+ ],
+ "marks": [
+  1.0,
+  14.42,
+  26.04,
+  48.15
+ ],
+ "accents": [
+  3.55,
+  14.42,
+  26.04,
+  28.08,
+  48.15
+ ],
+ "segments": [
+  3.5,
+  10.49,
+  17.45,
+  26.75,
+  36.35,
+  43.08,
+  48.1,
+  52.0
+ ],
+ "cash": [
+  38.68
+ ],
+ "boom": [
+  26.04
+ ],
+ "bell": [],
+ "capmap": {
+  "S&P": "S&P 500",
+  "500": "S&P 500",
+  "J.P.": "J.P. MORGAN"
+ },
+ "cover": {
+  "rubrik": "ERKLÄRT",
+  "lines": [
+   [
+    "Jetzt investieren",
+    "black"
+   ],
+   [
+    "oder warten?",
+    "accent"
+   ]
+  ],
+  "pose": "q",
+  "mouth": "closed",
+  "file": "cover_jetzt_investieren",
+  "pen_w": 1150,
+  "pen_dx": 20
+ }
+}
