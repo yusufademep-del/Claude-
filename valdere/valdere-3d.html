@@ -1,0 +1,135 @@
+<title>Valdère 3D Modell</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE occasion, hushed
+   IDEA Vitrine im Manufaktur-Salon: die Uhr schwebt im Licht, man dreht sie in der Hand
+   PICTURE das 3D-Modell, bildfüllend, Zeiger zeigen die echte Uhrzeit
+   COLOUR Smaragd-Nacht, Elfenbein, Champagnergold
+   TYPE Cormorant Garamond + Manrope
+   LAYOUT Vollbild-Canvas; Titel oben links, Modellwahl unten mittig; Handy gleich, kompakter */
+:root{color-scheme:dark;--bg:#07160f;--ink:#f3ecdf;--soft:#b9c4bb;--gold:#d6bf8e;--line:rgba(214,191,142,.35)}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(120% 90% at 50% 40%,#123a2f 0%,#07160f 70%);color:var(--ink);font:15px/1.5 Manrope,system-ui,sans-serif;overflow:hidden}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.top{position:fixed;top:calc(env(safe-area-inset-top,0px) + 20px);left:max(4vw,16px,env(safe-area-inset-left,0px));right:max(4vw,16px,env(safe-area-inset-right,0px));pointer-events:none;display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+h1{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:clamp(34px,5vw,56px);line-height:1;margin:0}
+.ref{color:var(--gold);margin-top:6px}
+.spec{color:var(--soft);font-size:13px;text-align:right;max-width:16em}
+.bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);display:flex;gap:6px;padding:6px;border:1px solid var(--line);background:rgba(7,22,15,.7);backdrop-filter:blur(8px);border-radius:999px;max-width:calc(100% - 32px)}
+.bar button{font:600 14px Manrope,sans-serif;color:var(--ink);background:none;border:0;border-radius:999px;padding:0 18px;min-height:44px;cursor:pointer;white-space:nowrap}
+.bar button:hover{background:rgba(214,191,142,.12)}
+.bar button[aria-pressed=true]{background:var(--gold);color:#17120a}
+.hint{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);left:0;right:0;text-align:center;color:var(--soft);font-size:13px;pointer-events:none}
+@media(max-width:560px){.spec{display:none}.bar button{padding:0 12px;font-size:13px}}
+</style>
+<canvas id="c"></canvas>
+<div class="top"><div><h1 id="nm">Valdère Nocturne</h1><div class="ref" id="rf">Ref. VD-01 · Mondphase · 39 mm</div></div><div class="spec" id="sp">18 K Roségold · Kaliber VD 210 · Handaufzug · 72 h Gangreserve</div></div>
+<div class="hint">Ziehen zum Drehen · Zwei Finger oder Mausrad zum Zoomen · Zeiger zeigen die echte Uhrzeit</div>
+<div class="bar" id="bar">
+  <button data-m="0" aria-pressed="true">Nocturne</button>
+  <button data-m="1" aria-pressed="false">Glacier</button>
+  <button data-m="2" aria-pressed="false">Héritage</button>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+{
+const M=[
+ {n:'Valdère Nocturne',r:'Ref. VD-01 · Mondphase · 39 mm',s:'18 K Roségold · Kaliber VD 210 · Handaufzug · 72 h Gangreserve',dial:['#1a5a4a','#0a2a22'],ink:'#e3c98f',metal:0xf0a37c,strap:0x08261c,sec:'#b33a48',moon:1},
+ {n:'Valdère Glacier',r:'Ref. VD-02 · Drei Zeiger · 38 mm',s:'18 K Weißgold · Kaliber VD 100 · 7,9 mm flach · 72 h Gangreserve',dial:['#f6f8f8','#d5e0e3'],ink:'#26343c',metal:0xdfe3e6,strap:0x141c24,sec:'#26343c'},
+ {n:'Valdère Héritage',r:'Ref. VD-03 · Tourbillon · 40 mm',s:'Platin 950 · Kaliber VD 900 · 96 h Gangreserve · 30 Stück',dial:['#1c1712','#060504'],ink:'#d6bf8e',metal:0xcfd2d4,strap:0x120c08,sec:'#d6bf8e',tour:1}];
+const cv=document.getElementById('c');
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+R.setPixelRatio(Math.min(devicePixelRatio,2));R.outputEncoding=THREE.sRGBEncoding;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.05;
+const S=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(32,1,1,1000);cam.position.set(40,25,120);
+const ctl=new THREE.OrbitControls(cam,cv);ctl.enableDamping=true;ctl.autoRotate=true;ctl.autoRotateSpeed=.8;ctl.minDistance=60;ctl.maxDistance=220;ctl.enablePan=false;ctl.target.set(0,0,-8);
+// studio environment for reflections
+const env=new THREE.Scene();
+env.add(new THREE.Mesh(new THREE.SphereGeometry(100,32,16),new THREE.MeshBasicMaterial({color:0x050a08,side:THREE.BackSide})));
+[[0,60,40,1.0,0xfff2dc,90,30],[-70,10,20,.7,0xffffff,20,70],[70,-10,30,.5,0xd6bf8e,25,60],[0,-60,-30,.25,0xffffff,80,20]].forEach(p=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(p[5],p[6]),new THREE.MeshBasicMaterial({color:p[4],side:THREE.DoubleSide}));m.material.color.multiplyScalar(p[3]*3);m.position.set(p[0],p[1],p[2]);m.lookAt(0,0,0);env.add(m)});
+const pm=new THREE.PMREMGenerator(R);S.environment=pm.fromScene(env,.04).texture;
+const kl=new THREE.DirectionalLight(0xfff0d8,1.6);kl.position.set(30,60,80);S.add(kl);S.add(new THREE.AmbientLight(0x406050,.4));
+const metal=new THREE.MeshStandardMaterial({color:M[0].metal,metalness:1,roughness:.18});
+const brushed=new THREE.MeshStandardMaterial({color:M[0].metal,metalness:1,roughness:.38});
+const W=new THREE.Group();S.add(W);
+// case via lathe (profile in r,z)
+const prof=[[0,-6.5],[15,-6.5],[17.6,-5.8],[19,-4],[19.6,-1],[19.6,1.5],[19.1,3],[18.2,3.6],[17,3.7],[16.6,3.2]].map(p=>new THREE.Vector2(p[0],p[1]));
+const lathe=g=>{g.rotateX(Math.PI/2);return g};
+const cs=new THREE.Mesh(lathe(new THREE.LatheGeometry(prof,128)),metal);W.add(cs);
+// dial texture
+const dc=document.createElement('canvas');dc.width=dc.height=1024;const dx=dc.getContext('2d');
+const dt=new THREE.CanvasTexture(dc);dt.encoding=THREE.sRGBEncoding;dt.anisotropy=8;
+function drawDial(m){const c=512;dx.clearRect(0,0,1024,1024);
+ const g=dx.createRadialGradient(400,380,40,512,512,560);g.addColorStop(0,m.dial[0]);g.addColorStop(1,m.dial[1]);dx.fillStyle=g;dx.beginPath();dx.arc(c,c,512,0,7);dx.fill();
+ dx.save();dx.globalAlpha=.06;for(let i=0;i<360;i++){dx.strokeStyle=i%2?'#fff':'#000';dx.beginPath();dx.moveTo(c,c);dx.lineTo(c+520*Math.cos(i*Math.PI/180),c+520*Math.sin(i*Math.PI/180));dx.stroke()}dx.restore();
+ dx.strokeStyle=m.ink;dx.fillStyle=m.ink;
+ for(let i=0;i<60;i++){const a=i*Math.PI/30,b=i%5==0;dx.lineWidth=b?7:2.5;const r1=b?430:452,r2=480;dx.beginPath();dx.moveTo(c+r1*Math.sin(a),c-r1*Math.cos(a));dx.lineTo(c+r2*Math.sin(a),c-r2*Math.cos(a));dx.stroke()}
+ dx.lineWidth=1.5;dx.beginPath();dx.arc(c,c,486,0,7);dx.stroke();
+ dx.textAlign='center';dx.textBaseline='middle';dx.font='500 84px "Cormorant Garamond",serif';
+ ['XII','III','VI','IX'].forEach((t,i)=>{if(i==2&&(m.moon||m.tour))return;const a=i*Math.PI/2;dx.fillText(t,c+360*Math.sin(a),c-360*Math.cos(a)+4)});
+ dx.font='500 58px "Cormorant Garamond",serif';dx.fillText('V A L D È R E',c,300);
+ dx.font='600 18px Manrope,sans-serif';dx.globalAlpha=.75;dx.fillText('V A L L É E   D E   J O U X',c,350);dx.globalAlpha=1;
+ if(m.moon){dx.fillStyle='#04100c';dx.beginPath();dx.arc(c,740,92,Math.PI,0);dx.lineTo(c+92,760);dx.lineTo(c-92,760);dx.fill();dx.strokeStyle=m.ink;dx.lineWidth=3;dx.stroke();
+  for(let i=0;i<14;i++){dx.fillStyle=m.ink;dx.globalAlpha=.8;dx.beginPath();dx.arc(c-70+((i*53)%140),690+((i*37)%60),2,0,7);dx.fill()}dx.globalAlpha=1;
+  dx.fillStyle='#f3ecdf';dx.beginPath();dx.arc(c+10,705,34,0,7);dx.fill();dx.fillStyle='#04100c';dx.beginPath();dx.arc(c+30,695,32,0,7);dx.fill()}
+ if(m.tour){dx.fillStyle='#000';dx.beginPath();dx.arc(c,730,120,0,7);dx.fill();dx.strokeStyle=m.ink;dx.lineWidth=4;dx.stroke()}
+ dt.needsUpdate=true}
+const dial=new THREE.Mesh(new THREE.CircleGeometry(16.6,128),new THREE.MeshStandardMaterial({map:dt,roughness:.22,metalness:.1}));dial.position.z=1.2;W.add(dial);
+// tourbillon cage
+const tour=new THREE.Group();tour.position.set(0,-6.95,1.4);
+for(let i=0;i<3;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(8.6,.35,.3),metal);b.rotation.z=i*Math.PI/3;tour.add(b)}
+tour.add(new THREE.Mesh(new THREE.TorusGeometry(3.4,.22,8,48),metal));const bal=new THREE.Mesh(new THREE.TorusGeometry(2.2,.18,8,40),brushed);bal.position.z=.4;tour.add(bal);W.add(tour);
+// hands
+function leaf(len,w){const s=new THREE.Shape();s.moveTo(0,-len*.18);s.quadraticCurveTo(w,len*.35,0,len);s.quadraticCurveTo(-w,len*.35,0,-len*.18);return new THREE.ExtrudeGeometry(s,{depth:.25,bevelEnabled:false,curveSegments:24})}
+const handMat=new THREE.MeshStandardMaterial({color:0xe3c98f,metalness:.85,roughness:.32});
+const hh=new THREE.Mesh(leaf(10,1.25),handMat);hh.position.z=1.6;const mh=new THREE.Mesh(leaf(14.6,.95),handMat);mh.position.z=1.95;
+const secMat=new THREE.MeshStandardMaterial({color:0xb33a48,metalness:.4,roughness:.3});
+const sh=new THREE.Mesh(new THREE.BoxGeometry(.28,19,.15),secMat);sh.geometry.translate(0,6.5,0);sh.position.z=2.3;
+const hub=new THREE.Mesh(new THREE.CylinderGeometry(.75,.75,1.2,32).rotateX(Math.PI/2),handMat);hub.position.z=2;
+W.add(hh,mh,sh,hub);
+// crystal
+const glass=new THREE.Mesh(new THREE.SphereGeometry(60,96,16,0,Math.PI*2,0,.29),new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0,transmission:.96,transparent:true,opacity:.22,reflectivity:.6,clearcoat:1}));
+glass.rotation.x=Math.PI/2;glass.position.z=3.4-60*Math.cos(.29)+60*0-0;glass.position.z=3.6-60;glass.position.z=3.6-60+60*(1-Math.cos(.29))*0;glass.position.z=-56.4+60*(1-1)+0;W.add(glass);
+glass.position.z=3.9-60;
+// crown
+const cr=new THREE.Group();const knob=new THREE.Mesh(new THREE.CylinderGeometry(2.6,2.6,3.2,24),metal);knob.rotation.z=Math.PI/2;cr.add(knob);
+const cab=new THREE.Mesh(new THREE.SphereGeometry(1.4,24,12),new THREE.MeshStandardMaterial({color:0x0f4a3a,roughness:.1,metalness:.2}));cab.position.x=1.7;cab.scale.x=.5;cr.add(cab);
+const stem=new THREE.Mesh(new THREE.CylinderGeometry(1,1,2,16),metal);stem.rotation.z=Math.PI/2;stem.position.x=-2;cr.add(stem);cr.position.set(21.6,0,-1.2);W.add(cr);
+// lugs
+for(const sy of[1,-1])for(const sx of[1,-1]){const g=new THREE.BoxGeometry(2.6,9,4.2);const l=new THREE.Mesh(g,metal);l.position.set(sx*8.6,sy*20.5,-2.6);l.rotation.x=sy*.32;W.add(l)}
+// strap along wrist ellipse
+const strapMat=new THREE.MeshStandardMaterial({color:M[0].strap,roughness:.75,metalness:0,envMapIntensity:.25});
+const st=new THREE.Group();W.add(st);
+const A=33,B=27,cz=-3.6;const P=t=>new THREE.Vector3(0,A*Math.sin(t),cz-B*(1-Math.cos(t)));
+for(const sg of[1,-1]){const N=70,t0=.72,t1=3.05;for(let i=0;i<N;i++){const t=sg*(t0+(t1-t0)*i/N),t2=sg*(t0+(t1-t0)*(i+1)/N);const a=P(t),b=P(t2);const len=a.distanceTo(b)+.15;
+ const taper=20-4*i/N;const seg=new THREE.Mesh(new THREE.BoxGeometry(taper,len,3.2),strapMat);seg.position.copy(a).add(b).multiplyScalar(.5);seg.lookAt(seg.position.clone().add(new THREE.Vector3(0,0,1)));
+ const dir=b.clone().sub(a).normalize();seg.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir);st.add(seg)}}
+const keeper=new THREE.Mesh(new THREE.TorusGeometry(1,.5,8,4),metal);
+// buckle
+const bk=new THREE.Mesh(new THREE.TorusGeometry(10,.8,12,48,Math.PI),metal);bk.position.copy(P(-2.95));bk.rotation.set(-Math.PI/2+.2,0,0);st.add(bk);
+// caseback with engraving
+const bc=document.createElement('canvas');bc.width=bc.height=512;const bx=bc.getContext('2d');
+bx.fillStyle='#b98a6e';bx.fillRect(0,0,512,512);for(let r=30;r<256;r+=3){bx.strokeStyle=r%6?'rgba(255,240,220,.18)':'rgba(60,30,10,.15)';bx.beginPath();bx.arc(256,256,r,0,7);bx.stroke()}
+bx.fillStyle='rgba(60,30,15,.85)';bx.textAlign='center';bx.font='500 44px "Cormorant Garamond",serif';bx.fillText('VALDÈRE',256,200);bx.font='600 20px Manrope';bx.fillText('N° 001 / 120',256,250);bx.fillText('18K · 750 · SAPHIR',256,290);bx.fillText('MANUFACTURE · VALLÉE DE JOUX',256,330);
+const bt=new THREE.CanvasTexture(bc);bt.encoding=THREE.sRGBEncoding;
+const back=new THREE.Mesh(new THREE.CircleGeometry(14.5,96),new THREE.MeshStandardMaterial({map:bt,metalness:.9,roughness:.32}));back.rotation.y=Math.PI;back.position.z=-6.55;W.add(back);
+W.rotation.set(-.15,0,0);
+// apply model
+function apply(i){const m=M[i];drawDial(m);metal.color.setHex(m.metal).convertSRGBToLinear();brushed.color.setHex(m.metal).convertSRGBToLinear();strapMat.color.setHex(m.strap).convertSRGBToLinear();
+ handMat.color.set(m.ink).convertSRGBToLinear();secMat.color.set(m.sec).convertSRGBToLinear();tour.visible=!!m.tour;cab.material.color.set(i==1?0x2a4a6a:i==2?0x111111:0x0f4a3a).convertSRGBToLinear();
+ document.getElementById('nm').textContent=m.n;document.getElementById('rf').textContent=m.r;document.getElementById('sp').textContent=m.s;
+ document.querySelectorAll('#bar button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m==i))}
+document.getElementById('bar').addEventListener('click',e=>{const b=e.target.closest('button');if(b)apply(+b.dataset.m)});
+document.fonts&&document.fonts.ready.then(()=>apply(+document.querySelector('#bar [aria-pressed=true]').dataset.m));apply(0);
+function size(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.position.setLength(w<600?150:120);cam.updateProjectionMatrix()}
+const ro=new ResizeObserver(size);ro.observe(document.body);size();
+cv.addEventListener('pointerdown',()=>ctl.autoRotate=false);
+function loop(){const d=new Date(),s=d.getSeconds()+d.getMilliseconds()/1000,mi=d.getMinutes()+s/60,h=(d.getHours()%12)+mi/60;
+ sh.rotation.z=-s*Math.PI/30;mh.rotation.z=-mi*Math.PI/30;hh.rotation.z=-h*Math.PI/6;tour.rotation.z=-s*Math.PI/30;bal.rotation.z=Math.sin(s*Math.PI*6)*1.5;
+ ctl.update();R.render(S,cam);requestAnimationFrame(loop)}
+loop();
+}
+</script>
